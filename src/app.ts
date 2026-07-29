@@ -20,9 +20,14 @@ import { criarRotasInternas } from './rotas/interno.rotas.js';
 import { criarRotasSaude } from './rotas/saude.rotas.js';
 import { AutenticacaoInternaService } from './services/autenticacao-interna.service.js';
 import { ProntidaoService } from './services/prontidao.service.js';
+import type { VerificadorDependencia } from './services/prontidao.service.js';
 import { TokenInternoService } from './services/token-interno.service.js';
 
-export function criarAplicacao(): Express {
+interface OpcoesAplicacao {
+  verificadoresProntidao?: VerificadorDependencia[];
+}
+
+export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
   const aplicacao = express();
   const tokens = new TokenInternoService({
     segredo: ambiente.JWT_INTERNO_SECRET,
@@ -31,7 +36,9 @@ export function criarAplicacao(): Express {
   const usuarios = new UsuarioInternoMemoriaRepository();
   const autenticacao = new AutenticacaoInternaService(usuarios, tokens);
   const autenticacaoController = new AutenticacaoInternaController(autenticacao);
-  const prontidaoController = new ProntidaoController(new ProntidaoService([]));
+  const prontidaoController = new ProntidaoController(
+    new ProntidaoService(opcoes.verificadoresProntidao ?? []),
+  );
   const documentoOpenApi = gerarDocumentoOpenApi();
 
   aplicacao.disable('x-powered-by');

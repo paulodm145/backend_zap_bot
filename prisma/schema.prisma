@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum PapelUsuario {
+  SUPER_ADMIN
+  ADMIN_TENANT
+  USUARIO
+
+  @@map("papel_usuario")
+}
+
+enum StatusTenant {
+  AGUARDANDO_PAGAMENTO
+  PROVISIONANDO
+  ATIVO
+  SUSPENSO
+  CANCELADO
+  FALHA_PROVISIONAMENTO
+
+  @@map("status_tenant")
+}
+
+enum StatusAssinatura {
+  AGUARDANDO_PAGAMENTO
+  ATIVA
+  INADIMPLENTE
+  CANCELADA
+  MANUAL
+
+  @@map("status_assinatura")
+}
+
+model Usuario {
+  id                     Int                @id @default(autoincrement())
+  public_id              String             @unique @default(uuid()) @db.Uuid
+  tenant_id              Int?
+  nome                   String             @db.VarChar(150)
+  email                  String             @unique @db.VarChar(254)
+  senha_hash             String             @db.VarChar(255)
+  papel                  PapelUsuario
+  ativo                  Boolean            @default(true)
+  totp_secret_encrypted  String?
+  totp_habilitado        Boolean            @default(false)
+  deletado_at            DateTime?          @db.Timestamptz(3)
+  created_at             DateTime           @default(now()) @db.Timestamptz(3)
+  updated_at             DateTime           @updatedAt @db.Timestamptz(3)
+  tenant                 Tenant?            @relation(fields: [tenant_id], references: [id], onDelete: Restrict)
+  refresh_tokens         RefreshToken[]     @relation("UsuarioRefreshTokens")
+  refresh_tokens_revoked RefreshToken[]     @relation("UsuarioRevogadorRefreshTokens")
+  auditorias             AuditoriaInterna[]
+
+  @@index([tenant_id])
+  @@index([papel, ativo])
+  @@index([deletado_at])
+  @@map("users")
+}
+
+model Tenant {
+  id                       Int          @id @default(autoincrement())
+  public_id                String       @unique @default(uuid()) @db.Uuid
+  nome                     String       @db.VarChar(150)
+  nome_do_banco            String?      @unique @db.VarChar(63)
+  string_conexao_encrypted String?
+  status                   StatusTenant @default(AGUARDANDO_PAGAMENTO)
+  etapa_provisionamento    String?      @db.VarChar(80)
+  erro_provisionamento     String?
+  deletado_at              DateTime?    @db.Timestamptz(3)
+  created_at               DateTime     @default(now()) @db.Timestamptz(3)
+  updated_at               DateTime     @updatedAt @db.Timestamptz(3)
+  usuarios                 Usuario[]
+  assinaturas              Assinatura[]
+
+  @@index([status, updated_at])
+  @@index([deletado_at])
+  @@map("tenants")
+}
+
+model Plano {
+  id                   Int          @id @default(autoincrement())
+  public_id            String       @unique @default(uuid()) @db.Uuid
+  nome                 String       @unique @db.VarChar(80)
+  limite_conversas_mes Int
+  preco_centavos       Int
+  ativo                Boolean      @default(true)
+  created_at           DateTime     @default(now()) @db.Timestamptz(3)
+  updated_at           DateTime     @updatedAt @db.Timestamptz(3)
+  assinaturas          Assinatura[]
+
+  @@index([ativo, nome])
+  @@map("planos")
+}
+
+model Assinatura {
+  id                    Int              @id @default(autoincrement())
+  tenant_id             Int
+  plano_id              Int
+  status                StatusAssinatura
+  gateway_assinatura_id String?          @unique @db.VarChar(150)
+  proxima_cobranca      DateTime?        @db.Timestamptz(3)
+  cancelada_at          DateTime?        @db.Timestamptz(3)
+  created_at            DateTime         @default(now()) @db.Timestamptz(3)
+  updated_at            DateTime         @updatedAt @db.Timestamptz(3)
+  tenant                Tenant           @relation(fields: [tenant_id], references: [id], onDelete: Restrict)
+  plano                 Plano            @relation(fields: [plano_id], references: [id], onDelete: Restrict)
+
+  @@index([tenant_id, status])
+  @@index([plano_id, status])
+  @@index([status, proxima_cobranca])
+  @@map("assinaturas")
+}
+
+model RefreshToken {
+  id                 Int           @id @default(autoincrement())
+  usuario_id         Int
+  revogado_por_id    Int?
+  substituido_por_id Int?          @unique
+  token_hash         String        @unique @db.VarChar(128)
+  familia            String        @db.Uuid
+  expira_at          DateTime      @db.Timestamptz(3)
+  revogado_at        DateTime?     @db.Timestamptz(3)
+  motivo_revogacao   String?       @db.VarChar(120)
+  user_agent         String?       @db.VarChar(500)
+  ip                 String?       @db.VarChar(45)
+  created_at         DateTime      @default(now()) @db.Timestamptz(3)
+  updated_at         DateTime      @updatedAt @db.Timestamptz(3)
+  usuario            Usuario       @relation("UsuarioRefreshTokens", fields: [usuario_id], references: [id], onDelete: Cascade)
+  revogado_por       Usuario?      @relation("UsuarioRevogadorRefreshTokens", fields: [revogado_por_id], references: [id], onDelete: SetNull)
+  substituido_por    RefreshToken? @relation("RotacaoRefreshToken", fields: [substituido_por_id], references: [id], onDelete: SetNull)
+  token_anterior     RefreshToken? @relation("RotacaoRefreshToken")
+
+  @@index([usuario_id, revogado_at])
+  @@index([familia])
+  @@index([expira_at])
+  @@map("refresh_tokens")
+}
+
+model AuditoriaInterna {
+  id                 Int      @id @default(autoincrement())
+  autor_usuario_id   Int?
+  acao               String   @db.VarChar(100)
+  entidade           String   @db.VarChar(100)
+  entidade_public_id String?  @db.Uuid
+  detalhes           Json?
+  ip                 String?  @db.VarChar(45)
+  created_at         DateTime @default(now()) @db.Timestamptz(3)
+  updated_at         DateTime @updatedAt @db.Timestamptz(3)
+  autor              Usuario? @relation(fields: [autor_usuario_id], references: [id], onDelete: SetNull)
+
+  @@index([autor_usuario_id, created_at])
+  @@index([entidade, entidade_public_id])
+  @@index([created_at])
+  @@map("auditoria_interna")
+}

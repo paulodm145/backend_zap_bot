@@ -34,7 +34,7 @@ export class AutenticacaoInternaService {
     return {
       exigeSegundoFator: false,
       accessToken: this.tokens.emitir({
-        id: usuario.id,
+        id: usuario.publicId,
         email: usuario.email,
         papel: 'super_admin',
       }),

@@ -17,6 +17,7 @@ const ambienteSchema = z
           .map((origem) => origem.trim())
           .filter(Boolean),
       ),
+    CENTRAL_DATABASE_URL: z.url().startsWith('postgresql://'),
     JWT_INTERNO_SECRET: z.string().min(32),
     JWT_INTERNO_EXPIRACAO_SEGUNDOS: z.coerce.number().int().positive().default(900),
     HTTP_REQUEST_TIMEOUT_MS: z.coerce.number().int().positive().default(30_000),

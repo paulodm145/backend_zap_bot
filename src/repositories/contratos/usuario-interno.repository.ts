@@ -1,5 +1,6 @@
 export interface UsuarioInterno {
-  id: string;
+  id: number;
+  publicId: string;
   email: string;
   senhaHash: string;
   papel: 'super_admin' | 'usuario';

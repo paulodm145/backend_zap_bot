@@ -7,7 +7,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'html'],
       include: ['src/**/*.ts'],
-      exclude: ['src/servidor.ts', 'src/types/**/*.d.ts'],
+      exclude: ['src/generated/**', 'src/servidor.ts', 'src/types/**/*.d.ts'],
       thresholds: {
         branches: 70,
         functions: 80,

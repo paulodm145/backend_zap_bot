@@ -33,6 +33,7 @@ Documentos funcionais disponíveis:
 
 - [Autenticação](api/autenticacao.md)
 - [Admin interno](api/admin-interno.md)
+- [Banco central](banco-central.md)
 
 ## Swagger e Markdown
 

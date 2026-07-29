@@ -1,8 +1,12 @@
 import { criarAplicacao } from './app.js';
 import { ambiente } from './config/ambiente.js';
 import { logger } from './config/logger.js';
+import { desconectarPrismaCentral, obterPrismaCentral } from './database/prisma-central.js';
+import { VerificadorBancoCentralService } from './services/verificador-banco-central.service.js';
 
-const aplicacao = criarAplicacao();
+const aplicacao = criarAplicacao({
+  verificadoresProntidao: [new VerificadorBancoCentralService(obterPrismaCentral())],
+});
 
 const servidor = aplicacao.listen(ambiente.PORTA, () => {
   logger.info({ porta: ambiente.PORTA }, 'API iniciada');
@@ -30,12 +34,21 @@ function encerrar(motivo: string, erro?: unknown): void {
   encerramentoForcado.unref();
 
   servidor.close((erro) => {
-    if (erro) {
-      logger.error({ erro }, 'Falha ao encerrar API');
-      process.exitCode = 1;
-    }
+    void (async () => {
+      if (erro) {
+        logger.error({ erro }, 'Falha ao encerrar API');
+        process.exitCode = 1;
+      }
 
-    clearTimeout(encerramentoForcado);
+      try {
+        await desconectarPrismaCentral();
+      } catch (erroDesconexao) {
+        logger.error({ erro: erroDesconexao }, 'Falha ao desconectar o banco central');
+        process.exitCode = 1;
+      }
+
+      clearTimeout(encerramentoForcado);
+    })();
   });
 }
 

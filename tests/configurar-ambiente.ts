@@ -3,6 +3,8 @@ process.env.LOG_LEVEL = 'silent';
 process.env.JWT_INTERNO_SECRET = 'segredo-de-teste-com-mais-de-trinta-e-dois-caracteres';
 process.env.JWT_INTERNO_EXPIRACAO_SEGUNDOS = '900';
 process.env.ORIGENS_PERMITIDAS = 'http://localhost:3001';
+process.env.CENTRAL_DATABASE_URL =
+  'postgresql://zapbot:senha-de-teste@localhost:5432/zapbot_central_test';
 process.env.HTTP_REQUEST_TIMEOUT_MS = '30000';
 process.env.HTTP_HEADERS_TIMEOUT_MS = '31000';
 process.env.HTTP_KEEP_ALIVE_TIMEOUT_MS = '5000';

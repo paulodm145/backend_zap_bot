@@ -11,7 +11,8 @@ import { AutenticacaoInternaService } from '../../src/services/autenticacao-inte
 import { TokenInternoService } from '../../src/services/token-interno.service.js';
 
 const usuarioBase: UsuarioInterno = {
-  id: '62b07d40-f7a7-4c52-ab82-41536fc77bc2',
+  id: 1,
+  publicId: '62b07d40-f7a7-4c52-ab82-41536fc77bc2',
   email: 'admin@zapbot.local',
   senhaHash: bcrypt.hashSync('senha-segura', 4),
   papel: 'super_admin',

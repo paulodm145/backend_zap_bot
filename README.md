@@ -10,10 +10,11 @@ O projeto está na fase de construção da estrutura base. Consulte:
 - [Diagnóstico inicial](docs/DIAGNOSTICO-INICIAL.md)
 - [Tarefas da estrutura base](docs/TAREFAS-ESTRUTURA-BASE.md)
 - [Padrão de documentação](docs/README.md)
+- [Banco central](docs/banco-central.md)
 
 ## Requisitos
 
-- Node.js `20.0.0` ou superior;
+- Node.js `20.19.0` ou superior;
 - npm compatível com a versão instalada do Node.js.
 
 A versão mínima também está declarada no campo `engines.node` do

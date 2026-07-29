@@ -245,68 +245,68 @@ assinaturas, refresh tokens e auditoria interna.
 
 ### Prisma
 
-- [ ] Instalar `prisma`.
-- [ ] Instalar `@prisma/client`.
-- [ ] Inicializar schema do `central_db`.
-- [ ] Configurar `CENTRAL_DATABASE_URL`.
-- [ ] Criar factory singleton do Prisma central.
-- [ ] Configurar encerramento do Prisma no shutdown.
-- [ ] Criar comando de geração do client.
-- [ ] Criar comando de migration local.
-- [ ] Criar comando de migration de produção.
+- [x] Instalar `prisma`.
+- [x] Instalar `@prisma/client`.
+- [x] Inicializar schema do `central_db`.
+- [x] Configurar `CENTRAL_DATABASE_URL`.
+- [x] Criar factory singleton do Prisma central.
+- [x] Configurar encerramento do Prisma no shutdown.
+- [x] Criar comando de geração do client.
+- [x] Criar comando de migration local.
+- [x] Criar comando de migration de produção.
 
 ### Modelos
 
-- [ ] Criar enum de papel do usuário.
-- [ ] Criar enum de status do tenant.
-- [ ] Criar enum de status da assinatura.
-- [ ] Criar modelo `Usuario`.
-- [ ] Usar `id` inteiro sequencial em `Usuario`.
-- [ ] Adicionar `public_id` UUID único em `Usuario`.
-- [ ] Criar modelo `Tenant`.
-- [ ] Usar `id` inteiro sequencial em `Tenant`.
-- [ ] Adicionar `public_id` UUID único em `Tenant`.
-- [ ] Criar modelo `Plano`.
-- [ ] Criar modelo `Assinatura`.
-- [ ] Criar modelo `RefreshToken`.
-- [ ] Criar modelo `AuditoriaInterna`.
-- [ ] Adicionar `created_at` e `updated_at` em todos os modelos.
-- [ ] Definir soft delete onde aplicável.
-- [ ] Criar índice único de e-mail normalizado.
-- [ ] Criar índices de status do tenant.
-- [ ] Criar índices de tenant e status da assinatura.
-- [ ] Criar índice de expiração do refresh token.
-- [ ] Criar índices de autor e data da auditoria.
-- [ ] Revisar todos os índices contra consultas planejadas.
+- [x] Criar enum de papel do usuário.
+- [x] Criar enum de status do tenant.
+- [x] Criar enum de status da assinatura.
+- [x] Criar modelo `Usuario`.
+- [x] Usar `id` inteiro sequencial em `Usuario`.
+- [x] Adicionar `public_id` UUID único em `Usuario`.
+- [x] Criar modelo `Tenant`.
+- [x] Usar `id` inteiro sequencial em `Tenant`.
+- [x] Adicionar `public_id` UUID único em `Tenant`.
+- [x] Criar modelo `Plano`.
+- [x] Criar modelo `Assinatura`.
+- [x] Criar modelo `RefreshToken`.
+- [x] Criar modelo `AuditoriaInterna`.
+- [x] Adicionar `created_at` e `updated_at` em todos os modelos.
+- [x] Definir soft delete onde aplicável.
+- [x] Criar índice único de e-mail normalizado.
+- [x] Criar índices de status do tenant.
+- [x] Criar índices de tenant e status da assinatura.
+- [x] Criar índice de expiração do refresh token.
+- [x] Criar índices de autor e data da auditoria.
+- [x] Revisar todos os índices contra consultas planejadas.
 
 ### Migration e dados iniciais
 
-- [ ] Gerar migration inicial.
-- [ ] Revisar SQL gerado.
-- [ ] Confirmar sequences/identity das chaves primárias.
-- [ ] Confirmar defaults de timestamps.
-- [ ] Criar seed idempotente de planos.
-- [ ] Criar comando seguro para cadastrar primeiro `super_admin`.
-- [ ] Impedir senha ou segredo padrão no seed.
-- [ ] Documentar setup do banco central.
+- [x] Gerar migration inicial.
+- [x] Revisar SQL gerado.
+- [x] Confirmar sequences/identity das chaves primárias.
+- [x] Confirmar defaults de timestamps.
+- [x] Criar seed idempotente de planos.
+- [x] Criar comando seguro para cadastrar primeiro `super_admin`.
+- [x] Impedir senha ou segredo padrão no seed.
+- [x] Documentar setup do banco central.
 
 ### Testes
 
-- [ ] Criar banco isolado para testes de repository.
-- [ ] Testar criação e busca de usuário.
-- [ ] Testar unicidade de e-mail.
-- [ ] Testar criação de tenant.
-- [ ] Testar índices essenciais na migration.
-- [ ] Testar limpeza do banco de teste.
+- [x] Criar banco isolado para testes de repository.
+- [x] Testar criação e busca de usuário.
+- [x] Testar unicidade de e-mail.
+- [x] Testar criação de tenant.
+- [x] Testar índices essenciais na migration.
+- [x] Testar limpeza do banco de teste.
 
 ### Checklist de saída
 
-- [ ] Migration sobe em banco vazio.
-- [ ] Migration é aplicável no ambiente de teste.
-- [ ] Seed é idempotente.
-- [ ] Schema e documentação estão sincronizados.
-- [ ] Testes, lint, typecheck e build aprovados.
-- [ ] Branch pronta para revisão e merge.
+- [x] Migration sobe em banco vazio.
+- [x] Migration é aplicável no ambiente de teste.
+- [x] Seed é idempotente.
+- [x] Schema e documentação estão sincronizados.
+- [x] Testes, lint, typecheck e build aprovados.
+- [x] Branch pronta para revisão e merge.
 
 ---
 
