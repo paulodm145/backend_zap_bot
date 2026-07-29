@@ -15,4 +15,20 @@ export class UsuarioInternoMemoriaRepository implements UsuarioInternoRepository
     void _email;
     return Promise.resolve(null);
   }
+
+  public buscarPorPublicId(_publicId: string): Promise<UsuarioInterno | null> {
+    void _publicId;
+    return Promise.resolve(null);
+  }
+
+  public salvarTotp(
+    _publicId: string,
+    _segredoCriptografado: string,
+    _habilitado: boolean,
+  ): Promise<void> {
+    void _publicId;
+    void _segredoCriptografado;
+    void _habilitado;
+    return Promise.resolve();
+  }
 }

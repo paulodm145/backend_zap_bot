@@ -8,7 +8,9 @@ import type {
   UsuarioInternoRepository,
 } from '../../src/repositories/contratos/usuario-interno.repository.js';
 import { AutenticacaoInternaService } from '../../src/services/autenticacao-interna.service.js';
+import { EstadoAutenticacaoInternaService } from '../../src/services/estado-autenticacao-interna.service.js';
 import { TokenInternoService } from '../../src/services/token-interno.service.js';
+import { TotpService } from '../../src/services/totp.service.js';
 
 const usuarioBase: UsuarioInterno = {
   id: 1,
@@ -23,17 +25,24 @@ const usuarioBase: UsuarioInterno = {
 function criarServico(usuario: UsuarioInterno | null): AutenticacaoInternaService {
   const repository: UsuarioInternoRepository = {
     buscarPorEmail: vi.fn().mockResolvedValue(usuario),
+    buscarPorPublicId: vi.fn().mockResolvedValue(usuario),
+    salvarTotp: vi.fn().mockResolvedValue(undefined),
   };
   const tokens = new TokenInternoService({
     segredo: 'segredo-de-teste-com-mais-de-trinta-e-dois-caracteres',
     expiracaoSegundos: 900,
   });
 
-  return new AutenticacaoInternaService(repository, tokens);
+  return new AutenticacaoInternaService(
+    repository,
+    tokens,
+    new EstadoAutenticacaoInternaService('segredo-de-teste-com-mais-de-trinta-e-dois-caracteres'),
+    new TotpService('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'),
+  );
 }
 
 describe('AutenticacaoInternaService', () => {
-  it('emite token com escopo interno para super admin ativo', async () => {
+  it('exige configuração do TOTP para super admin ativo', async () => {
     const servico = criarServico(usuarioBase);
 
     const resultado = await servico.login({
@@ -41,8 +50,9 @@ describe('AutenticacaoInternaService', () => {
       senha: 'senha-segura',
     });
 
-    expect(resultado.exigeSegundoFator).toBe(false);
-    expect(resultado.accessToken).toEqual(expect.any(String));
+    expect(resultado.exigeSegundoFator).toBe(true);
+    expect(resultado.exigeConfiguracao).toBe(true);
+    expect(resultado.estadoToken).toEqual(expect.any(String));
   });
 
   it('não revela se o e-mail ou a senha estão incorretos', async () => {
@@ -67,6 +77,8 @@ describe('AutenticacaoInternaService', () => {
       senha: 'senha-segura',
     });
 
-    expect(resultado).toEqual({ exigeSegundoFator: true });
+    expect(resultado.exigeSegundoFator).toBe(true);
+    expect(resultado.exigeConfiguracao).toBe(false);
+    expect(resultado.estadoToken).toEqual(expect.any(String));
   });
 });

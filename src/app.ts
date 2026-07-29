@@ -26,11 +26,13 @@ import { criarRotasInternas } from './rotas/interno.rotas.js';
 import { criarRotasSaude } from './rotas/saude.rotas.js';
 import { AutenticacaoInternaService } from './services/autenticacao-interna.service.js';
 import { AutenticacaoService } from './services/autenticacao.service.js';
+import { EstadoAutenticacaoInternaService } from './services/estado-autenticacao-interna.service.js';
 import { HashSenhaService } from './services/hash-senha.service.js';
 import { ProntidaoService } from './services/prontidao.service.js';
 import type { VerificadorDependencia } from './services/prontidao.service.js';
 import { TokenInternoService } from './services/token-interno.service.js';
 import { TokenTenantService } from './services/token-tenant.service.js';
+import { TotpService } from './services/totp.service.js';
 
 interface OpcoesAplicacao {
   verificadoresProntidao?: VerificadorDependencia[];
@@ -43,16 +45,25 @@ export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
     segredo: ambiente.JWT_INTERNO_SECRET,
     expiracaoSegundos: ambiente.JWT_INTERNO_EXPIRACAO_SEGUNDOS,
   });
-  const usuarios = new UsuarioInternoMemoriaRepository();
-  const autenticacao = new AutenticacaoInternaService(usuarios, tokens);
-  const autenticacaoController = new AutenticacaoInternaController(autenticacao);
   const prismaCentral = opcoes.prismaCentral ?? obterPrismaCentral();
+  const usuariosCentrais = new UsuarioCentralRepository(prismaCentral);
+  const usuarios =
+    ambiente.NODE_ENV === 'test' && !opcoes.prismaCentral
+      ? new UsuarioInternoMemoriaRepository()
+      : usuariosCentrais;
+  const autenticacao = new AutenticacaoInternaService(
+    usuarios,
+    tokens,
+    new EstadoAutenticacaoInternaService(ambiente.JWT_INTERNO_SECRET),
+    new TotpService(ambiente.TOTP_CRIPTOGRAFIA_CHAVE),
+  );
+  const autenticacaoController = new AutenticacaoInternaController(autenticacao);
   const tokenTenant = new TokenTenantService(
     ambiente.JWT_TENANT_SECRET,
     ambiente.JWT_TENANT_EXPIRACAO_SEGUNDOS,
   );
   const autenticacaoTenant = new AutenticacaoService(
-    new UsuarioCentralRepository(prismaCentral),
+    usuariosCentrais,
     new RefreshTokenRepository(prismaCentral),
     new HashSenhaService(),
     tokenTenant,

@@ -406,45 +406,45 @@ Objetivo: substituir o repository temporário e concluir autenticação segura d
 
 ### Repository e login
 
-- [ ] Criar repository Prisma de usuário interno.
-- [ ] Remover repository em memória da composição de produção.
-- [ ] Manter repository em memória apenas como test double.
-- [ ] Consultar usuário por e-mail normalizado.
-- [ ] Validar papel `super_admin`.
-- [ ] Validar usuário ativo.
-- [ ] Emitir token com audiência exclusiva do admin.
-- [ ] Manter rate limit do login interno.
+- [x] Criar repository Prisma de usuário interno.
+- [x] Remover repository em memória da composição de produção.
+- [x] Manter repository em memória apenas como test double.
+- [x] Consultar usuário por e-mail normalizado.
+- [x] Validar papel `super_admin`.
+- [x] Validar usuário ativo.
+- [x] Emitir token com audiência exclusiva do admin.
+- [x] Manter rate limit do login interno.
 
 ### TOTP
 
-- [ ] Selecionar biblioteca TOTP.
-- [ ] Criar serviço de geração do segredo.
-- [ ] Criptografar segredo TOTP em repouso.
-- [ ] Criar QR code de configuração.
-- [ ] Criar estado temporário do login antes do segundo fator.
-- [ ] Implementar verificação do código TOTP.
-- [ ] Impedir reutilização indevida do estado temporário.
-- [ ] Emitir JWT interno somente após segundo fator.
-- [ ] Criar códigos de recuperação, se aprovado.
+- [x] Selecionar biblioteca TOTP.
+- [x] Criar serviço de geração do segredo.
+- [x] Criptografar segredo TOTP em repouso.
+- [x] Criar QR code de configuração.
+- [x] Criar estado temporário do login antes do segundo fator.
+- [x] Implementar verificação do código TOTP.
+- [x] Impedir reutilização indevida do estado temporário.
+- [x] Emitir JWT interno somente após segundo fator.
+- [x] Registrar códigos de recuperação como fora do escopo até aprovação.
 
 ### Testes e documentação
 
-- [ ] Testar login interno com repository Prisma.
-- [ ] Testar usuário sem papel.
-- [ ] Testar usuário inativo.
-- [ ] Testar fluxo de configuração TOTP.
-- [ ] Testar código TOTP inválido.
-- [ ] Testar separação entre token interno e token de tenant.
-- [ ] Atualizar Swagger.
-- [ ] Atualizar `docs/api/admin-interno.md`.
+- [x] Testar login interno com repository Prisma.
+- [x] Testar usuário sem papel.
+- [x] Testar usuário inativo.
+- [x] Testar fluxo de configuração TOTP.
+- [x] Testar código TOTP inválido.
+- [x] Testar separação entre token interno e token de tenant.
+- [x] Atualizar Swagger.
+- [x] Atualizar `docs/api/admin-interno.md`.
 
 ### Checklist de saída
 
-- [ ] Nenhuma credencial interna padrão existe.
-- [ ] Segundo fator funciona de ponta a ponta.
-- [ ] Swagger e Markdown sincronizados.
-- [ ] Testes, lint, typecheck e build aprovados.
-- [ ] Branch pronta para revisão e merge.
+- [x] Nenhuma credencial interna padrão existe.
+- [x] Segundo fator funciona de ponta a ponta.
+- [x] Swagger e Markdown sincronizados.
+- [x] Testes, lint, typecheck e build aprovados.
+- [x] Branch pronta para revisão e merge.
 
 ---
 

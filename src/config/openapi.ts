@@ -2,6 +2,7 @@ import { OpenAPIRegistry, OpenApiGeneratorV3 } from '@asteasolutions/zod-to-open
 
 import { loginInternoSchema } from '../dtos/login-interno.dto.js';
 import { loginSchema } from '../dtos/login.dto.js';
+import { estadoInternoSchema, verificarTotpInternoSchema } from '../dtos/totp-interno.dto.js';
 import { z } from './zod-openapi.js';
 
 const erroSchema = z
@@ -43,10 +44,18 @@ const prontidaoSchema = z
 
 const loginInternoRespostaSchema = z
   .object({
-    exigeSegundoFator: z.boolean(),
-    accessToken: z.string().optional(),
+    exigeSegundoFator: z.literal(true),
+    exigeConfiguracao: z.boolean(),
+    estadoToken: z.string(),
   })
   .openapi('LoginInternoResposta');
+
+const configurarTotpRespostaSchema = z.object({
+  segredo: z.string(),
+  qrCode: z.string(),
+});
+
+const sessaoInternaRespostaSchema = z.object({ accessToken: z.string() });
 
 const usuarioAutenticadoSchema = z.object({
   id: z.uuid(),
@@ -98,6 +107,52 @@ function criarRegistro(): OpenAPIRegistry {
       },
       422: {
         description: 'Dados de entrada inválidos.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+
+  registro.registerPath({
+    method: 'post',
+    path: '/api/v1/interno/auth/2fa/configurar',
+    tags: ['Admin interno'],
+    summary: 'Gera segredo e QR code para a primeira configuração TOTP',
+    request: {
+      body: {
+        required: true,
+        content: { 'application/json': { schema: estadoInternoSchema } },
+      },
+    },
+    responses: {
+      200: {
+        description: 'Configuração TOTP pendente de confirmação.',
+        content: { 'application/json': { schema: configurarTotpRespostaSchema } },
+      },
+      401: {
+        description: 'Estado temporário inválido ou expirado.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+
+  registro.registerPath({
+    method: 'post',
+    path: '/api/v1/interno/auth/2fa/verificar',
+    tags: ['Admin interno'],
+    summary: 'Valida o TOTP e emite a sessão administrativa',
+    request: {
+      body: {
+        required: true,
+        content: { 'application/json': { schema: verificarTotpInternoSchema } },
+      },
+    },
+    responses: {
+      200: {
+        description: 'Segundo fator confirmado.',
+        content: { 'application/json': { schema: sessaoInternaRespostaSchema } },
+      },
+      401: {
+        description: 'Estado ou código TOTP inválido.',
         content: { 'application/json': { schema: erroSchema } },
       },
     },

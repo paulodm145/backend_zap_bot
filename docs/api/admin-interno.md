@@ -11,25 +11,25 @@ O admin interno é exclusivo da equipe operadora do SaaS. O prefixo é
 
 Tokens de tenant não são aceitos.
 
-## Estado atual
+## Rotas disponíveis
 
-O scaffold contém somente:
-
-| Método | Rota                         | Autenticação | Finalidade             |
-| ------ | ---------------------------- | ------------ | ---------------------- |
-| POST   | `/api/v1/interno/auth/login` | Não          | Iniciar autenticação   |
-| GET    | `/api/v1/interno/saude`      | JWT interno  | Validar sessão interna |
-
-O repository temporário não possui usuários. Portanto, a tela de login deve
-ser considerada indisponível para uso real até a integração com o
-`central_db`.
+| Método | Rota                                  | Autenticação      | Finalidade             |
+| ------ | ------------------------------------- | ----------------- | ---------------------- |
+| POST   | `/api/v1/interno/auth/login`          | Não               | Validar e-mail e senha |
+| POST   | `/api/v1/interno/auth/2fa/configurar` | Estado temporário | Gerar QR code TOTP     |
+| POST   | `/api/v1/interno/auth/2fa/verificar`  | Estado temporário | Confirmar TOTP e logar |
+| GET    | `/api/v1/interno/saude`               | JWT interno       | Validar sessão interna |
 
 ## Telas planejadas
 
 ### Login interno
 
 - Campos: e-mail e senha.
-- Estado futuro adicional: configuração ou verificação TOTP.
+- Em sucesso, a resposta contém `estadoToken`, `exigeSegundoFator: true` e
+  `exigeConfiguracao`.
+- O estado temporário dura cinco minutos e só é aceito nas rotas de TOTP.
+- Se `exigeConfiguracao` for verdadeiro, abrir a tela de leitura do QR code.
+- Se for falso, abrir diretamente a tela para o código de seis dígitos.
 - Após sucesso definitivo, redirecionar para a visão geral.
 - Aplicar tratamento de `401`, `403`, `422` e `429` conforme
   [autenticacao.md](autenticacao.md).
@@ -94,8 +94,14 @@ src/
     interno.rotas.ts
   services/
     autenticacao-interna.service.ts
+    estado-autenticacao-interna.service.ts
+    totp.service.ts
     token-interno.service.ts
 ```
+
+O segredo TOTP é armazenado criptografado com AES-256-GCM. A chave é externa ao
+banco e configurada em `TOTP_CRIPTOGRAFIA_CHAVE`. O JWT administrativo só é
+emitido após a validação do segundo fator.
 
 ## Atualização em tempo real
 
