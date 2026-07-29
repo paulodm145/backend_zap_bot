@@ -609,35 +609,35 @@ Objetivo: permitir execução reproduzível da base em ambiente local.
 
 ### Containers
 
-- [ ] Criar Dockerfile de desenvolvimento.
-- [ ] Criar Dockerfile de produção multi-stage.
-- [ ] Criar `.dockerignore`.
-- [ ] Criar `docker-compose.dev.yml`.
-- [ ] Adicionar PostgreSQL.
-- [ ] Adicionar Redis.
-- [ ] Adicionar API.
-- [ ] Configurar healthcheck do PostgreSQL.
-- [ ] Configurar healthcheck do Redis.
-- [ ] Configurar healthcheck da API.
-- [ ] Criar volumes nomeados.
-- [ ] Evitar segredos no Compose versionado.
+- [x] Criar Dockerfile de desenvolvimento.
+- [x] Criar Dockerfile de produção multi-stage.
+- [x] Criar `.dockerignore`.
+- [x] Criar `docker-compose.dev.yml`.
+- [x] Adicionar PostgreSQL.
+- [x] Adicionar Redis.
+- [x] Adicionar API.
+- [x] Configurar healthcheck do PostgreSQL.
+- [x] Configurar healthcheck do Redis.
+- [x] Configurar healthcheck da API.
+- [x] Criar volumes nomeados.
+- [x] Evitar segredos no Compose versionado.
 
 ### Operação
 
-- [ ] Documentar subida do ambiente.
-- [ ] Documentar execução de migrations.
-- [ ] Documentar criação do primeiro super admin.
-- [ ] Documentar execução de testes.
-- [ ] Testar inicialização a partir de ambiente limpo.
-- [ ] Testar encerramento gracioso em container.
+- [x] Documentar subida do ambiente.
+- [x] Documentar execução de migrations.
+- [x] Documentar criação do primeiro super admin.
+- [x] Documentar execução de testes.
+- [x] Testar inicialização a partir de ambiente limpo.
+- [x] Testar encerramento gracioso em container.
 
 ### Checklist de saída
 
-- [ ] Ambiente sobe com um comando documentado.
-- [ ] API fica pronta somente após dependências.
-- [ ] Dados persistem entre reinicializações.
-- [ ] Testes, lint, typecheck e build aprovados.
-- [ ] Branch pronta para revisão e merge.
+- [x] Ambiente sobe com um comando documentado.
+- [x] API fica pronta somente após dependências.
+- [x] Dados persistem entre reinicializações.
+- [x] Testes, lint, typecheck e build aprovados.
+- [x] Branch pronta para revisão e merge.
 
 ---
 

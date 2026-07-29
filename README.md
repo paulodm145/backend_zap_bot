@@ -55,7 +55,14 @@ Variáveis disponíveis no scaffold atual:
 | ----------------------------------- | ------------------------------------------------ |
 | `NODE_ENV`                          | Ambiente: `development`, `test` ou `production`  |
 | `PORTA`                             | Porta HTTP da API                                |
+| `API_PORT`                          | Porta da API publicada pelo Docker Compose       |
 | `LOG_LEVEL`                         | Nível dos logs estruturados                      |
+| `POSTGRES_USER`                     | Usuário do PostgreSQL no Docker Compose          |
+| `POSTGRES_PASSWORD`                 | Senha local do PostgreSQL no Docker Compose      |
+| `POSTGRES_DB`                       | Banco central criado pelo Docker Compose         |
+| `POSTGRES_PORT`                     | Porta do PostgreSQL publicada no host            |
+| `REDIS_URL`                         | Conexão Redis usada pela aplicação               |
+| `REDIS_PORT`                        | Porta do Redis publicada no host                 |
 | `ORIGENS_PERMITIDAS`                | Origens CORS separadas por vírgula               |
 | `JWT_INTERNO_SECRET`                | Segredo do JWT interno, mínimo de 32 caracteres  |
 | `JWT_INTERNO_EXPIRACAO_SEGUNDOS`    | Duração do JWT interno em segundos               |
@@ -98,8 +105,10 @@ GET http://localhost:3000/api/v1/saude
 ```
 
 A rota `GET /api/v1/prontidao` informa se as dependências necessárias estão
-disponíveis. Os verificadores de PostgreSQL e Redis serão conectados quando
-essas dependências forem adicionadas.
+disponíveis. No estado atual, a API verifica a conexão com o PostgreSQL; o
+Compose também condiciona sua inicialização aos healthchecks do PostgreSQL e
+do Redis. A verificação do Redis pela própria aplicação será adicionada na
+etapa de filas.
 
 Em desenvolvimento, a documentação fica disponível em:
 
@@ -109,6 +118,74 @@ GET http://localhost:3000/api/v1/openapi.json
 ```
 
 As duas rotas exigem autenticação Basic em produção.
+
+## Ambiente local com containers
+
+Pré-requisitos: Docker Engine com Compose v2 e portas 3000, 5432 e 6379
+disponíveis. Prepare o ambiente:
+
+```bash
+cp .env.example .env
+```
+
+Troque todos os segredos, especialmente `POSTGRES_PASSWORD`, chaves JWT e
+chaves hexadecimais de criptografia. Nenhum segredo é definido no Compose.
+
+Suba PostgreSQL, Redis e API:
+
+```bash
+docker compose -f docker-compose.dev.yml up --build -d
+```
+
+PostgreSQL e Redis precisam ficar saudáveis antes da API iniciar. A API só fica
+saudável quando sua rota de prontidão responde com sucesso. Verifique:
+
+```bash
+docker compose -f docker-compose.dev.yml ps
+curl http://localhost:3000/api/v1/prontidao
+```
+
+Na primeira inicialização, aplique as migrations centrais e o seed:
+
+```bash
+docker compose -f docker-compose.dev.yml exec api npm run db:central:migrate:deploy
+docker compose -f docker-compose.dev.yml exec api npm run db:central:seed
+```
+
+Crie o primeiro administrador sem credencial padrão:
+
+```bash
+docker compose -f docker-compose.dev.yml exec \
+  -e SUPER_ADMIN_NOME="Administrador" \
+  -e SUPER_ADMIN_EMAIL="admin@empresa.com" \
+  -e SUPER_ADMIN_SENHA="uma-senha-forte-e-unica" \
+  api npm run admin:criar
+```
+
+Execute verificações dentro do container:
+
+```bash
+docker compose -f docker-compose.dev.yml exec api npm run lint
+docker compose -f docker-compose.dev.yml exec api npm run typecheck
+docker compose -f docker-compose.dev.yml exec api npm test
+```
+
+Para observar logs e testar o encerramento gracioso:
+
+```bash
+docker compose -f docker-compose.dev.yml logs -f api
+docker compose -f docker-compose.dev.yml stop -t 15 api
+```
+
+Suba novamente sem reconstruir para confirmar persistência:
+
+```bash
+docker compose -f docker-compose.dev.yml up -d
+```
+
+Os volumes `postgres_dados`, `redis_dados` e `api_node_modules` sobrevivem a
+`stop` e `down`. A remoção explícita com `down -v` apaga os dados locais e não
+deve ser usada sem intenção.
 
 ## Validação
 
