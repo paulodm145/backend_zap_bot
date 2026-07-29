@@ -318,82 +318,82 @@ Objetivo: cumprir exatamente o contrato já implementado pelo frontend.
 
 ### Domínio e persistência
 
-- [ ] Criar repository de usuário central.
-- [ ] Criar repository de refresh token.
-- [ ] Criar serviço de hash de senha.
-- [ ] Criar serviço de access token.
-- [ ] Criar serviço de refresh token.
-- [ ] Armazenar apenas hash do refresh token.
-- [ ] Implementar rotação de refresh token.
-- [ ] Implementar revogação de família de tokens.
-- [ ] Registrar expiração e revogação.
-- [ ] Criar rotina de limpeza de tokens expirados.
+- [x] Criar repository de usuário central.
+- [x] Criar repository de refresh token.
+- [x] Criar serviço de hash de senha.
+- [x] Criar serviço de access token.
+- [x] Criar serviço de refresh token.
+- [x] Armazenar apenas hash do refresh token.
+- [x] Implementar rotação de refresh token.
+- [x] Implementar revogação de família de tokens.
+- [x] Registrar expiração e revogação.
+- [x] Criar rotina de limpeza de tokens expirados.
 
 ### Login
 
-- [ ] Criar schema Zod do login.
-- [ ] Inferir o DTO do schema.
-- [ ] Normalizar e-mail por helper.
-- [ ] Implementar `AutenticacaoService.login`.
-- [ ] Buscar usuário e tenant no `central_db`.
-- [ ] Bloquear tenant suspenso ou cancelado.
-- [ ] Comparar senha sem revelar existência do e-mail.
-- [ ] Emitir access token de curta duração.
-- [ ] Emitir refresh token de longa duração.
-- [ ] Configurar cookie `HttpOnly`.
-- [ ] Configurar cookie `Secure`.
-- [ ] Configurar cookie `SameSite=None`.
-- [ ] Configurar cookie `Path=/api/v1/auth`.
-- [ ] Retornar `{ accessToken, usuario }`.
-- [ ] Incluir `id`, `nome`, `email` e `tenantId`.
-- [ ] Retornar `CREDENCIAIS_INVALIDAS` em credencial inválida.
+- [x] Criar schema Zod do login.
+- [x] Inferir o DTO do schema.
+- [x] Normalizar e-mail por helper.
+- [x] Implementar `AutenticacaoService.login`.
+- [x] Buscar usuário e tenant no `central_db`.
+- [x] Bloquear tenant suspenso ou cancelado.
+- [x] Comparar senha sem revelar existência do e-mail.
+- [x] Emitir access token de curta duração.
+- [x] Emitir refresh token de longa duração.
+- [x] Configurar cookie `HttpOnly`.
+- [x] Configurar cookie `Secure`.
+- [x] Configurar cookie `SameSite=None`.
+- [x] Configurar cookie `Path=/api/v1/auth`.
+- [x] Retornar `{ accessToken, usuario }`.
+- [x] Incluir `id`, `nome`, `email` e `tenantId`.
+- [x] Retornar `CREDENCIAIS_INVALIDAS` em credencial inválida.
 
 ### Refresh e logout
 
-- [ ] Implementar `POST /api/v1/auth/refresh` sem body.
-- [ ] Ler refresh token exclusivamente do cookie.
-- [ ] Validar expiração, hash e revogação.
-- [ ] Rotacionar refresh token.
-- [ ] Renovar cookie.
-- [ ] Retornar somente `{ accessToken }`.
-- [ ] Retornar `401` para refresh inválido.
-- [ ] Implementar `POST /api/v1/auth/logout`.
-- [ ] Revogar refresh token no servidor.
-- [ ] Limpar cookie com os mesmos atributos.
+- [x] Implementar `POST /api/v1/auth/refresh` sem body.
+- [x] Ler refresh token exclusivamente do cookie.
+- [x] Validar expiração, hash e revogação.
+- [x] Rotacionar refresh token.
+- [x] Renovar cookie.
+- [x] Retornar somente `{ accessToken }`.
+- [x] Retornar `401` para refresh inválido.
+- [x] Implementar `POST /api/v1/auth/logout`.
+- [x] Revogar refresh token no servidor.
+- [x] Limpar cookie com os mesmos atributos.
 
 ### Middleware
 
-- [ ] Criar middleware Bearer para tenants.
-- [ ] Validar assinatura, emissor e audiência.
-- [ ] Validar expiração do access token.
-- [ ] Anexar usuário e tenant resolvidos à request.
-- [ ] Retornar `401` padronizado para token ausente.
-- [ ] Retornar `401` padronizado para token inválido.
-- [ ] Não aceitar token interno nas rotas de tenant.
+- [x] Criar middleware Bearer para tenants.
+- [x] Validar assinatura, emissor e audiência.
+- [x] Validar expiração do access token.
+- [x] Anexar usuário e tenant resolvidos à request.
+- [x] Retornar `401` padronizado para token ausente.
+- [x] Retornar `401` padronizado para token inválido.
+- [x] Não aceitar token interno nas rotas de tenant.
 
 ### Testes e documentação
 
-- [ ] Testar login válido.
-- [ ] Testar credencial inválida.
-- [ ] Testar tenant suspenso.
-- [ ] Testar atributos exatos do cookie.
-- [ ] Testar refresh válido.
-- [ ] Testar rotação de refresh.
-- [ ] Testar reutilização de token rotacionado.
-- [ ] Testar refresh expirado.
-- [ ] Testar logout e revogação.
-- [ ] Testar limpeza do cookie.
-- [ ] Testar CORS com credenciais.
-- [ ] Atualizar Swagger.
-- [ ] Atualizar `docs/api/autenticacao.md`.
+- [x] Testar login válido.
+- [x] Testar credencial inválida.
+- [x] Testar tenant suspenso.
+- [x] Testar atributos exatos do cookie.
+- [x] Testar refresh válido.
+- [x] Testar rotação de refresh.
+- [x] Testar reutilização de token rotacionado.
+- [x] Testar refresh expirado.
+- [x] Testar logout e revogação.
+- [x] Testar limpeza do cookie.
+- [x] Testar CORS com credenciais.
+- [x] Atualizar Swagger.
+- [x] Atualizar `docs/api/autenticacao.md`.
 
 ### Checklist de saída
 
-- [ ] Contrato do frontend validado por teste de integração.
-- [ ] Tokens de tenant e internos permanecem isolados.
-- [ ] Swagger e Markdown sincronizados.
-- [ ] Testes, lint, typecheck e build aprovados.
-- [ ] Branch pronta para revisão e merge.
+- [x] Contrato do frontend validado por teste de integração.
+- [x] Tokens de tenant e internos permanecem isolados.
+- [x] Swagger e Markdown sincronizados.
+- [x] Testes, lint, typecheck e build aprovados.
+- [x] Branch pronta para revisão e merge.
 
 ---
 

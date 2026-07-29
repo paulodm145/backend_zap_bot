@@ -14,7 +14,8 @@ Tokens de um contexto nunca são aceitos no outro.
 
 ## Autenticação do tenant
 
-> Estado atual: contrato obrigatório definido; implementação pendente na Etapa 04.
+> Estado atual: login, renovação com rotação, logout e middleware Bearer
+> implementados.
 
 ### Tela de login
 
@@ -97,6 +98,11 @@ Resposta:
 }
 ```
 
+O cookie é rotacionado a cada renovação. Se um cookie antigo já rotacionado
+for reutilizado, toda a família daquela sessão é revogada por segurança. Um
+refresh inválido retorna `401` com código `REFRESH_TOKEN_INVALIDO`; nesse caso,
+o frontend deve limpar a sessão e redirecionar ao login.
+
 ### Logout
 
 ```http
@@ -167,15 +173,17 @@ Como frontend e backend usam domínios diferentes:
 
 ## Erros comuns
 
-| Status | Código                  | Ação do frontend                   |
-| ------ | ----------------------- | ---------------------------------- |
-| `401`  | `CREDENCIAIS_INVALIDAS` | Mostrar erro no login              |
-| `401`  | `NAO_AUTENTICADO`       | Tentar refresh quando aplicável    |
-| `403`  | `ACESSO_NEGADO`         | Exibir acesso negado               |
-| `422`  | `VALIDACAO`             | Exibir erros associados aos campos |
-| `429`  | `LIMITE_TENTATIVAS`     | Bloquear reenvio temporariamente   |
+| Status | Código                   | Ação do frontend                   |
+| ------ | ------------------------ | ---------------------------------- |
+| `401`  | `CREDENCIAIS_INVALIDAS`  | Mostrar erro no login              |
+| `401`  | `REFRESH_TOKEN_INVALIDO` | Limpar sessão e abrir o login      |
+| `401`  | `NAO_AUTENTICADO`        | Tentar refresh quando aplicável    |
+| `403`  | `ACESSO_NEGADO`          | Exibir acesso negado               |
+| `422`  | `VALIDACAO`              | Exibir erros associados aos campos |
+| `429`  | `LIMITE_TENTATIVAS`      | Bloquear reenvio temporariamente   |
 
 ## Referência executável
 
-Enquanto as rotas de tenant não forem implementadas, somente as rotas internas
-existentes aparecem no Swagger em `/api/v1/docs`.
+O contrato das três rotas de autenticação também está disponível no Swagger em
+`/api/v1/docs`. O frontend deve usar este documento Markdown para as regras de
+tela e o OpenAPI para formatos de requisição e resposta.

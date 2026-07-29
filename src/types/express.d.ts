@@ -7,6 +7,11 @@ declare global {
         email: string;
         papel: 'super_admin';
       };
+      usuarioTenant?: {
+        id: string;
+        email: string;
+        tenantId: string;
+      };
     }
   }
 }

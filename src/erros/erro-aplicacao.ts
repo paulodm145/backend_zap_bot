@@ -16,6 +16,18 @@ export class NaoAutenticadoError extends ErroAplicacao {
   }
 }
 
+export class CredenciaisInvalidasError extends ErroAplicacao {
+  public constructor(mensagem = 'E-mail ou senha inválidos') {
+    super('CREDENCIAIS_INVALIDAS', mensagem, 401);
+  }
+}
+
+export class RefreshTokenInvalidoError extends ErroAplicacao {
+  public constructor(mensagem = 'Refresh token inválido ou expirado') {
+    super('REFRESH_TOKEN_INVALIDO', mensagem, 401);
+  }
+}
+
 export class AcessoNegadoError extends ErroAplicacao {
   public constructor(mensagem = 'Acesso negado') {
     super('ACESSO_NEGADO', mensagem, 403);

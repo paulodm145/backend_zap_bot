@@ -1,6 +1,7 @@
 import { OpenAPIRegistry, OpenApiGeneratorV3 } from '@asteasolutions/zod-to-openapi';
 
 import { loginInternoSchema } from '../dtos/login-interno.dto.js';
+import { loginSchema } from '../dtos/login.dto.js';
 import { z } from './zod-openapi.js';
 
 const erroSchema = z
@@ -47,6 +48,22 @@ const loginInternoRespostaSchema = z
   })
   .openapi('LoginInternoResposta');
 
+const usuarioAutenticadoSchema = z.object({
+  id: z.uuid(),
+  nome: z.string(),
+  email: z.email(),
+  tenantId: z.uuid(),
+});
+
+const loginRespostaSchema = z
+  .object({
+    accessToken: z.string(),
+    usuario: usuarioAutenticadoSchema,
+  })
+  .openapi('LoginResposta');
+
+const refreshRespostaSchema = z.object({ accessToken: z.string() }).openapi('RefreshResposta');
+
 function criarRegistro(): OpenAPIRegistry {
   const registro = new OpenAPIRegistry();
 
@@ -58,6 +75,60 @@ function criarRegistro(): OpenAPIRegistry {
   });
   registro.register('ErroResposta', erroSchema);
   registro.register('PaginacaoResposta', paginacaoSchema);
+
+  registro.registerPath({
+    method: 'post',
+    path: '/api/v1/auth/login',
+    tags: ['Autenticação'],
+    summary: 'Autentica um usuário e resolve seu tenant',
+    request: {
+      body: {
+        required: true,
+        content: { 'application/json': { schema: loginSchema } },
+      },
+    },
+    responses: {
+      200: {
+        description: 'Sessão criada; o refresh token é enviado em cookie HttpOnly.',
+        content: { 'application/json': { schema: loginRespostaSchema } },
+      },
+      401: {
+        description: 'Credenciais inválidas ou tenant indisponível.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+      422: {
+        description: 'Dados de entrada inválidos.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+
+  registro.registerPath({
+    method: 'post',
+    path: '/api/v1/auth/refresh',
+    tags: ['Autenticação'],
+    summary: 'Rotaciona o refresh token e emite novo access token',
+    responses: {
+      200: {
+        description: 'Token renovado e cookie rotacionado.',
+        content: { 'application/json': { schema: refreshRespostaSchema } },
+      },
+      401: {
+        description: 'Refresh token ausente, inválido, expirado ou revogado.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+
+  registro.registerPath({
+    method: 'post',
+    path: '/api/v1/auth/logout',
+    tags: ['Autenticação'],
+    summary: 'Revoga a sessão e limpa o cookie de refresh',
+    responses: {
+      204: { description: 'Sessão encerrada.' },
+    },
+  });
 
   registro.registerPath({
     method: 'get',

@@ -49,4 +49,23 @@ export class UsuarioCentralRepository implements UsuarioInternoRepository {
       totpHabilitado: usuario.totp_habilitado,
     };
   }
+
+  public buscarTenantPorEmail(email: string) {
+    return this.prisma.usuario.findFirst({
+      where: {
+        email,
+        ativo: true,
+        deletado_at: null,
+        tenant_id: { not: null },
+      },
+      include: { tenant: true },
+    });
+  }
+
+  public buscarPorIdComTenant(id: number) {
+    return this.prisma.usuario.findFirst({
+      where: { id, deletado_at: null },
+      include: { tenant: true },
+    });
+  }
 }
