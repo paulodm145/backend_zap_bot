@@ -96,7 +96,7 @@ os módulos seguintes serão construídos.
 - [x] Atualizar imports da aplicação após a migração horizontal.
 - [x] Atualizar imports dos testes após a migração horizontal.
 - [x] Definir convenção de imports entre camadas horizontais.
-- [ ] Documentar a versão mínima do Node no README operacional.
+- [x] Documentar a versão mínima do Node no README operacional.
 
 ### Configuração e observabilidade
 
