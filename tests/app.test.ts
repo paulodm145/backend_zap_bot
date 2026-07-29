@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { criarAplicacao } from '../src/app.js';
 import { adicionarCorrelacao } from '../src/middlewares/correlacao.middleware.js';
 import { tratarErro } from '../src/middlewares/erro.middleware.js';
+import { TokenInternoService } from '../src/services/token-interno.service.js';
 
 describe('aplicação', () => {
   const aplicacao = criarAplicacao();
@@ -29,6 +30,20 @@ describe('aplicação', () => {
     });
   });
 
+  it('expõe o documento OpenAPI em desenvolvimento e teste', async () => {
+    const resposta = await request(aplicacao).get('/api/v1/openapi.json');
+
+    expect(resposta.status).toBe(200);
+    expect(resposta.body).toMatchObject({ openapi: '3.0.3' });
+  });
+
+  it('expõe o Swagger UI em desenvolvimento e teste', async () => {
+    const resposta = await request(aplicacao).get('/api/v1/docs/');
+
+    expect(resposta.status).toBe(200);
+    expect(resposta.text).toContain('Swagger UI');
+  });
+
   it('protege as rotas internas', async () => {
     const resposta = await request(aplicacao).get('/api/v1/interno/saude');
 
@@ -38,6 +53,28 @@ describe('aplicação', () => {
         codigo: 'NAO_AUTENTICADO',
         mensagem: 'Autenticação necessária',
       },
+    });
+  });
+
+  it('aceita token válido exclusivamente na rota interna', async () => {
+    const tokens = new TokenInternoService({
+      segredo: process.env.JWT_INTERNO_SECRET ?? '',
+      expiracaoSegundos: 900,
+    });
+    const accessToken = tokens.emitir({
+      id: '62b07d40-f7a7-4c52-ab82-41536fc77bc2',
+      email: 'admin@zapbot.local',
+      papel: 'super_admin',
+    });
+
+    const resposta = await request(aplicacao)
+      .get('/api/v1/interno/saude')
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(resposta.status).toBe(200);
+    expect(resposta.body).toMatchObject({
+      status: 'ok',
+      escopo: 'interno',
     });
   });
 
@@ -65,6 +102,28 @@ describe('aplicação', () => {
     expect(resposta.body).toMatchObject({
       erro: {
         codigo: 'NAO_AUTENTICADO',
+      },
+    });
+  });
+
+  it('limita tentativas repetidas de login interno', async () => {
+    const aplicacaoIsolada = criarAplicacao();
+    let ultimoStatus = 0;
+    let ultimoCorpo: unknown;
+
+    for (let tentativa = 0; tentativa < 11; tentativa += 1) {
+      const resposta = await request(aplicacaoIsolada).post('/api/v1/interno/auth/login').send({
+        email: 'admin@zapbot.local',
+        senha: 'senha-segura',
+      });
+      ultimoStatus = resposta.status;
+      ultimoCorpo = resposta.body;
+    }
+
+    expect(ultimoStatus).toBe(429);
+    expect(ultimoCorpo).toMatchObject({
+      erro: {
+        codigo: 'LIMITE_TENTATIVAS',
       },
     });
   });

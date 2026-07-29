@@ -7,3 +7,5 @@ process.env.HTTP_REQUEST_TIMEOUT_MS = '30000';
 process.env.HTTP_HEADERS_TIMEOUT_MS = '31000';
 process.env.HTTP_KEEP_ALIVE_TIMEOUT_MS = '5000';
 process.env.HTTP_SHUTDOWN_TIMEOUT_MS = '10000';
+process.env.SWAGGER_USUARIO = 'admin-docs';
+process.env.SWAGGER_SENHA = 'senha-forte-de-teste';

@@ -29,6 +29,11 @@ Crie somente os arquivos necessários às funcionalidades implementadas. A
 estrutura acima é uma referência de organização, não uma exigência para gerar
 documentos vazios antecipadamente.
 
+Documentos funcionais disponíveis:
+
+- [Autenticação](api/autenticacao.md)
+- [Admin interno](api/admin-interno.md)
+
 ## Swagger e Markdown
 
 Toda rota deve possuir duas formas complementares de documentação:

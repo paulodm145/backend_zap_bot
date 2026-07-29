@@ -3,12 +3,16 @@ import express, { type Express } from 'express';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { pinoHttp } from 'pino-http';
+import swaggerUi from 'swagger-ui-express';
 
 import { ambiente } from './config/ambiente.js';
 import { logger } from './config/logger.js';
+import { gerarDocumentoOpenApi } from './config/openapi.js';
 import { AutenticacaoInternaController } from './controllers/autenticacao-interna.controller.js';
 import { ProntidaoController } from './controllers/prontidao.controller.js';
+import { MuitasRequisicoesError } from './erros/erro-aplicacao.js';
 import { adicionarCorrelacao } from './middlewares/correlacao.middleware.js';
+import { protegerDocumentacao } from './middlewares/documentacao.middleware.js';
 import { tratarErro } from './middlewares/erro.middleware.js';
 import { UsuarioInternoMemoriaRepository } from './repositories/memoria/usuario-interno-memoria.repository.js';
 import { criarRotasAutenticacaoInterna } from './rotas/autenticacao-interna.rotas.js';
@@ -28,6 +32,7 @@ export function criarAplicacao(): Express {
   const autenticacao = new AutenticacaoInternaService(usuarios, tokens);
   const autenticacaoController = new AutenticacaoInternaController(autenticacao);
   const prontidaoController = new ProntidaoController(new ProntidaoService([]));
+  const documentoOpenApi = gerarDocumentoOpenApi();
 
   aplicacao.disable('x-powered-by');
   aplicacao.use(adicionarCorrelacao);
@@ -38,6 +43,21 @@ export function criarAplicacao(): Express {
         correlationId: requisicao.correlationId,
       }),
     }),
+  );
+  aplicacao.get(
+    '/api/v1/openapi.json',
+    protegerDocumentacao,
+    helmet({ contentSecurityPolicy: false }),
+    (_requisicao, resposta) => {
+      resposta.status(200).json(documentoOpenApi);
+    },
+  );
+  aplicacao.use(
+    '/api/v1/docs',
+    protegerDocumentacao,
+    helmet({ contentSecurityPolicy: false }),
+    swaggerUi.serve,
+    swaggerUi.setup(documentoOpenApi),
   );
   aplicacao.use(helmet());
   aplicacao.use(
@@ -54,6 +74,9 @@ export function criarAplicacao(): Express {
       limit: 10,
       standardHeaders: 'draft-8',
       legacyHeaders: false,
+      handler: (_requisicao, _resposta, proximo) => {
+        proximo(new MuitasRequisicoesError());
+      },
     }),
     criarRotasAutenticacaoInterna(autenticacaoController),
   );

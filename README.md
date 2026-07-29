@@ -61,6 +61,8 @@ Variáveis disponíveis no scaffold atual:
 | `HTTP_HEADERS_TIMEOUT_MS`        | Limite para receber os headers HTTP             |
 | `HTTP_KEEP_ALIVE_TIMEOUT_MS`     | Tempo de keep-alive de uma conexão              |
 | `HTTP_SHUTDOWN_TIMEOUT_MS`       | Limite do encerramento gracioso                 |
+| `SWAGGER_USUARIO`                | Usuário do Swagger em produção                  |
+| `SWAGGER_SENHA`                  | Senha do Swagger em produção                    |
 
 A aplicação valida as variáveis com Zod durante a inicialização e falha
 imediatamente quando uma configuração obrigatória é inválida.
@@ -89,6 +91,15 @@ GET http://localhost:3000/api/v1/saude
 A rota `GET /api/v1/prontidao` informa se as dependências necessárias estão
 disponíveis. Os verificadores de PostgreSQL e Redis serão conectados quando
 essas dependências forem adicionadas.
+
+Em desenvolvimento, a documentação fica disponível em:
+
+```text
+GET http://localhost:3000/api/v1/docs
+GET http://localhost:3000/api/v1/openapi.json
+```
+
+As duas rotas exigem autenticação Basic em produção.
 
 ## Validação
 

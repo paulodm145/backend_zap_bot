@@ -33,3 +33,9 @@ export class ValidacaoError extends ErroAplicacao {
     super('VALIDACAO', mensagem, 422, detalhes);
   }
 }
+
+export class MuitasRequisicoesError extends ErroAplicacao {
+  public constructor(mensagem = 'Limite de tentativas excedido') {
+    super('LIMITE_TENTATIVAS', mensagem, 429);
+  }
+}

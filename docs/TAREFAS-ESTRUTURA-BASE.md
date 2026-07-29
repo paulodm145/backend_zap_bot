@@ -27,7 +27,7 @@ Regras:
 | Etapa                        | Branch                           | Dependência | Estado    |
 | ---------------------------- | -------------------------------- | ----------- | --------- |
 | 01. Fundação do repositório  | `chore/estrutura-base`           | Nenhuma     | Concluída |
-| 02. OpenAPI e documentação   | `feat/openapi-documentacao-base` | 01          | Pendente  |
+| 02. OpenAPI e documentação   | `feat/openapi-documentacao-base` | 01          | Concluída |
 | 03. Banco central            | `feat/banco-central-prisma`      | 01          | Pendente  |
 | 04. Autenticação de tenant   | `feat/autenticacao-tenant`       | 03          | Pendente  |
 | 05. Autenticação interna     | `feat/autenticacao-interna`      | 03          | Pendente  |
@@ -192,47 +192,47 @@ de consumo para o frontend.
 
 ### OpenAPI
 
-- [ ] Instalar `@asteasolutions/zod-to-openapi`.
-- [ ] Instalar `swagger-ui-express`.
-- [ ] Criar extensão central do Zod para OpenAPI.
-- [ ] Criar registro central de schemas.
-- [ ] Criar registro central de rotas.
-- [ ] Definir informações e versão da API.
-- [ ] Definir servidor local no documento OpenAPI.
-- [ ] Definir security scheme Bearer JWT.
-- [ ] Registrar envelope padrão de erro.
-- [ ] Registrar schema padrão de paginação.
-- [ ] Documentar rota de saúde.
-- [ ] Documentar login interno existente.
-- [ ] Expor JSON OpenAPI.
-- [ ] Expor Swagger UI em `/api/v1/docs`.
-- [ ] Proteger Swagger UI em produção.
-- [ ] Testar geração do documento OpenAPI.
-- [ ] Testar ausência de schemas duplicados.
+- [x] Instalar `@asteasolutions/zod-to-openapi`.
+- [x] Instalar `swagger-ui-express`.
+- [x] Criar extensão central do Zod para OpenAPI.
+- [x] Criar registro central de schemas.
+- [x] Criar registro central de rotas.
+- [x] Definir informações e versão da API.
+- [x] Definir servidor local no documento OpenAPI.
+- [x] Definir security scheme Bearer JWT.
+- [x] Registrar envelope padrão de erro.
+- [x] Registrar schema padrão de paginação.
+- [x] Documentar rota de saúde.
+- [x] Documentar login interno existente.
+- [x] Expor JSON OpenAPI.
+- [x] Expor Swagger UI em `/api/v1/docs`.
+- [x] Proteger Swagger UI em produção.
+- [x] Testar geração do documento OpenAPI.
+- [x] Testar ausência de schemas duplicados.
 
 ### Documentação Markdown
 
-- [ ] Criar diretório `docs/api/`.
-- [ ] Criar `docs/api/autenticacao.md`.
-- [ ] Documentar contrato de login do tenant.
-- [ ] Documentar contrato de refresh.
-- [ ] Documentar contrato de logout.
-- [ ] Documentar cookie cross-domain.
-- [ ] Documentar estados da tela de login.
-- [ ] Documentar comportamento de sessão expirada.
-- [ ] Criar `docs/api/admin-interno.md`.
-- [ ] Migrar conteúdo útil de `docs/admin-interno.md`.
-- [ ] Documentar perfis autorizados no admin interno.
-- [ ] Documentar estados de carregamento, vazio e erro.
-- [ ] Adicionar links dos documentos funcionais em `docs/README.md`.
+- [x] Criar diretório `docs/api/`.
+- [x] Criar `docs/api/autenticacao.md`.
+- [x] Documentar contrato de login do tenant.
+- [x] Documentar contrato de refresh.
+- [x] Documentar contrato de logout.
+- [x] Documentar cookie cross-domain.
+- [x] Documentar estados da tela de login.
+- [x] Documentar comportamento de sessão expirada.
+- [x] Criar `docs/api/admin-interno.md`.
+- [x] Migrar conteúdo útil de `docs/admin-interno.md`.
+- [x] Documentar perfis autorizados no admin interno.
+- [x] Documentar estados de carregamento, vazio e erro.
+- [x] Adicionar links dos documentos funcionais em `docs/README.md`.
 
 ### Checklist de saída
 
-- [ ] Swagger reflete os schemas Zod reais.
-- [ ] Toda rota existente aparece no Swagger.
-- [ ] Markdown orienta a composição das telas existentes.
-- [ ] Testes, lint, typecheck e build aprovados.
-- [ ] Branch pronta para revisão e merge.
+- [x] Swagger reflete os schemas Zod reais.
+- [x] Toda rota existente aparece no Swagger.
+- [x] Markdown orienta a composição das telas existentes.
+- [x] Testes, lint, typecheck e build aprovados.
+- [x] Branch pronta para revisão e merge.
 
 ---
 
