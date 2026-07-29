@@ -23,6 +23,7 @@ const ambienteSchema = z
     REFRESH_TOKEN_EXPIRACAO_DIAS: z.coerce.number().int().positive().max(90).default(30),
     TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE: z.string().regex(/^[a-fA-F0-9]{64}$/),
     TENANT_CLIENTES_CACHE_MAXIMO: z.coerce.number().int().positive().max(100).default(20),
+    POSTGRES_ADMIN_URL: z.url().startsWith('postgresql://').optional(),
     JWT_INTERNO_SECRET: z.string().min(32),
     JWT_INTERNO_EXPIRACAO_SEGUNDOS: z.coerce.number().int().positive().default(900),
     TOTP_CRIPTOGRAFIA_CHAVE: z.string().regex(/^[a-fA-F0-9]{64}$/),

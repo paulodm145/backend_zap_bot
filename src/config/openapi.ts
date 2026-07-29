@@ -2,6 +2,13 @@ import { OpenAPIRegistry, OpenApiGeneratorV3 } from '@asteasolutions/zod-to-open
 
 import { loginInternoSchema } from '../dtos/login-interno.dto.js';
 import { loginSchema } from '../dtos/login.dto.js';
+import {
+  alterarPlanoTenantSchema,
+  alterarStatusTenantSchema,
+  listarTenantsSchema,
+  provisionarTenantSchema,
+  tenantPublicIdSchema,
+} from '../dtos/tenant-interno.dto.js';
 import { estadoInternoSchema, verificarTotpInternoSchema } from '../dtos/totp-interno.dto.js';
 import { z } from './zod-openapi.js';
 
@@ -278,6 +285,110 @@ function criarRegistro(): OpenAPIRegistry {
         content: {
           'application/json': { schema: erroSchema },
         },
+      },
+    },
+  });
+
+  registro.registerPath({
+    method: 'get',
+    path: '/api/v1/interno/tenants',
+    tags: ['Admin interno - Tenants'],
+    summary: 'Lista tenants com paginação, busca, filtros e ordenação',
+    security: [{ bearerAuth: [] }],
+    request: { query: listarTenantsSchema },
+    responses: {
+      200: {
+        description: 'Página de tenants.',
+        content: { 'application/json': { schema: paginacaoSchema } },
+      },
+      401: {
+        description: 'Sessão interna ausente ou inválida.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+
+  registro.registerPath({
+    method: 'post',
+    path: '/api/v1/interno/tenants',
+    tags: ['Admin interno - Tenants'],
+    summary: 'Provisiona um tenant manual de forma idempotente',
+    security: [{ bearerAuth: [] }],
+    request: {
+      body: {
+        required: true,
+        content: { 'application/json': { schema: provisionarTenantSchema } },
+      },
+    },
+    responses: {
+      202: { description: 'Provisionamento concluído ou retomado.' },
+      401: {
+        description: 'Sessão interna ausente ou inválida.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+      422: {
+        description: 'Entrada ou regra de negócio inválida.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+
+  registro.registerPath({
+    method: 'get',
+    path: '/api/v1/interno/tenants/{tenantId}',
+    tags: ['Admin interno - Tenants'],
+    summary: 'Detalha um tenant por identificador público',
+    security: [{ bearerAuth: [] }],
+    request: { params: tenantPublicIdSchema },
+    responses: {
+      200: { description: 'Detalhe, usuários e histórico de assinaturas.' },
+      404: {
+        description: 'Tenant não encontrado.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+
+  registro.registerPath({
+    method: 'patch',
+    path: '/api/v1/interno/tenants/{tenantId}/status',
+    tags: ['Admin interno - Tenants'],
+    summary: 'Altera o status e registra auditoria',
+    security: [{ bearerAuth: [] }],
+    request: {
+      params: tenantPublicIdSchema,
+      body: {
+        required: true,
+        content: { 'application/json': { schema: alterarStatusTenantSchema } },
+      },
+    },
+    responses: {
+      200: { description: 'Status alterado.' },
+      422: {
+        description: 'Confirmação ausente ou transição inválida.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+
+  registro.registerPath({
+    method: 'patch',
+    path: '/api/v1/interno/tenants/{tenantId}/plano',
+    tags: ['Admin interno - Tenants'],
+    summary: 'Altera o plano manual e registra auditoria',
+    security: [{ bearerAuth: [] }],
+    request: {
+      params: tenantPublicIdSchema,
+      body: {
+        required: true,
+        content: { 'application/json': { schema: alterarPlanoTenantSchema } },
+      },
+    },
+    responses: {
+      200: { description: 'Assinatura manual criada.' },
+      422: {
+        description: 'Confirmação ausente ou regra inválida.',
+        content: { 'application/json': { schema: erroSchema } },
       },
     },
   });

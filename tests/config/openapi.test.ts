@@ -13,6 +13,10 @@ describe('OpenAPI', () => {
     expect(documento.paths).toHaveProperty('/api/v1/prontidao');
     expect(documento.paths).toHaveProperty('/api/v1/interno/auth/login');
     expect(documento.paths).toHaveProperty('/api/v1/interno/saude');
+    expect(documento.paths).toHaveProperty('/api/v1/interno/tenants');
+    expect(documento.paths).toHaveProperty('/api/v1/interno/tenants/{tenantId}');
+    expect(documento.paths).toHaveProperty('/api/v1/interno/tenants/{tenantId}/status');
+    expect(documento.paths).toHaveProperty('/api/v1/interno/tenants/{tenantId}/plano');
     expect(documento.paths).toHaveProperty('/api/v1/openapi.json');
     expect(documento.paths).toHaveProperty('/api/v1/docs');
   });

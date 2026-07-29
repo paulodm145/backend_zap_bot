@@ -51,26 +51,27 @@ Substitua todos os valores de exemplo antes de executar a aplicação. O arquivo
 
 Variáveis disponíveis no scaffold atual:
 
-| Variável                            | Finalidade                                      |
-| ----------------------------------- | ----------------------------------------------- |
-| `NODE_ENV`                          | Ambiente: `development`, `test` ou `production` |
-| `PORTA`                             | Porta HTTP da API                               |
-| `LOG_LEVEL`                         | Nível dos logs estruturados                     |
-| `ORIGENS_PERMITIDAS`                | Origens CORS separadas por vírgula              |
-| `JWT_INTERNO_SECRET`                | Segredo do JWT interno, mínimo de 32 caracteres |
-| `JWT_INTERNO_EXPIRACAO_SEGUNDOS`    | Duração do JWT interno em segundos              |
-| `TOTP_CRIPTOGRAFIA_CHAVE`           | Chave AES de 32 bytes representada em 64 hex    |
-| `TOTP_INTERNO_OBRIGATORIO`          | Exigência de TOTP; `false` só fora de produção  |
-| `CENTRAL_DATABASE_URL`              | Conexão do banco central/admin                  |
-| `TENANT_DATABASE_URL`               | Conexão de um tenant para comandos de migration |
-| `TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE` | Chave AES das conexões dos tenants              |
-| `TENANT_CLIENTES_CACHE_MAXIMO`      | Limite de clients de tenant mantidos no LRU     |
-| `HTTP_REQUEST_TIMEOUT_MS`           | Limite para concluir uma requisição             |
-| `HTTP_HEADERS_TIMEOUT_MS`           | Limite para receber os headers HTTP             |
-| `HTTP_KEEP_ALIVE_TIMEOUT_MS`        | Tempo de keep-alive de uma conexão              |
-| `HTTP_SHUTDOWN_TIMEOUT_MS`          | Limite do encerramento gracioso                 |
-| `SWAGGER_USUARIO`                   | Usuário do Swagger em produção                  |
-| `SWAGGER_SENHA`                     | Senha do Swagger em produção                    |
+| Variável                            | Finalidade                                       |
+| ----------------------------------- | ------------------------------------------------ |
+| `NODE_ENV`                          | Ambiente: `development`, `test` ou `production`  |
+| `PORTA`                             | Porta HTTP da API                                |
+| `LOG_LEVEL`                         | Nível dos logs estruturados                      |
+| `ORIGENS_PERMITIDAS`                | Origens CORS separadas por vírgula               |
+| `JWT_INTERNO_SECRET`                | Segredo do JWT interno, mínimo de 32 caracteres  |
+| `JWT_INTERNO_EXPIRACAO_SEGUNDOS`    | Duração do JWT interno em segundos               |
+| `TOTP_CRIPTOGRAFIA_CHAVE`           | Chave AES de 32 bytes representada em 64 hex     |
+| `TOTP_INTERNO_OBRIGATORIO`          | Exigência de TOTP; `false` só fora de produção   |
+| `CENTRAL_DATABASE_URL`              | Conexão do banco central/admin                   |
+| `TENANT_DATABASE_URL`               | Conexão de um tenant para comandos de migration  |
+| `TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE` | Chave AES das conexões dos tenants               |
+| `TENANT_CLIENTES_CACHE_MAXIMO`      | Limite de clients de tenant mantidos no LRU      |
+| `POSTGRES_ADMIN_URL`                | Conexão administrativa para criar bancos físicos |
+| `HTTP_REQUEST_TIMEOUT_MS`           | Limite para concluir uma requisição              |
+| `HTTP_HEADERS_TIMEOUT_MS`           | Limite para receber os headers HTTP              |
+| `HTTP_KEEP_ALIVE_TIMEOUT_MS`        | Tempo de keep-alive de uma conexão               |
+| `HTTP_SHUTDOWN_TIMEOUT_MS`          | Limite do encerramento gracioso                  |
+| `SWAGGER_USUARIO`                   | Usuário do Swagger em produção                   |
+| `SWAGGER_SENHA`                     | Senha do Swagger em produção                     |
 
 A aplicação valida as variáveis com Zod durante a inicialização e falha
 imediatamente quando uma configuração obrigatória é inválida.

@@ -11,6 +11,7 @@ import { gerarDocumentoOpenApi } from './config/openapi.js';
 import { AutenticacaoController } from './controllers/autenticacao.controller.js';
 import { AutenticacaoInternaController } from './controllers/autenticacao-interna.controller.js';
 import { ProntidaoController } from './controllers/prontidao.controller.js';
+import { TenantsInternosController } from './controllers/tenants-internos.controller.js';
 import { obterPrismaCentral } from './database/prisma-central.js';
 import type { PrismaClient } from './generated/prisma/client.js';
 import { MuitasRequisicoesError } from './erros/erro-aplicacao.js';
@@ -20,12 +21,14 @@ import { tratarErro } from './middlewares/erro.middleware.js';
 import { RefreshTokenRepository } from './repositories/refresh-token.repository.js';
 import { UsuarioInternoMemoriaRepository } from './repositories/memoria/usuario-interno-memoria.repository.js';
 import { UsuarioCentralRepository } from './repositories/usuario-central.repository.js';
+import { TenantCentralRepository } from './repositories/tenant-central.repository.js';
 import { criarRotasAutenticacao } from './rotas/autenticacao.rotas.js';
 import { criarRotasAutenticacaoInterna } from './rotas/autenticacao-interna.rotas.js';
 import { criarRotasInternas } from './rotas/interno.rotas.js';
 import { criarRotasSaude } from './rotas/saude.rotas.js';
 import { AutenticacaoInternaService } from './services/autenticacao-interna.service.js';
 import { AutenticacaoService } from './services/autenticacao.service.js';
+import { AdministracaoTenantsService } from './services/administracao-tenants.service.js';
 import { EstadoAutenticacaoInternaService } from './services/estado-autenticacao-interna.service.js';
 import { HashSenhaService } from './services/hash-senha.service.js';
 import { ProntidaoService } from './services/prontidao.service.js';
@@ -33,6 +36,9 @@ import type { VerificadorDependencia } from './services/prontidao.service.js';
 import { TokenInternoService } from './services/token-interno.service.js';
 import { TokenTenantService } from './services/token-tenant.service.js';
 import { TotpService } from './services/totp.service.js';
+import { CriptografiaService } from './services/criptografia.service.js';
+import { ProvisionadorBancoTenantService } from './services/provisionador-banco-tenant.service.js';
+import { ProvisionamentoTenantService } from './services/provisionamento-tenant.service.js';
 
 interface OpcoesAplicacao {
   verificadoresProntidao?: VerificadorDependencia[];
@@ -71,6 +77,19 @@ export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
     ambiente.REFRESH_TOKEN_EXPIRACAO_DIAS,
   );
   const autenticacaoTenantController = new AutenticacaoController(autenticacaoTenant);
+  const tenantsRepository = new TenantCentralRepository(prismaCentral);
+  const tenantsController = new TenantsInternosController(
+    tenantsRepository,
+    new AdministracaoTenantsService(tenantsRepository),
+    new ProvisionamentoTenantService(
+      tenantsRepository,
+      new HashSenhaService(),
+      new CriptografiaService(ambiente.TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE),
+      new ProvisionadorBancoTenantService(
+        ambiente.POSTGRES_ADMIN_URL ?? 'postgresql://configuracao:ausente@localhost:5432/postgres',
+      ),
+    ),
+  );
   const prontidaoController = new ProntidaoController(
     new ProntidaoService(opcoes.verificadoresProntidao ?? []),
   );
@@ -123,7 +142,7 @@ export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
     }),
     criarRotasAutenticacaoInterna(autenticacaoController),
   );
-  aplicacao.use('/api/v1/interno', criarRotasInternas(tokens));
+  aplicacao.use('/api/v1/interno', criarRotasInternas(tokens, tenantsController));
   aplicacao.use('/api/v1', criarRotasSaude(prontidaoController));
 
   aplicacao.use((_requisicao, resposta) => {

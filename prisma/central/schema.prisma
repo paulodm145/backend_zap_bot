@@ -64,6 +64,7 @@ model Usuario {
 model Tenant {
   id                       Int          @id @default(autoincrement())
   public_id                String       @unique @default(uuid()) @db.Uuid
+  provisionamento_chave    String?      @unique @db.Uuid
   nome                     String       @db.VarChar(150)
   nome_do_banco            String?      @unique @db.VarChar(63)
   string_conexao_encrypted String?
@@ -77,6 +78,9 @@ model Tenant {
   assinaturas              Assinatura[]
 
   @@index([status, updated_at])
+  @@index([status, created_at])
+  @@index([nome, status])
+  @@index([etapa_provisionamento, updated_at])
   @@index([deletado_at])
   @@map("tenants")
 }

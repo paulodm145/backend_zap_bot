@@ -14,6 +14,7 @@ process.env.REFRESH_TOKEN_EXPIRACAO_DIAS = '30';
 process.env.TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE =
   'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789';
 process.env.TENANT_CLIENTES_CACHE_MAXIMO = '20';
+process.env.POSTGRES_ADMIN_URL = 'postgresql://postgres:postgres@127.0.0.1:5432/postgres';
 process.env.HTTP_REQUEST_TIMEOUT_MS = '30000';
 process.env.HTTP_HEADERS_TIMEOUT_MS = '31000';
 process.env.HTTP_KEEP_ALIVE_TIMEOUT_MS = '5000';

@@ -542,62 +542,62 @@ Objetivo: criar a primeira funcionalidade operacional do painel interno.
 
 ### Listagem
 
-- [ ] Criar schema Zod de paginação.
-- [ ] Criar helper/repository base de paginação.
-- [ ] Limitar `take` ao máximo configurado.
-- [ ] Criar repository de tenants.
-- [ ] Criar busca por nome.
-- [ ] Criar filtro por status.
-- [ ] Criar filtro por plano.
-- [ ] Criar ordenação permitida por allowlist.
-- [ ] Criar índice para a consulta de listagem.
-- [ ] Implementar `GET /api/v1/interno/tenants`.
-- [ ] Retornar `dados`, `total`, `skip` e `take`.
+- [x] Criar schema Zod de paginação.
+- [x] Criar helper/repository base de paginação.
+- [x] Limitar `take` ao máximo configurado.
+- [x] Criar repository de tenants.
+- [x] Criar busca por nome.
+- [x] Criar filtro por status.
+- [x] Criar filtro por plano.
+- [x] Criar ordenação permitida por allowlist.
+- [x] Criar índice para a consulta de listagem.
+- [x] Implementar `GET /api/v1/interno/tenants`.
+- [x] Retornar `dados`, `total`, `skip` e `take`.
 
 ### Detalhe e alterações
 
-- [ ] Implementar busca por `public_id`.
-- [ ] Implementar detalhe do tenant.
-- [ ] Implementar alteração de status.
-- [ ] Implementar alteração manual de plano.
-- [ ] Criar confirmação de regras no Service.
-- [ ] Registrar auditoria de alteração de status.
-- [ ] Registrar auditoria de alteração de plano.
-- [ ] Testar acesso exclusivo de `super_admin`.
+- [x] Implementar busca por `public_id`.
+- [x] Implementar detalhe do tenant.
+- [x] Implementar alteração de status.
+- [x] Implementar alteração manual de plano.
+- [x] Criar confirmação de regras no Service.
+- [x] Registrar auditoria de alteração de status.
+- [x] Registrar auditoria de alteração de plano.
+- [x] Testar acesso exclusivo de `super_admin`.
 
 ### Provisionamento
 
-- [ ] Definir estados do provisionamento.
-- [ ] Criar `TenantProvisioningService`.
-- [ ] Criar registro central idempotente.
-- [ ] Gerar nome seguro e único do banco.
-- [ ] Criar banco físico.
-- [ ] Aplicar migration do tenant.
-- [ ] Criar primeiro administrador do tenant.
-- [ ] Registrar cada etapa.
-- [ ] Permitir retomada após falha.
-- [ ] Evitar duplicação em retry.
-- [ ] Criar compensações aprovadas para falhas.
+- [x] Definir estados do provisionamento.
+- [x] Criar `TenantProvisioningService`.
+- [x] Criar registro central idempotente.
+- [x] Gerar nome seguro e único do banco.
+- [x] Criar banco físico.
+- [x] Aplicar migration do tenant.
+- [x] Criar primeiro administrador do tenant.
+- [x] Registrar cada etapa.
+- [x] Permitir retomada após falha.
+- [x] Evitar duplicação em retry.
+- [x] Criar compensações aprovadas para falhas.
 
 ### Frontend e documentação
 
-- [ ] Documentar colunas da tela de listagem.
-- [ ] Documentar busca, filtros e paginação.
-- [ ] Documentar estados vazio e carregando.
-- [ ] Documentar ações e confirmações.
-- [ ] Documentar progresso do provisionamento.
-- [ ] Documentar erros recuperáveis e não recuperáveis.
-- [ ] Atualizar Swagger.
-- [ ] Atualizar `docs/api/tenants.md`.
+- [x] Documentar colunas da tela de listagem.
+- [x] Documentar busca, filtros e paginação.
+- [x] Documentar estados vazio e carregando.
+- [x] Documentar ações e confirmações.
+- [x] Documentar progresso do provisionamento.
+- [x] Documentar erros recuperáveis e não recuperáveis.
+- [x] Atualizar Swagger.
+- [x] Atualizar `docs/api/tenants.md`.
 
 ### Checklist de saída
 
-- [ ] Listagem paginada usa índices adequados.
-- [ ] Alterações sensíveis geram auditoria.
-- [ ] Provisionamento suporta retry.
-- [ ] Swagger e Markdown sincronizados.
-- [ ] Testes, lint, typecheck e build aprovados.
-- [ ] Branch pronta para revisão e merge.
+- [x] Listagem paginada usa índices adequados.
+- [x] Alterações sensíveis geram auditoria.
+- [x] Provisionamento suporta retry.
+- [x] Swagger e Markdown sincronizados.
+- [x] Testes, lint, typecheck e build aprovados.
+- [x] Branch pronta para revisão e merge.
 
 ---
 

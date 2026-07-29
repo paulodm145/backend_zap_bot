@@ -14,7 +14,15 @@ export function validar(schema: ZodType, origem: OrigemRequisicao = 'body'): Req
       return;
     }
 
-    requisicao[origem] = resultado.data;
+    if (origem === 'query') {
+      Object.defineProperty(requisicao, 'query', {
+        value: resultado.data,
+        configurable: true,
+        enumerable: true,
+      });
+    } else {
+      requisicao[origem] = resultado.data;
+    }
     proximo();
   };
 }

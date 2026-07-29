@@ -87,6 +87,8 @@ descreverIntegracao('repositories do banco central', () => {
 
     expect(nomes).toContain('users_email_key');
     expect(nomes).toContain('tenants_status_updated_at_idx');
+    expect(nomes).toContain('tenants_status_created_at_idx');
+    expect(nomes).toContain('tenants_nome_trgm_idx');
     expect(nomes).toContain('assinaturas_tenant_id_status_idx');
     expect(nomes).toContain('refresh_tokens_expira_at_idx');
   });
