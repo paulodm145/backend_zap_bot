@@ -24,19 +24,19 @@ Regras:
 
 ## Visão das etapas
 
-| Etapa                        | Branch                           | Dependência | Estado       |
-| ---------------------------- | -------------------------------- | ----------- | ------------ |
-| 01. Fundação do repositório  | `chore/estrutura-base`           | Nenhuma     | Em andamento |
-| 02. OpenAPI e documentação   | `feat/openapi-documentacao-base` | 01          | Pendente     |
-| 03. Banco central            | `feat/banco-central-prisma`      | 01          | Pendente     |
-| 04. Autenticação de tenant   | `feat/autenticacao-tenant`       | 03          | Pendente     |
-| 05. Autenticação interna     | `feat/autenticacao-interna`      | 03          | Pendente     |
-| 06. Resolução multi-tenant   | `feat/resolucao-multitenant`     | 03 e 04     | Pendente     |
-| 07. Administração de tenants | `feat/admin-tenants`             | 05 e 06     | Pendente     |
-| 08. Infraestrutura local     | `chore/infraestrutura-local`     | 03 e 06     | Pendente     |
-| 09. Filas e idempotência     | `feat/filas-mensageria`          | 06 e 08     | Pendente     |
-| 10. Motor de fluxo inicial   | `feat/motor-fluxo-base`          | 06 e 09     | Pendente     |
-| 11. CI e qualidade           | `ci/pipeline-qualidade`          | 01 a 10     | Pendente     |
+| Etapa                        | Branch                           | Dependência | Estado    |
+| ---------------------------- | -------------------------------- | ----------- | --------- |
+| 01. Fundação do repositório  | `chore/estrutura-base`           | Nenhuma     | Concluída |
+| 02. OpenAPI e documentação   | `feat/openapi-documentacao-base` | 01          | Pendente  |
+| 03. Banco central            | `feat/banco-central-prisma`      | 01          | Pendente  |
+| 04. Autenticação de tenant   | `feat/autenticacao-tenant`       | 03          | Pendente  |
+| 05. Autenticação interna     | `feat/autenticacao-interna`      | 03          | Pendente  |
+| 06. Resolução multi-tenant   | `feat/resolucao-multitenant`     | 03 e 04     | Pendente  |
+| 07. Administração de tenants | `feat/admin-tenants`             | 05 e 06     | Pendente  |
+| 08. Infraestrutura local     | `chore/infraestrutura-local`     | 03 e 06     | Pendente  |
+| 09. Filas e idempotência     | `feat/filas-mensageria`          | 06 e 08     | Pendente  |
+| 10. Motor de fluxo inicial   | `feat/motor-fluxo-base`          | 06 e 09     | Pendente  |
+| 11. CI e qualidade           | `ci/pipeline-qualidade`          | 01 a 10     | Pendente  |
 
 ---
 
@@ -172,14 +172,14 @@ os módulos seguintes serão construídos.
 
 ### Checklist de saída
 
-- [ ] `npm run format:check` aprovado.
-- [ ] `npm run lint` aprovado.
-- [ ] `npm run typecheck` aprovado.
-- [ ] `npm test` aprovado.
-- [ ] `npm run build` aprovado.
-- [ ] Documentação da fundação revisada.
-- [ ] Commits da etapa seguem Conventional Commits.
-- [ ] Branch pronta para revisão e merge.
+- [x] `npm run format:check` aprovado.
+- [x] `npm run lint` aprovado.
+- [x] `npm run typecheck` aprovado.
+- [x] `npm test` aprovado.
+- [x] `npm run build` aprovado.
+- [x] Documentação da fundação revisada.
+- [x] Commits da etapa seguem Conventional Commits.
+- [x] Branch pronta para revisão e merge.
 
 ---
 
