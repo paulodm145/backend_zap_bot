@@ -11,6 +11,7 @@ O projeto está na fase de construção da estrutura base. Consulte:
 - [Tarefas da estrutura base](docs/TAREFAS-ESTRUTURA-BASE.md)
 - [Padrão de documentação](docs/README.md)
 - [Banco central](docs/banco-central.md)
+- [Operação multi-tenant](docs/multitenancy.md)
 
 ## Requisitos
 
@@ -50,20 +51,26 @@ Substitua todos os valores de exemplo antes de executar a aplicação. O arquivo
 
 Variáveis disponíveis no scaffold atual:
 
-| Variável                         | Finalidade                                      |
-| -------------------------------- | ----------------------------------------------- |
-| `NODE_ENV`                       | Ambiente: `development`, `test` ou `production` |
-| `PORTA`                          | Porta HTTP da API                               |
-| `LOG_LEVEL`                      | Nível dos logs estruturados                     |
-| `ORIGENS_PERMITIDAS`             | Origens CORS separadas por vírgula              |
-| `JWT_INTERNO_SECRET`             | Segredo do JWT interno, mínimo de 32 caracteres |
-| `JWT_INTERNO_EXPIRACAO_SEGUNDOS` | Duração do JWT interno em segundos              |
-| `HTTP_REQUEST_TIMEOUT_MS`        | Limite para concluir uma requisição             |
-| `HTTP_HEADERS_TIMEOUT_MS`        | Limite para receber os headers HTTP             |
-| `HTTP_KEEP_ALIVE_TIMEOUT_MS`     | Tempo de keep-alive de uma conexão              |
-| `HTTP_SHUTDOWN_TIMEOUT_MS`       | Limite do encerramento gracioso                 |
-| `SWAGGER_USUARIO`                | Usuário do Swagger em produção                  |
-| `SWAGGER_SENHA`                  | Senha do Swagger em produção                    |
+| Variável                            | Finalidade                                      |
+| ----------------------------------- | ----------------------------------------------- |
+| `NODE_ENV`                          | Ambiente: `development`, `test` ou `production` |
+| `PORTA`                             | Porta HTTP da API                               |
+| `LOG_LEVEL`                         | Nível dos logs estruturados                     |
+| `ORIGENS_PERMITIDAS`                | Origens CORS separadas por vírgula              |
+| `JWT_INTERNO_SECRET`                | Segredo do JWT interno, mínimo de 32 caracteres |
+| `JWT_INTERNO_EXPIRACAO_SEGUNDOS`    | Duração do JWT interno em segundos              |
+| `TOTP_CRIPTOGRAFIA_CHAVE`           | Chave AES de 32 bytes representada em 64 hex    |
+| `TOTP_INTERNO_OBRIGATORIO`          | Exigência de TOTP; `false` só fora de produção  |
+| `CENTRAL_DATABASE_URL`              | Conexão do banco central/admin                  |
+| `TENANT_DATABASE_URL`               | Conexão de um tenant para comandos de migration |
+| `TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE` | Chave AES das conexões dos tenants              |
+| `TENANT_CLIENTES_CACHE_MAXIMO`      | Limite de clients de tenant mantidos no LRU     |
+| `HTTP_REQUEST_TIMEOUT_MS`           | Limite para concluir uma requisição             |
+| `HTTP_HEADERS_TIMEOUT_MS`           | Limite para receber os headers HTTP             |
+| `HTTP_KEEP_ALIVE_TIMEOUT_MS`        | Tempo de keep-alive de uma conexão              |
+| `HTTP_SHUTDOWN_TIMEOUT_MS`          | Limite do encerramento gracioso                 |
+| `SWAGGER_USUARIO`                   | Usuário do Swagger em produção                  |
+| `SWAGGER_SENHA`                     | Senha do Swagger em produção                    |
 
 A aplicação valida as variáveis com Zod durante a inicialização e falha
 imediatamente quando uma configuração obrigatória é inválida.
@@ -121,6 +128,76 @@ Para aplicar a formatação automaticamente:
 npm run format
 ```
 
+## Scripts
+
+Todos os scripts são executados com `npm run <nome>`.
+
+| Script                      | Finalidade                                                 |
+| --------------------------- | ---------------------------------------------------------- |
+| `dev`                       | Inicia a API em modo watch.                                |
+| `build`                     | Gera os dois clients Prisma e compila o TypeScript.        |
+| `start`                     | Executa a saída compilada em `dist/`.                      |
+| `lint` / `lint:fix`         | Verifica ou corrige regras estáticas.                      |
+| `format` / `format:check`   | Aplica ou verifica o Prettier.                             |
+| `typecheck`                 | Valida tipos sem emitir arquivos.                          |
+| `test` / `test:watch`       | Executa testes uma vez ou em observação.                   |
+| `test:coverage`             | Executa testes com limites de cobertura.                   |
+| `prisma:generate`           | Gera os clients central e tenant.                          |
+| `prisma:central:generate`   | Gera somente o client do banco central/admin.              |
+| `prisma:tenant:generate`    | Gera somente o client dos bancos de tenant.                |
+| `db:central:migrate:dev`    | Cria/aplica migration central em desenvolvimento.          |
+| `db:central:migrate:deploy` | Aplica migrations centrais pendentes.                      |
+| `db:central:seed`           | Cadastra ou atualiza os planos iniciais.                   |
+| `db:tenant:migrate:dev`     | Cria migration no schema separado de tenant.               |
+| `db:tenant:migrate:deploy`  | Atualiza um banco de tenant específico.                    |
+| `db:tenant:migrate:todos`   | Atualiza todos os tenants ativos, tolerando falha isolada. |
+| `auth:limpar-refresh`       | Remove refresh tokens expirados do banco central.          |
+| `admin:criar`               | Cadastra o primeiro `super_admin` sem senha padrão.        |
+
+Exemplos de infraestrutura central:
+
+```bash
+CENTRAL_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/zapbot_central \
+npm run db:central:migrate:deploy
+
+CENTRAL_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/zapbot_central \
+npm run db:central:seed
+```
+
+Exemplos de migrations de tenant:
+
+```bash
+TENANT_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/tenant_modelo \
+npm run db:tenant:migrate:dev -- --name adicionar_fluxos
+
+TENANT_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/tenant_cliente \
+npm run db:tenant:migrate:deploy
+```
+
+Exemplos operacionais:
+
+```bash
+CENTRAL_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/zapbot_central \
+TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE=<64-hex> \
+npm run db:tenant:migrate:todos
+
+CENTRAL_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/zapbot_central \
+npm run auth:limpar-refresh
+
+SUPER_ADMIN_NOME="Administrador" \
+SUPER_ADMIN_EMAIL=admin@empresa.com \
+SUPER_ADMIN_SENHA='uma-senha-forte-e-unica' \
+npm run admin:criar
+```
+
+Para desabilitar o TOTP exclusivamente no desenvolvimento local:
+
+```bash
+NODE_ENV=development TOTP_INTERNO_OBRIGATORIO=false npm run dev
+```
+
+Em produção, a inicialização falha se o TOTP estiver desabilitado.
+
 ## Estrutura atual
 
 ```text
@@ -148,13 +225,9 @@ efeitos colaterais.
 
 ## Estado atual
 
-O scaffold possui saúde da API e uma base isolada de autenticação interna. O
-repository temporário de usuários não contém credenciais, portanto nenhum
-login administrativo funciona até a implementação do `central_db`.
-
-PostgreSQL, Prisma, Redis, BullMQ, autenticação de tenants, motor de fluxo,
-WhatsApp e demais módulos do produto ainda serão implementados conforme o
-backlog.
+O banco central, as autenticações de tenant e admin com TOTP, os schemas
+Prisma separados e a resolução física de conexões estão implementados.
+Redis, BullMQ, motor de fluxo, WhatsApp e demais módulos continuam no backlog.
 
 ## Fluxo de contribuição
 

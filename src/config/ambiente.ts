@@ -21,9 +21,15 @@ const ambienteSchema = z
     JWT_TENANT_SECRET: z.string().min(32),
     JWT_TENANT_EXPIRACAO_SEGUNDOS: z.coerce.number().int().positive().default(900),
     REFRESH_TOKEN_EXPIRACAO_DIAS: z.coerce.number().int().positive().max(90).default(30),
+    TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE: z.string().regex(/^[a-fA-F0-9]{64}$/),
+    TENANT_CLIENTES_CACHE_MAXIMO: z.coerce.number().int().positive().max(100).default(20),
     JWT_INTERNO_SECRET: z.string().min(32),
     JWT_INTERNO_EXPIRACAO_SEGUNDOS: z.coerce.number().int().positive().default(900),
     TOTP_CRIPTOGRAFIA_CHAVE: z.string().regex(/^[a-fA-F0-9]{64}$/),
+    TOTP_INTERNO_OBRIGATORIO: z
+      .enum(['true', 'false'])
+      .default('true')
+      .transform((valor) => valor === 'true'),
     HTTP_REQUEST_TIMEOUT_MS: z.coerce.number().int().positive().default(30_000),
     HTTP_HEADERS_TIMEOUT_MS: z.coerce.number().int().positive().default(31_000),
     HTTP_KEEP_ALIVE_TIMEOUT_MS: z.coerce.number().int().positive().default(5_000),
@@ -49,6 +55,14 @@ const ambienteSchema = z
         code: 'custom',
         path: ['SWAGGER_SENHA'],
         message: 'Obrigatório em produção',
+      });
+    }
+
+    if (!valor.TOTP_INTERNO_OBRIGATORIO) {
+      contexto.addIssue({
+        code: 'custom',
+        path: ['TOTP_INTERNO_OBRIGATORIO'],
+        message: 'Deve permanecer habilitado em produção',
       });
     }
   });

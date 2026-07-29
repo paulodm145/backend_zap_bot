@@ -2,7 +2,7 @@ import 'dotenv/config';
 
 import { PrismaPg } from '@prisma/adapter-pg';
 
-import { PrismaClient } from '../src/generated/prisma/client.js';
+import { PrismaClient } from '../../src/generated/prisma/client.js';
 
 const url = process.env.CENTRAL_DATABASE_URL;
 

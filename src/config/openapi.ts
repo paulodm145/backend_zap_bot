@@ -44,9 +44,10 @@ const prontidaoSchema = z
 
 const loginInternoRespostaSchema = z
   .object({
-    exigeSegundoFator: z.literal(true),
-    exigeConfiguracao: z.boolean(),
-    estadoToken: z.string(),
+    exigeSegundoFator: z.boolean(),
+    exigeConfiguracao: z.boolean().optional(),
+    estadoToken: z.string().optional(),
+    accessToken: z.string().optional(),
   })
   .openapi('LoginInternoResposta');
 

@@ -103,6 +103,11 @@ O segredo TOTP é armazenado criptografado com AES-256-GCM. A chave é externa a
 banco e configurada em `TOTP_CRIPTOGRAFIA_CHAVE`. O JWT administrativo só é
 emitido após a validação do segundo fator.
 
+Em localhost, o desenvolvedor pode definir `TOTP_INTERNO_OBRIGATORIO=false`.
+Nesse modo, o login retorna diretamente `accessToken` e
+`exigeSegundoFator: false`. A aplicação rejeita essa configuração quando
+`NODE_ENV=production`.
+
 ## Atualização em tempo real
 
 As telas administrativas da estrutura base não dependem de WebSocket. O

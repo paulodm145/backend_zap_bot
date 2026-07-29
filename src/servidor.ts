@@ -2,6 +2,7 @@ import { criarAplicacao } from './app.js';
 import { ambiente } from './config/ambiente.js';
 import { logger } from './config/logger.js';
 import { desconectarPrismaCentral, obterPrismaCentral } from './database/prisma-central.js';
+import { fecharConexoesTenant } from './database/gerenciador-conexoes-tenant.js';
 import { VerificadorBancoCentralService } from './services/verificador-banco-central.service.js';
 
 const aplicacao = criarAplicacao({
@@ -41,6 +42,7 @@ function encerrar(motivo: string, erro?: unknown): void {
       }
 
       try {
+        await fecharConexoesTenant();
         await desconectarPrismaCentral();
       } catch (erroDesconexao) {
         logger.error({ erro: erroDesconexao }, 'Falha ao desconectar o banco central');

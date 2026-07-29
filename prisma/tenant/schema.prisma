@@ -1,0 +1,171 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../../src/generated/prisma-tenant"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum StatusConversa {
+  ABERTA
+  AGUARDANDO
+  FINALIZADA
+
+  @@map("status_conversa")
+}
+
+enum TipoMensagem {
+  TEXTO
+  IMAGEM
+  AUDIO
+  DOCUMENTO
+  SISTEMA
+
+  @@map("tipo_mensagem")
+}
+
+model ContaWhatsapp {
+  id              Int      @id @default(autoincrement())
+  public_id       String   @unique @default(uuid()) @db.Uuid
+  nome            String   @db.VarChar(120)
+  phone_number_id String   @unique @db.VarChar(100)
+  token_encrypted String
+  ativo           Boolean  @default(true)
+  created_at      DateTime @default(now()) @db.Timestamptz(3)
+  updated_at      DateTime @updatedAt @db.Timestamptz(3)
+  conversas       Conversa[]
+
+  @@index([ativo, nome])
+  @@map("contas_whatsapp")
+}
+
+model Fluxo {
+  id         Int      @id @default(autoincrement())
+  public_id  String   @unique @default(uuid()) @db.Uuid
+  nome       String   @db.VarChar(150)
+  definicao  Json
+  versao     Int      @default(1)
+  ativo      Boolean  @default(false)
+  created_at DateTime @default(now()) @db.Timestamptz(3)
+  updated_at DateTime @updatedAt @db.Timestamptz(3)
+
+  @@index([ativo, updated_at])
+  @@index([nome])
+  @@map("fluxos")
+}
+
+model Contato {
+  id         Int      @id @default(autoincrement())
+  public_id  String   @unique @default(uuid()) @db.Uuid
+  nome       String?  @db.VarChar(150)
+  telefone   String   @unique @db.VarChar(20)
+  atributos  Json?
+  created_at DateTime @default(now()) @db.Timestamptz(3)
+  updated_at DateTime @updatedAt @db.Timestamptz(3)
+  conversas  Conversa[]
+
+  @@index([nome])
+  @@map("contatos")
+}
+
+model Setor {
+  id          Int      @id @default(autoincrement())
+  public_id   String   @unique @default(uuid()) @db.Uuid
+  nome        String   @unique @db.VarChar(100)
+  descricao   String?
+  ativo       Boolean  @default(true)
+  created_at  DateTime @default(now()) @db.Timestamptz(3)
+  updated_at  DateTime @updatedAt @db.Timestamptz(3)
+  atendentes  Atendente[]
+  conversas   Conversa[]
+
+  @@index([ativo, nome])
+  @@map("setores")
+}
+
+model Atendente {
+  id         Int      @id @default(autoincrement())
+  public_id  String   @unique @default(uuid()) @db.Uuid
+  setor_id   Int?
+  nome       String   @db.VarChar(150)
+  email      String   @unique @db.VarChar(254)
+  ativo      Boolean  @default(true)
+  created_at DateTime @default(now()) @db.Timestamptz(3)
+  updated_at DateTime @updatedAt @db.Timestamptz(3)
+  setor      Setor?   @relation(fields: [setor_id], references: [id], onDelete: SetNull)
+  conversas  Conversa[]
+
+  @@index([setor_id, ativo])
+  @@map("atendentes")
+}
+
+model Conversa {
+  id                  Int            @id @default(autoincrement())
+  public_id           String         @unique @default(uuid()) @db.Uuid
+  conta_whatsapp_id   Int
+  contato_id          Int
+  setor_id            Int?
+  atendente_id        Int?
+  status              StatusConversa @default(ABERTA)
+  ultima_mensagem_at  DateTime?      @db.Timestamptz(3)
+  finalizada_at       DateTime?      @db.Timestamptz(3)
+  created_at          DateTime       @default(now()) @db.Timestamptz(3)
+  updated_at          DateTime       @updatedAt @db.Timestamptz(3)
+  conta_whatsapp      ContaWhatsapp  @relation(fields: [conta_whatsapp_id], references: [id], onDelete: Restrict)
+  contato             Contato        @relation(fields: [contato_id], references: [id], onDelete: Restrict)
+  setor               Setor?         @relation(fields: [setor_id], references: [id], onDelete: SetNull)
+  atendente           Atendente?     @relation(fields: [atendente_id], references: [id], onDelete: SetNull)
+  mensagens           Mensagem[]
+
+  @@index([status, ultima_mensagem_at])
+  @@index([contato_id, created_at])
+  @@index([setor_id, status])
+  @@index([atendente_id, status])
+  @@map("conversas")
+}
+
+model Mensagem {
+  id                 Int          @id @default(autoincrement())
+  public_id          String       @unique @default(uuid()) @db.Uuid
+  conversa_id        Int
+  whatsapp_message_id String?     @unique @db.VarChar(150)
+  tipo               TipoMensagem
+  conteudo           Json
+  recebida           Boolean
+  enviada_at         DateTime?    @db.Timestamptz(3)
+  created_at         DateTime     @default(now()) @db.Timestamptz(3)
+  updated_at         DateTime     @updatedAt @db.Timestamptz(3)
+  conversa           Conversa     @relation(fields: [conversa_id], references: [id], onDelete: Cascade)
+
+  @@index([conversa_id, created_at])
+  @@index([created_at])
+  @@map("mensagens")
+}
+
+model CredencialIntegracao {
+  id                    Int      @id @default(autoincrement())
+  public_id             String   @unique @default(uuid()) @db.Uuid
+  nome                  String   @db.VarChar(120)
+  tipo_auth             String   @db.VarChar(30)
+  configuracao_encrypted String
+  ativo                 Boolean  @default(true)
+  created_at            DateTime @default(now()) @db.Timestamptz(3)
+  updated_at            DateTime @updatedAt @db.Timestamptz(3)
+
+  @@index([ativo, nome])
+  @@map("credenciais_integracao")
+}
+
+model RegistroUso {
+  id         Int      @id @default(autoincrement())
+  tipo       String   @db.VarChar(50)
+  quantidade Int
+  referencia String?  @db.VarChar(150)
+  created_at DateTime @default(now()) @db.Timestamptz(3)
+  updated_at DateTime @updatedAt @db.Timestamptz(3)
+
+  @@index([tipo, created_at])
+  @@index([created_at])
+  @@map("registros_uso")
+}

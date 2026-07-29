@@ -25,4 +25,21 @@ export class TenantCentralRepository {
       },
     });
   }
+
+  public buscarAtivoDoUsuario(email: string, tenantPublicId: string) {
+    return this.prisma.tenant.findFirst({
+      where: {
+        public_id: tenantPublicId,
+        status: 'ATIVO',
+        deletado_at: null,
+        usuarios: {
+          some: {
+            email,
+            ativo: true,
+            deletado_at: null,
+          },
+        },
+      },
+    });
+  }
 }

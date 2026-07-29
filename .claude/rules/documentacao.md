@@ -15,3 +15,5 @@
 - Não altere decisões registradas sem explicar a motivação e manter a
   documentação sincronizada.
 - Exemplos devem refletir o código atual e nunca conter credenciais reais.
+- Todo script adicionado ao `package.json` deve ser documentado no README
+  principal, com finalidade, pré-requisitos e ao menos um exemplo executável.

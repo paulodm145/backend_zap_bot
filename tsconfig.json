@@ -28,6 +28,7 @@
     "prisma/**/*.ts",
     "scripts/**/*.ts",
     "prisma.config.ts",
+    "prisma.tenant.config.ts",
     "vitest.config.ts"
   ],
   "exclude": ["dist", "node_modules"]

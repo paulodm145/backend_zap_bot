@@ -56,6 +56,7 @@ export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
     tokens,
     new EstadoAutenticacaoInternaService(ambiente.JWT_INTERNO_SECRET),
     new TotpService(ambiente.TOTP_CRIPTOGRAFIA_CHAVE),
+    ambiente.TOTP_INTERNO_OBRIGATORIO,
   );
   const autenticacaoController = new AutenticacaoInternaController(autenticacao);
   const tokenTenant = new TokenTenantService(

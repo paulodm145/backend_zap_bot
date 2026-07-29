@@ -22,7 +22,10 @@ const usuarioBase: UsuarioInterno = {
   totpHabilitado: false,
 };
 
-function criarServico(usuario: UsuarioInterno | null): AutenticacaoInternaService {
+function criarServico(
+  usuario: UsuarioInterno | null,
+  totpObrigatorio = true,
+): AutenticacaoInternaService {
   const repository: UsuarioInternoRepository = {
     buscarPorEmail: vi.fn().mockResolvedValue(usuario),
     buscarPorPublicId: vi.fn().mockResolvedValue(usuario),
@@ -38,6 +41,7 @@ function criarServico(usuario: UsuarioInterno | null): AutenticacaoInternaServic
     tokens,
     new EstadoAutenticacaoInternaService('segredo-de-teste-com-mais-de-trinta-e-dois-caracteres'),
     new TotpService('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'),
+    totpObrigatorio,
   );
 }
 
@@ -67,6 +71,15 @@ describe('AutenticacaoInternaService', () => {
       codigo: 'NAO_AUTENTICADO',
       message: 'E-mail ou senha inválidos',
     });
+  });
+
+  it('permite desabilitar TOTP explicitamente no ambiente local', async () => {
+    const resultado = await criarServico(usuarioBase, false).login({
+      email: usuarioBase.email,
+      senha: 'senha-segura',
+    });
+    expect(resultado.exigeSegundoFator).toBe(false);
+    expect(resultado.accessToken).toEqual(expect.any(String));
   });
 
   it('exige segundo fator sem emitir token quando TOTP está habilitado', async () => {

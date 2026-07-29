@@ -16,3 +16,5 @@ O contrato completo está em `AGENTS.md` e é obrigatório.
 - CORS usa `credentials: true` e origem exata, nunca `*`.
 - Não misture autenticação de tenant com autenticação interna de
   `super_admin`.
+- O TOTP interno só pode ser desabilitado explicitamente em ambiente local de
+  desenvolvimento ou teste. Produção sempre exige segundo fator.

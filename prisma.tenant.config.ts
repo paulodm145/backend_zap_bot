@@ -3,14 +3,13 @@ import 'dotenv/config';
 import { defineConfig } from 'prisma/config';
 
 export default defineConfig({
-  schema: 'prisma/central/schema.prisma',
+  schema: 'prisma/tenant/schema.prisma',
   migrations: {
-    path: 'prisma/central/migrations',
-    seed: 'tsx prisma/central/seed.ts',
+    path: 'prisma/tenant/migrations',
   },
   datasource: {
     url:
-      process.env.CENTRAL_DATABASE_URL ??
+      process.env.TENANT_DATABASE_URL ??
       'postgresql://configuracao:ausente@localhost:5432/configuracao_ausente',
   },
 });

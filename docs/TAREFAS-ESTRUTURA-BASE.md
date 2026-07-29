@@ -456,70 +456,81 @@ Objetivo: resolver e gerenciar com segurança a conexão física de cada tenant.
 
 ### Credenciais
 
-- [ ] Definir formato criptografado da conexão do tenant.
-- [ ] Validar chave de criptografia no ambiente.
-- [ ] Criar helper criptográfico com versionamento de payload.
-- [ ] Criar serviço de criptografia.
-- [ ] Testar criptografia e descriptografia.
-- [ ] Garantir que conexões não apareçam em logs.
+- [x] Definir formato criptografado da conexão do tenant.
+- [x] Validar chave de criptografia no ambiente.
+- [x] Criar helper criptográfico com versionamento de payload.
+- [x] Criar serviço de criptografia.
+- [x] Testar criptografia e descriptografia.
+- [x] Garantir que conexões não apareçam em logs.
 
 ### Gerenciador de conexões
 
-- [ ] Definir interface do gerenciador de conexões.
-- [ ] Criar client Prisma dinâmico por banco.
-- [ ] Criar cache limitado de clients.
-- [ ] Implementar política LRU.
-- [ ] Atualizar uso do client a cada acesso.
-- [ ] Fechar client removido do cache.
-- [ ] Evitar abertura duplicada concorrente.
-- [ ] Fechar todos os clients no shutdown.
-- [ ] Configurar limite máximo por ambiente.
-- [ ] Registrar métricas sem expor credenciais.
+- [x] Definir interface do gerenciador de conexões.
+- [x] Criar client Prisma dinâmico por banco.
+- [x] Criar cache limitado de clients.
+- [x] Implementar política LRU.
+- [x] Atualizar uso do client a cada acesso.
+- [x] Fechar client removido do cache.
+- [x] Evitar abertura duplicada concorrente.
+- [x] Fechar todos os clients no shutdown.
+- [x] Configurar limite máximo por ambiente.
+- [x] Registrar métricas sem expor credenciais.
 
 ### Middleware e contexto
 
-- [ ] Criar contexto tipado do tenant.
-- [ ] Resolver tenant pelo token autenticado.
-- [ ] Buscar metadados no banco central.
-- [ ] Rejeitar tenant inativo.
-- [ ] Obter conexão exclusivamente dos metadados centrais.
-- [ ] Anexar repository/client do tenant à request.
-- [ ] Impedir escolha do banco por header, query ou body.
+- [x] Criar contexto tipado do tenant.
+- [x] Resolver tenant pelo token autenticado.
+- [x] Buscar metadados no banco central.
+- [x] Rejeitar tenant inativo.
+- [x] Obter conexão exclusivamente dos metadados centrais.
+- [x] Anexar repository/client do tenant à request.
+- [x] Impedir escolha do banco por header, query ou body.
 
 ### Schema do banco do tenant
 
-- [ ] Criar schema Prisma separado do tenant.
-- [ ] Usar IDs inteiros sequenciais.
-- [ ] Adicionar `public_id` onde houver exposição pública.
-- [ ] Adicionar `created_at` e `updated_at` em todas as tabelas.
-- [ ] Criar modelos iniciais de conta WhatsApp.
-- [ ] Criar modelos iniciais de fluxo.
-- [ ] Criar modelos iniciais de contato.
-- [ ] Criar modelos iniciais de setor e atendente.
-- [ ] Criar modelos iniciais de conversa e mensagem.
-- [ ] Criar modelos iniciais de credencial e uso.
-- [ ] Definir índices a partir dos contratos de consulta.
+- [x] Criar schema Prisma separado do tenant.
+- [x] Usar IDs inteiros sequenciais.
+- [x] Adicionar `public_id` onde houver exposição pública.
+- [x] Adicionar `created_at` e `updated_at` em todas as tabelas.
+- [x] Criar modelos iniciais de conta WhatsApp.
+- [x] Criar modelos iniciais de fluxo.
+- [x] Criar modelos iniciais de contato.
+- [x] Criar modelos iniciais de setor e atendente.
+- [x] Criar modelos iniciais de conversa e mensagem.
+- [x] Criar modelos iniciais de credencial e uso.
+- [x] Definir índices a partir dos contratos de consulta.
 
 ### Migrations multi-tenant
 
-- [ ] Criar executor de migration para um banco.
-- [ ] Criar executor para todos os tenants ativos.
-- [ ] Registrar sucesso por tenant.
-- [ ] Registrar falha por tenant.
-- [ ] Continuar após falha isolada.
-- [ ] Retornar resumo do processo.
-- [ ] Impedir execução concorrente da mesma migration.
-- [ ] Testar dois bancos de tenant isolados.
-- [ ] Testar ausência de vazamento entre tenants.
+- [x] Criar executor de migration para um banco.
+- [x] Criar executor para todos os tenants ativos.
+- [x] Registrar sucesso por tenant.
+- [x] Registrar falha por tenant.
+- [x] Continuar após falha isolada.
+- [x] Retornar resumo do processo.
+- [x] Impedir execução concorrente da mesma migration.
+- [x] Testar dois bancos de tenant isolados.
+- [x] Testar ausência de vazamento entre tenants.
+
+### Decisões complementares
+
+- [x] Separar schema e migrations do banco central/admin.
+- [x] Separar schema e migrations dos bancos de tenant.
+- [x] Criar scripts independentes de migration central.
+- [x] Criar scripts independentes de migration de tenant.
+- [x] Documentar todos os scripts do projeto no README com exemplos.
+- [x] Permitir desabilitar TOTP somente em localhost.
+- [x] Impedir TOTP desabilitado em produção.
+- [x] Resolver tenant pelo e-mail autenticado, nunca por subdomínio.
 
 ### Checklist de saída
 
-- [ ] Isolamento entre dois tenants comprovado por testes.
-- [ ] Cache LRU validado.
-- [ ] Migration multi-tenant tolera falha isolada.
-- [ ] Documentação de operação atualizada.
-- [ ] Testes, lint, typecheck e build aprovados.
-- [ ] Branch pronta para revisão e merge.
+- [x] Isolamento entre dois tenants comprovado por testes.
+- [x] Cache LRU validado.
+- [x] Migration multi-tenant tolera falha isolada.
+- [x] Documentação de operação atualizada.
+- [x] Testes, lint, typecheck e build aprovados.
+- [x] Branch pronta para revisão e merge.
 
 ---
 

@@ -178,6 +178,10 @@ src/
 - Tabelas do banco do tenant não recebem `tenant_id`.
 - Resolva a conexão pelo usuário autenticado e nunca aceite do cliente o nome
   do banco ou uma string de conexão.
+- A resolução começa pelo e-mail autenticado; subdomínio nunca determina
+  tenant ou conexão.
+- Mantenha migrations do banco central/admin e dos bancos de tenant em schemas
+  e diretórios separados, com scripts independentes de atualização.
 - Redis e filas são compartilhados; toda chave e todo job devem carregar
   namespace ou identidade explícita do tenant.
 - Nunca permita que dados, credenciais, cache, eventos WebSocket ou jobs de um
@@ -382,6 +386,8 @@ pipeline passar.
   parâmetros, schemas, exemplos, status HTTP e erros.
 - O Markdown explica como consumir e combinar os contratos para construir a
   experiência do frontend.
+- Todo script do projeto deve constar no README principal com finalidade,
+  pré-requisitos e exemplos executáveis.
 - Cada documento funcional deve incluir, quando aplicável:
   - objetivo da funcionalidade e perfis autorizados;
   - telas ou jornadas que os endpoints suportam;

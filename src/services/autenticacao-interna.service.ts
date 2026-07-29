@@ -21,6 +21,7 @@ export class AutenticacaoInternaService {
     private readonly tokens: TokenInternoService,
     private readonly estados: EstadoAutenticacaoInternaService,
     private readonly totp: TotpService,
+    private readonly totpObrigatorio = true,
   ) {}
 
   public async login(entrada: LoginInternoDTO): Promise<ResultadoLoginInterno> {
@@ -32,6 +33,13 @@ export class AutenticacaoInternaService {
 
     if (!usuario.ativo || usuario.papel !== 'super_admin') {
       throw new AcessoNegadoError('Usuário sem acesso ao painel interno');
+    }
+
+    if (!this.totpObrigatorio) {
+      return {
+        exigeSegundoFator: false,
+        accessToken: this.emitirToken(usuario),
+      };
     }
 
     return {
@@ -73,11 +81,7 @@ export class AutenticacaoInternaService {
       await this.usuarios.salvarTotp(usuario.publicId, usuario.totpSecretEncrypted, true);
     }
     return {
-      accessToken: this.tokens.emitir({
-        id: usuario.publicId,
-        email: usuario.email,
-        papel: 'super_admin',
-      }),
+      accessToken: this.emitirToken(usuario),
     };
   }
 
@@ -87,5 +91,13 @@ export class AutenticacaoInternaService {
       throw new NaoAutenticadoError();
     }
     return usuario;
+  }
+
+  private emitirToken(usuario: { publicId: string; email: string }): string {
+    return this.tokens.emitir({
+      id: usuario.publicId,
+      email: usuario.email,
+      papel: 'super_admin',
+    });
   }
 }

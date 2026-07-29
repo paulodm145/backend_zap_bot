@@ -29,19 +29,19 @@ npm run prisma:generate
 Criar uma migration durante o desenvolvimento:
 
 ```bash
-npm run db:migrate:dev -- --name nome_da_migration
+npm run db:central:migrate:dev -- --name nome_da_migration
 ```
 
 Aplicar migrations versionadas em produção:
 
 ```bash
-npm run db:migrate:deploy
+npm run db:central:migrate:deploy
 ```
 
 Popular ou atualizar os planos iniciais:
 
 ```bash
-npm run db:seed
+npm run db:central:seed
 ```
 
 O seed usa `upsert` pelo nome do plano e pode ser executado novamente sem

@@ -34,6 +34,7 @@ Documentos funcionais disponíveis:
 - [Autenticação](api/autenticacao.md)
 - [Admin interno](api/admin-interno.md)
 - [Banco central](banco-central.md)
+- [Operação multi-tenant](multitenancy.md)
 
 ## Swagger e Markdown
 

@@ -1,3 +1,5 @@
+import type { PrismaClient as PrismaTenantClient } from '../generated/prisma-tenant/client.js';
+
 declare global {
   namespace Express {
     interface Request {
@@ -11,6 +13,11 @@ declare global {
         id: string;
         email: string;
         tenantId: string;
+      };
+      contextoTenant?: {
+        id: number;
+        publicId: string;
+        prisma: PrismaTenantClient;
       };
     }
   }
