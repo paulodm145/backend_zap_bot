@@ -32,6 +32,7 @@ export const tratarErro: ErrorRequestHandler = (erro, requisicao, resposta, _pro
   logger.error(
     {
       erro,
+      correlationId: requisicao.correlationId,
       metodo: requisicao.method,
       rota: requisicao.originalUrl,
     },

@@ -7,11 +7,15 @@ import { pinoHttp } from 'pino-http';
 import { ambiente } from './config/ambiente.js';
 import { logger } from './config/logger.js';
 import { AutenticacaoInternaController } from './controllers/autenticacao-interna.controller.js';
+import { ProntidaoController } from './controllers/prontidao.controller.js';
+import { adicionarCorrelacao } from './middlewares/correlacao.middleware.js';
 import { tratarErro } from './middlewares/erro.middleware.js';
 import { UsuarioInternoMemoriaRepository } from './repositories/memoria/usuario-interno-memoria.repository.js';
 import { criarRotasAutenticacaoInterna } from './rotas/autenticacao-interna.rotas.js';
 import { criarRotasInternas } from './rotas/interno.rotas.js';
+import { criarRotasSaude } from './rotas/saude.rotas.js';
 import { AutenticacaoInternaService } from './services/autenticacao-interna.service.js';
+import { ProntidaoService } from './services/prontidao.service.js';
 import { TokenInternoService } from './services/token-interno.service.js';
 
 export function criarAplicacao(): Express {
@@ -23,9 +27,18 @@ export function criarAplicacao(): Express {
   const usuarios = new UsuarioInternoMemoriaRepository();
   const autenticacao = new AutenticacaoInternaService(usuarios, tokens);
   const autenticacaoController = new AutenticacaoInternaController(autenticacao);
+  const prontidaoController = new ProntidaoController(new ProntidaoService([]));
 
   aplicacao.disable('x-powered-by');
-  aplicacao.use(pinoHttp({ logger }));
+  aplicacao.use(adicionarCorrelacao);
+  aplicacao.use(
+    pinoHttp({
+      logger,
+      customProps: (requisicao) => ({
+        correlationId: requisicao.correlationId,
+      }),
+    }),
+  );
   aplicacao.use(helmet());
   aplicacao.use(
     cors({
@@ -45,10 +58,7 @@ export function criarAplicacao(): Express {
     criarRotasAutenticacaoInterna(autenticacaoController),
   );
   aplicacao.use('/api/v1/interno', criarRotasInternas(tokens));
-
-  aplicacao.get('/api/v1/saude', (_requisicao, resposta) => {
-    resposta.status(200).json({ status: 'ok' });
-  });
+  aplicacao.use('/api/v1', criarRotasSaude(prontidaoController));
 
   aplicacao.use((_requisicao, resposta) => {
     resposta.status(404).json({

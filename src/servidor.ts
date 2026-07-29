@@ -8,18 +8,48 @@ const servidor = aplicacao.listen(ambiente.PORTA, () => {
   logger.info({ porta: ambiente.PORTA }, 'API iniciada');
 });
 
-function encerrar(sinal: NodeJS.Signals): void {
-  logger.info({ sinal }, 'Encerrando API');
+servidor.requestTimeout = ambiente.HTTP_REQUEST_TIMEOUT_MS;
+servidor.headersTimeout = ambiente.HTTP_HEADERS_TIMEOUT_MS;
+servidor.keepAliveTimeout = ambiente.HTTP_KEEP_ALIVE_TIMEOUT_MS;
+
+let encerrando = false;
+
+function encerrar(motivo: string, erro?: unknown): void {
+  if (encerrando) {
+    return;
+  }
+
+  encerrando = true;
+  process.exitCode = erro === undefined ? 0 : 1;
+  logger.info({ motivo }, 'Encerrando API');
+
+  const encerramentoForcado = setTimeout(() => {
+    logger.fatal({ motivo }, 'Tempo limite excedido durante o encerramento');
+    process.exit(1);
+  }, ambiente.HTTP_SHUTDOWN_TIMEOUT_MS);
+  encerramentoForcado.unref();
+
   servidor.close((erro) => {
     if (erro) {
       logger.error({ erro }, 'Falha ao encerrar API');
       process.exitCode = 1;
-      return;
     }
 
-    process.exitCode = 0;
+    clearTimeout(encerramentoForcado);
   });
 }
 
-process.once('SIGTERM', encerrar);
-process.once('SIGINT', encerrar);
+process.once('SIGTERM', () => {
+  encerrar('SIGTERM');
+});
+process.once('SIGINT', () => {
+  encerrar('SIGINT');
+});
+process.once('unhandledRejection', (erro) => {
+  logger.fatal({ erro }, 'Rejeição de Promise não tratada');
+  encerrar('unhandledRejection', erro);
+});
+process.once('uncaughtException', (erro) => {
+  logger.fatal({ erro }, 'Exceção não capturada');
+  encerrar('uncaughtException', erro);
+});

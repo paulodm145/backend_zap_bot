@@ -57,6 +57,10 @@ Variáveis disponíveis no scaffold atual:
 | `ORIGENS_PERMITIDAS`             | Origens CORS separadas por vírgula              |
 | `JWT_INTERNO_SECRET`             | Segredo do JWT interno, mínimo de 32 caracteres |
 | `JWT_INTERNO_EXPIRACAO_SEGUNDOS` | Duração do JWT interno em segundos              |
+| `HTTP_REQUEST_TIMEOUT_MS`        | Limite para concluir uma requisição             |
+| `HTTP_HEADERS_TIMEOUT_MS`        | Limite para receber os headers HTTP             |
+| `HTTP_KEEP_ALIVE_TIMEOUT_MS`     | Tempo de keep-alive de uma conexão              |
+| `HTTP_SHUTDOWN_TIMEOUT_MS`       | Limite do encerramento gracioso                 |
 
 A aplicação valida as variáveis com Zod durante a inicialização e falha
 imediatamente quando uma configuração obrigatória é inválida.
@@ -82,6 +86,10 @@ Com a configuração padrão, a rota pública de saúde fica disponível em:
 GET http://localhost:3000/api/v1/saude
 ```
 
+A rota `GET /api/v1/prontidao` informa se as dependências necessárias estão
+disponíveis. Os verificadores de PostgreSQL e Redis serão conectados quando
+essas dependências forem adicionadas.
+
 ## Validação
 
 Execute antes de abrir um pull request:
@@ -91,6 +99,7 @@ npm run format:check
 npm run lint
 npm run typecheck
 npm test
+npm run test:coverage
 npm run build
 ```
 

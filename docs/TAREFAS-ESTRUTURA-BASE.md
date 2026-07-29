@@ -105,10 +105,10 @@ os módulos seguintes serão construídos.
 - [x] Falhar rapidamente quando uma variável obrigatória estiver ausente.
 - [x] Criar logger estruturado com Pino.
 - [x] Redigir headers e campos sensíveis dos logs.
-- [ ] Adicionar identificador de correlação por requisição.
-- [ ] Devolver o identificador de correlação em header de resposta.
-- [ ] Incluir o identificador de correlação em erros registrados.
-- [ ] Definir comportamento do logger para testes.
+- [x] Adicionar identificador de correlação por requisição.
+- [x] Devolver o identificador de correlação em header de resposta.
+- [x] Incluir o identificador de correlação em erros registrados.
+- [x] Definir comportamento do logger para testes.
 
 ### Aplicação HTTP
 
@@ -123,10 +123,10 @@ os módulos seguintes serão construídos.
 - [x] Criar resposta padronizada para rota inexistente.
 - [x] Criar encerramento gracioso para `SIGINT`.
 - [x] Criar encerramento gracioso para `SIGTERM`.
-- [ ] Criar rota de prontidão separada da rota de saúde.
-- [ ] Preparar a prontidão para verificar banco e Redis.
-- [ ] Configurar timeout do servidor HTTP.
-- [ ] Configurar tratamento de rejeições não capturadas no processo.
+- [x] Criar rota de prontidão separada da rota de saúde.
+- [x] Preparar a prontidão para verificar banco e Redis.
+- [x] Configurar timeout do servidor HTTP.
+- [x] Configurar tratamento de rejeições não capturadas no processo.
 
 ### Validação e erros
 
@@ -141,19 +141,19 @@ os módulos seguintes serão construídos.
 - [x] Criar erro de validação.
 - [x] Criar middleware central de erros.
 - [x] Padronizar envelope `{ erro: { codigo, mensagem } }`.
-- [ ] Criar wrapper assíncrono para controllers.
-- [ ] Remover `try/catch` repetido dos controllers existentes.
-- [ ] Ocultar detalhes internos de erros em produção.
+- [x] Criar wrapper assíncrono para controllers.
+- [x] Remover `try/catch` repetido dos controllers existentes.
+- [x] Ocultar detalhes internos de erros em produção.
 
 ### Helpers compartilhados
 
-- [ ] Criar diretório `src/helpers/`.
-- [ ] Criar helper de normalização de e-mail.
-- [ ] Criar helper de normalização de telefone em formato canônico.
-- [ ] Criar helper de conversão entre reais e centavos.
-- [ ] Criar helper de serialização de datas em UTC.
-- [ ] Criar testes unitários para cada helper.
-- [ ] Proibir conversões duplicadas fora dos helpers durante revisão.
+- [x] Criar diretório `src/helpers/`.
+- [x] Criar helper de normalização de e-mail.
+- [x] Criar helper de normalização de telefone em formato canônico.
+- [x] Criar helper de conversão entre reais e centavos.
+- [x] Criar helper de serialização de datas em UTC.
+- [x] Criar testes unitários para cada helper.
+- [x] Proibir conversões duplicadas fora dos helpers durante revisão.
 
 ### Testes da fundação
 
@@ -164,11 +164,11 @@ os módulos seguintes serão construídos.
 - [x] Testar validação do login interno.
 - [x] Testar credencial interna inexistente.
 - [x] Testar serviço inicial de autenticação interna.
-- [ ] Testar rota inexistente.
-- [ ] Testar erro interno sem exposição de stack.
-- [ ] Testar origem CORS permitida.
-- [ ] Testar origem CORS não permitida.
-- [ ] Definir meta inicial de cobertura.
+- [x] Testar rota inexistente.
+- [x] Testar erro interno sem exposição de stack.
+- [x] Testar origem CORS permitida.
+- [x] Testar origem CORS não permitida.
+- [x] Definir meta inicial de cobertura.
 
 ### Checklist de saída
 
