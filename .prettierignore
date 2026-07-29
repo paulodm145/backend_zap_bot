@@ -1,0 +1,6 @@
+docs/ARQUITETURA-BACKEND.md
+docs/PRD.md
+*:Zone.Identifier
+node_modules/
+dist/
+coverage/

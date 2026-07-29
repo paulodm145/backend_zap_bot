@@ -1,0 +1,826 @@
+# Tarefas da estrutura base
+
+## Como usar este documento
+
+Este arquivo é a fonte de verdade do progresso da estrutura base. Deve ser
+atualizado em todas as etapas do projeto.
+
+Estados:
+
+- `[ ]` pendente ou bloqueada;
+- `[x]` concluída e validada;
+- `Bloqueada: ...` descreve um impedimento sem marcar conclusão.
+
+Regras:
+
+1. Uma etapa corresponde a uma branch.
+2. A branch nasce da `main` atualizada.
+3. Cada tarefa deve produzir um resultado pequeno e verificável.
+4. O checkbox é marcado no mesmo commit semântico da implementação.
+5. Uma etapa só pode ser encerrada após cumprir seu checklist de saída.
+6. Trabalho descoberto durante a implementação deve ser incluído aqui antes de
+   ser executado.
+7. Não marcar tarefas futuras por inferência ou implementação parcial.
+
+## Visão das etapas
+
+| Etapa                        | Branch                           | Dependência | Estado       |
+| ---------------------------- | -------------------------------- | ----------- | ------------ |
+| 01. Fundação do repositório  | `chore/estrutura-base`           | Nenhuma     | Em andamento |
+| 02. OpenAPI e documentação   | `feat/openapi-documentacao-base` | 01          | Pendente     |
+| 03. Banco central            | `feat/banco-central-prisma`      | 01          | Pendente     |
+| 04. Autenticação de tenant   | `feat/autenticacao-tenant`       | 03          | Pendente     |
+| 05. Autenticação interna     | `feat/autenticacao-interna`      | 03          | Pendente     |
+| 06. Resolução multi-tenant   | `feat/resolucao-multitenant`     | 03 e 04     | Pendente     |
+| 07. Administração de tenants | `feat/admin-tenants`             | 05 e 06     | Pendente     |
+| 08. Infraestrutura local     | `chore/infraestrutura-local`     | 03 e 06     | Pendente     |
+| 09. Filas e idempotência     | `feat/filas-mensageria`          | 06 e 08     | Pendente     |
+| 10. Motor de fluxo inicial   | `feat/motor-fluxo-base`          | 06 e 09     | Pendente     |
+| 11. CI e qualidade           | `ci/pipeline-qualidade`          | 01 a 10     | Pendente     |
+
+---
+
+## Etapa 01 — Fundação do repositório
+
+Branch: `chore/estrutura-base`
+
+Objetivo: produzir uma API mínima, segura, testável e documentada sobre a qual
+os módulos seguintes serão construídos.
+
+### Governança
+
+- [x] Criar `AGENTS.md`.
+- [x] Criar `CLAUDE.md`.
+- [x] Criar regras modulares em `.claude/rules/`.
+- [x] Mover o PRD canônico para `docs/PRD.md`.
+- [x] Mover a arquitetura canônica para `docs/ARQUITETURA-BACKEND.md`.
+- [x] Criar `docs/README.md` com o padrão documental.
+- [x] Criar este backlog atômico.
+- [x] Criar a branch `chore/estrutura-base`.
+- [x] Revisar o diagnóstico inicial do código contra PRD e arquitetura.
+- [x] Registrar divergências encontradas no diagnóstico.
+
+### Projeto Node.js
+
+- [x] Criar `package.json`.
+- [x] Definir Node.js 20 ou superior.
+- [x] Gerar e versionar `package-lock.json`.
+- [x] Configurar execução em desenvolvimento com `tsx`.
+- [x] Configurar script de build.
+- [x] Configurar script de produção.
+- [x] Configurar script de lint.
+- [x] Configurar script de formatação.
+- [x] Configurar script de checagem de tipos.
+- [x] Configurar script de testes.
+- [x] Criar `.gitignore`.
+- [x] Criar `.prettierignore`.
+
+### TypeScript e estilo
+
+- [x] Ativar `strict`.
+- [x] Ativar `noImplicitAny`.
+- [x] Ativar `strictNullChecks`.
+- [x] Ativar `noUncheckedIndexedAccess`.
+- [x] Ativar `exactOptionalPropertyTypes`.
+- [x] Configurar build separado em `tsconfig.build.json`.
+- [x] Configurar ESLint com regras type-aware.
+- [x] Configurar Prettier.
+- [x] Impedir `console.log` pelo lint.
+- [x] Migrar controllers para `src/controllers/`.
+- [x] Migrar services para `src/services/`.
+- [x] Migrar contratos e implementações para `src/repositories/`.
+- [x] Migrar DTOs para `src/dtos/`.
+- [x] Migrar middlewares para `src/middlewares/`.
+- [x] Migrar composição de rotas para `src/rotas/`.
+- [x] Remover a árvore antiga `src/modulos/`.
+- [x] Atualizar imports da aplicação após a migração horizontal.
+- [x] Atualizar imports dos testes após a migração horizontal.
+- [x] Definir convenção de imports entre camadas horizontais.
+- [ ] Documentar a versão mínima do Node no README operacional.
+
+### Configuração e observabilidade
+
+- [x] Criar `.env.example` sem segredos reais.
+- [x] Validar variáveis de ambiente com Zod.
+- [x] Falhar rapidamente quando uma variável obrigatória estiver ausente.
+- [x] Criar logger estruturado com Pino.
+- [x] Redigir headers e campos sensíveis dos logs.
+- [ ] Adicionar identificador de correlação por requisição.
+- [ ] Devolver o identificador de correlação em header de resposta.
+- [ ] Incluir o identificador de correlação em erros registrados.
+- [ ] Definir comportamento do logger para testes.
+
+### Aplicação HTTP
+
+- [x] Criar a factory `criarAplicacao`.
+- [x] Separar criação da aplicação e inicialização do servidor.
+- [x] Desabilitar `x-powered-by`.
+- [x] Configurar Helmet.
+- [x] Configurar CORS com origens explícitas.
+- [x] Configurar `credentials: true`.
+- [x] Limitar o tamanho do JSON recebido.
+- [x] Criar rota pública de saúde.
+- [x] Criar resposta padronizada para rota inexistente.
+- [x] Criar encerramento gracioso para `SIGINT`.
+- [x] Criar encerramento gracioso para `SIGTERM`.
+- [ ] Criar rota de prontidão separada da rota de saúde.
+- [ ] Preparar a prontidão para verificar banco e Redis.
+- [ ] Configurar timeout do servidor HTTP.
+- [ ] Configurar tratamento de rejeições não capturadas no processo.
+
+### Validação e erros
+
+- [x] Criar middleware reutilizável de validação Zod.
+- [x] Permitir validação de `body`.
+- [x] Permitir validação de `params`.
+- [x] Permitir validação de `query`.
+- [x] Criar `ErroAplicacao`.
+- [x] Criar erro de autenticação.
+- [x] Criar erro de autorização.
+- [x] Criar erro de recurso não encontrado.
+- [x] Criar erro de validação.
+- [x] Criar middleware central de erros.
+- [x] Padronizar envelope `{ erro: { codigo, mensagem } }`.
+- [ ] Criar wrapper assíncrono para controllers.
+- [ ] Remover `try/catch` repetido dos controllers existentes.
+- [ ] Ocultar detalhes internos de erros em produção.
+
+### Helpers compartilhados
+
+- [ ] Criar diretório `src/helpers/`.
+- [ ] Criar helper de normalização de e-mail.
+- [ ] Criar helper de normalização de telefone em formato canônico.
+- [ ] Criar helper de conversão entre reais e centavos.
+- [ ] Criar helper de serialização de datas em UTC.
+- [ ] Criar testes unitários para cada helper.
+- [ ] Proibir conversões duplicadas fora dos helpers durante revisão.
+
+### Testes da fundação
+
+- [x] Configurar Vitest.
+- [x] Configurar Supertest.
+- [x] Testar rota pública de saúde.
+- [x] Testar proteção de rota interna.
+- [x] Testar validação do login interno.
+- [x] Testar credencial interna inexistente.
+- [x] Testar serviço inicial de autenticação interna.
+- [ ] Testar rota inexistente.
+- [ ] Testar erro interno sem exposição de stack.
+- [ ] Testar origem CORS permitida.
+- [ ] Testar origem CORS não permitida.
+- [ ] Definir meta inicial de cobertura.
+
+### Checklist de saída
+
+- [ ] `npm run format:check` aprovado.
+- [ ] `npm run lint` aprovado.
+- [ ] `npm run typecheck` aprovado.
+- [ ] `npm test` aprovado.
+- [ ] `npm run build` aprovado.
+- [ ] Documentação da fundação revisada.
+- [ ] Commits da etapa seguem Conventional Commits.
+- [ ] Branch pronta para revisão e merge.
+
+---
+
+## Etapa 02 — OpenAPI e documentação funcional
+
+Branch: `feat/openapi-documentacao-base`
+
+Objetivo: estabelecer uma única fonte de verdade para contratos HTTP e um guia
+de consumo para o frontend.
+
+### OpenAPI
+
+- [ ] Instalar `@asteasolutions/zod-to-openapi`.
+- [ ] Instalar `swagger-ui-express`.
+- [ ] Criar extensão central do Zod para OpenAPI.
+- [ ] Criar registro central de schemas.
+- [ ] Criar registro central de rotas.
+- [ ] Definir informações e versão da API.
+- [ ] Definir servidor local no documento OpenAPI.
+- [ ] Definir security scheme Bearer JWT.
+- [ ] Registrar envelope padrão de erro.
+- [ ] Registrar schema padrão de paginação.
+- [ ] Documentar rota de saúde.
+- [ ] Documentar login interno existente.
+- [ ] Expor JSON OpenAPI.
+- [ ] Expor Swagger UI em `/api/v1/docs`.
+- [ ] Proteger Swagger UI em produção.
+- [ ] Testar geração do documento OpenAPI.
+- [ ] Testar ausência de schemas duplicados.
+
+### Documentação Markdown
+
+- [ ] Criar diretório `docs/api/`.
+- [ ] Criar `docs/api/autenticacao.md`.
+- [ ] Documentar contrato de login do tenant.
+- [ ] Documentar contrato de refresh.
+- [ ] Documentar contrato de logout.
+- [ ] Documentar cookie cross-domain.
+- [ ] Documentar estados da tela de login.
+- [ ] Documentar comportamento de sessão expirada.
+- [ ] Criar `docs/api/admin-interno.md`.
+- [ ] Migrar conteúdo útil de `docs/admin-interno.md`.
+- [ ] Documentar perfis autorizados no admin interno.
+- [ ] Documentar estados de carregamento, vazio e erro.
+- [ ] Adicionar links dos documentos funcionais em `docs/README.md`.
+
+### Checklist de saída
+
+- [ ] Swagger reflete os schemas Zod reais.
+- [ ] Toda rota existente aparece no Swagger.
+- [ ] Markdown orienta a composição das telas existentes.
+- [ ] Testes, lint, typecheck e build aprovados.
+- [ ] Branch pronta para revisão e merge.
+
+---
+
+## Etapa 03 — Banco central
+
+Branch: `feat/banco-central-prisma`
+
+Objetivo: implementar persistência central de usuários, tenants, planos,
+assinaturas, refresh tokens e auditoria interna.
+
+### Prisma
+
+- [ ] Instalar `prisma`.
+- [ ] Instalar `@prisma/client`.
+- [ ] Inicializar schema do `central_db`.
+- [ ] Configurar `CENTRAL_DATABASE_URL`.
+- [ ] Criar factory singleton do Prisma central.
+- [ ] Configurar encerramento do Prisma no shutdown.
+- [ ] Criar comando de geração do client.
+- [ ] Criar comando de migration local.
+- [ ] Criar comando de migration de produção.
+
+### Modelos
+
+- [ ] Criar enum de papel do usuário.
+- [ ] Criar enum de status do tenant.
+- [ ] Criar enum de status da assinatura.
+- [ ] Criar modelo `Usuario`.
+- [ ] Usar `id` inteiro sequencial em `Usuario`.
+- [ ] Adicionar `public_id` UUID único em `Usuario`.
+- [ ] Criar modelo `Tenant`.
+- [ ] Usar `id` inteiro sequencial em `Tenant`.
+- [ ] Adicionar `public_id` UUID único em `Tenant`.
+- [ ] Criar modelo `Plano`.
+- [ ] Criar modelo `Assinatura`.
+- [ ] Criar modelo `RefreshToken`.
+- [ ] Criar modelo `AuditoriaInterna`.
+- [ ] Adicionar `created_at` e `updated_at` em todos os modelos.
+- [ ] Definir soft delete onde aplicável.
+- [ ] Criar índice único de e-mail normalizado.
+- [ ] Criar índices de status do tenant.
+- [ ] Criar índices de tenant e status da assinatura.
+- [ ] Criar índice de expiração do refresh token.
+- [ ] Criar índices de autor e data da auditoria.
+- [ ] Revisar todos os índices contra consultas planejadas.
+
+### Migration e dados iniciais
+
+- [ ] Gerar migration inicial.
+- [ ] Revisar SQL gerado.
+- [ ] Confirmar sequences/identity das chaves primárias.
+- [ ] Confirmar defaults de timestamps.
+- [ ] Criar seed idempotente de planos.
+- [ ] Criar comando seguro para cadastrar primeiro `super_admin`.
+- [ ] Impedir senha ou segredo padrão no seed.
+- [ ] Documentar setup do banco central.
+
+### Testes
+
+- [ ] Criar banco isolado para testes de repository.
+- [ ] Testar criação e busca de usuário.
+- [ ] Testar unicidade de e-mail.
+- [ ] Testar criação de tenant.
+- [ ] Testar índices essenciais na migration.
+- [ ] Testar limpeza do banco de teste.
+
+### Checklist de saída
+
+- [ ] Migration sobe em banco vazio.
+- [ ] Migration é aplicável no ambiente de teste.
+- [ ] Seed é idempotente.
+- [ ] Schema e documentação estão sincronizados.
+- [ ] Testes, lint, typecheck e build aprovados.
+- [ ] Branch pronta para revisão e merge.
+
+---
+
+## Etapa 04 — Autenticação de tenant
+
+Branch: `feat/autenticacao-tenant`
+
+Objetivo: cumprir exatamente o contrato já implementado pelo frontend.
+
+### Domínio e persistência
+
+- [ ] Criar repository de usuário central.
+- [ ] Criar repository de refresh token.
+- [ ] Criar serviço de hash de senha.
+- [ ] Criar serviço de access token.
+- [ ] Criar serviço de refresh token.
+- [ ] Armazenar apenas hash do refresh token.
+- [ ] Implementar rotação de refresh token.
+- [ ] Implementar revogação de família de tokens.
+- [ ] Registrar expiração e revogação.
+- [ ] Criar rotina de limpeza de tokens expirados.
+
+### Login
+
+- [ ] Criar schema Zod do login.
+- [ ] Inferir o DTO do schema.
+- [ ] Normalizar e-mail por helper.
+- [ ] Implementar `AutenticacaoService.login`.
+- [ ] Buscar usuário e tenant no `central_db`.
+- [ ] Bloquear tenant suspenso ou cancelado.
+- [ ] Comparar senha sem revelar existência do e-mail.
+- [ ] Emitir access token de curta duração.
+- [ ] Emitir refresh token de longa duração.
+- [ ] Configurar cookie `HttpOnly`.
+- [ ] Configurar cookie `Secure`.
+- [ ] Configurar cookie `SameSite=None`.
+- [ ] Configurar cookie `Path=/api/v1/auth`.
+- [ ] Retornar `{ accessToken, usuario }`.
+- [ ] Incluir `id`, `nome`, `email` e `tenantId`.
+- [ ] Retornar `CREDENCIAIS_INVALIDAS` em credencial inválida.
+
+### Refresh e logout
+
+- [ ] Implementar `POST /api/v1/auth/refresh` sem body.
+- [ ] Ler refresh token exclusivamente do cookie.
+- [ ] Validar expiração, hash e revogação.
+- [ ] Rotacionar refresh token.
+- [ ] Renovar cookie.
+- [ ] Retornar somente `{ accessToken }`.
+- [ ] Retornar `401` para refresh inválido.
+- [ ] Implementar `POST /api/v1/auth/logout`.
+- [ ] Revogar refresh token no servidor.
+- [ ] Limpar cookie com os mesmos atributos.
+
+### Middleware
+
+- [ ] Criar middleware Bearer para tenants.
+- [ ] Validar assinatura, emissor e audiência.
+- [ ] Validar expiração do access token.
+- [ ] Anexar usuário e tenant resolvidos à request.
+- [ ] Retornar `401` padronizado para token ausente.
+- [ ] Retornar `401` padronizado para token inválido.
+- [ ] Não aceitar token interno nas rotas de tenant.
+
+### Testes e documentação
+
+- [ ] Testar login válido.
+- [ ] Testar credencial inválida.
+- [ ] Testar tenant suspenso.
+- [ ] Testar atributos exatos do cookie.
+- [ ] Testar refresh válido.
+- [ ] Testar rotação de refresh.
+- [ ] Testar reutilização de token rotacionado.
+- [ ] Testar refresh expirado.
+- [ ] Testar logout e revogação.
+- [ ] Testar limpeza do cookie.
+- [ ] Testar CORS com credenciais.
+- [ ] Atualizar Swagger.
+- [ ] Atualizar `docs/api/autenticacao.md`.
+
+### Checklist de saída
+
+- [ ] Contrato do frontend validado por teste de integração.
+- [ ] Tokens de tenant e internos permanecem isolados.
+- [ ] Swagger e Markdown sincronizados.
+- [ ] Testes, lint, typecheck e build aprovados.
+- [ ] Branch pronta para revisão e merge.
+
+---
+
+## Etapa 05 — Autenticação interna
+
+Branch: `feat/autenticacao-interna`
+
+Objetivo: substituir o repository temporário e concluir autenticação segura do
+`super_admin`.
+
+### Repository e login
+
+- [ ] Criar repository Prisma de usuário interno.
+- [ ] Remover repository em memória da composição de produção.
+- [ ] Manter repository em memória apenas como test double.
+- [ ] Consultar usuário por e-mail normalizado.
+- [ ] Validar papel `super_admin`.
+- [ ] Validar usuário ativo.
+- [ ] Emitir token com audiência exclusiva do admin.
+- [ ] Manter rate limit do login interno.
+
+### TOTP
+
+- [ ] Selecionar biblioteca TOTP.
+- [ ] Criar serviço de geração do segredo.
+- [ ] Criptografar segredo TOTP em repouso.
+- [ ] Criar QR code de configuração.
+- [ ] Criar estado temporário do login antes do segundo fator.
+- [ ] Implementar verificação do código TOTP.
+- [ ] Impedir reutilização indevida do estado temporário.
+- [ ] Emitir JWT interno somente após segundo fator.
+- [ ] Criar códigos de recuperação, se aprovado.
+
+### Testes e documentação
+
+- [ ] Testar login interno com repository Prisma.
+- [ ] Testar usuário sem papel.
+- [ ] Testar usuário inativo.
+- [ ] Testar fluxo de configuração TOTP.
+- [ ] Testar código TOTP inválido.
+- [ ] Testar separação entre token interno e token de tenant.
+- [ ] Atualizar Swagger.
+- [ ] Atualizar `docs/api/admin-interno.md`.
+
+### Checklist de saída
+
+- [ ] Nenhuma credencial interna padrão existe.
+- [ ] Segundo fator funciona de ponta a ponta.
+- [ ] Swagger e Markdown sincronizados.
+- [ ] Testes, lint, typecheck e build aprovados.
+- [ ] Branch pronta para revisão e merge.
+
+---
+
+## Etapa 06 — Resolução multi-tenant
+
+Branch: `feat/resolucao-multitenant`
+
+Objetivo: resolver e gerenciar com segurança a conexão física de cada tenant.
+
+### Credenciais
+
+- [ ] Definir formato criptografado da conexão do tenant.
+- [ ] Validar chave de criptografia no ambiente.
+- [ ] Criar helper criptográfico com versionamento de payload.
+- [ ] Criar serviço de criptografia.
+- [ ] Testar criptografia e descriptografia.
+- [ ] Garantir que conexões não apareçam em logs.
+
+### Gerenciador de conexões
+
+- [ ] Definir interface do gerenciador de conexões.
+- [ ] Criar client Prisma dinâmico por banco.
+- [ ] Criar cache limitado de clients.
+- [ ] Implementar política LRU.
+- [ ] Atualizar uso do client a cada acesso.
+- [ ] Fechar client removido do cache.
+- [ ] Evitar abertura duplicada concorrente.
+- [ ] Fechar todos os clients no shutdown.
+- [ ] Configurar limite máximo por ambiente.
+- [ ] Registrar métricas sem expor credenciais.
+
+### Middleware e contexto
+
+- [ ] Criar contexto tipado do tenant.
+- [ ] Resolver tenant pelo token autenticado.
+- [ ] Buscar metadados no banco central.
+- [ ] Rejeitar tenant inativo.
+- [ ] Obter conexão exclusivamente dos metadados centrais.
+- [ ] Anexar repository/client do tenant à request.
+- [ ] Impedir escolha do banco por header, query ou body.
+
+### Schema do banco do tenant
+
+- [ ] Criar schema Prisma separado do tenant.
+- [ ] Usar IDs inteiros sequenciais.
+- [ ] Adicionar `public_id` onde houver exposição pública.
+- [ ] Adicionar `created_at` e `updated_at` em todas as tabelas.
+- [ ] Criar modelos iniciais de conta WhatsApp.
+- [ ] Criar modelos iniciais de fluxo.
+- [ ] Criar modelos iniciais de contato.
+- [ ] Criar modelos iniciais de setor e atendente.
+- [ ] Criar modelos iniciais de conversa e mensagem.
+- [ ] Criar modelos iniciais de credencial e uso.
+- [ ] Definir índices a partir dos contratos de consulta.
+
+### Migrations multi-tenant
+
+- [ ] Criar executor de migration para um banco.
+- [ ] Criar executor para todos os tenants ativos.
+- [ ] Registrar sucesso por tenant.
+- [ ] Registrar falha por tenant.
+- [ ] Continuar após falha isolada.
+- [ ] Retornar resumo do processo.
+- [ ] Impedir execução concorrente da mesma migration.
+- [ ] Testar dois bancos de tenant isolados.
+- [ ] Testar ausência de vazamento entre tenants.
+
+### Checklist de saída
+
+- [ ] Isolamento entre dois tenants comprovado por testes.
+- [ ] Cache LRU validado.
+- [ ] Migration multi-tenant tolera falha isolada.
+- [ ] Documentação de operação atualizada.
+- [ ] Testes, lint, typecheck e build aprovados.
+- [ ] Branch pronta para revisão e merge.
+
+---
+
+## Etapa 07 — Administração de tenants
+
+Branch: `feat/admin-tenants`
+
+Objetivo: criar a primeira funcionalidade operacional do painel interno.
+
+### Listagem
+
+- [ ] Criar schema Zod de paginação.
+- [ ] Criar helper/repository base de paginação.
+- [ ] Limitar `take` ao máximo configurado.
+- [ ] Criar repository de tenants.
+- [ ] Criar busca por nome.
+- [ ] Criar filtro por status.
+- [ ] Criar filtro por plano.
+- [ ] Criar ordenação permitida por allowlist.
+- [ ] Criar índice para a consulta de listagem.
+- [ ] Implementar `GET /api/v1/interno/tenants`.
+- [ ] Retornar `dados`, `total`, `skip` e `take`.
+
+### Detalhe e alterações
+
+- [ ] Implementar busca por `public_id`.
+- [ ] Implementar detalhe do tenant.
+- [ ] Implementar alteração de status.
+- [ ] Implementar alteração manual de plano.
+- [ ] Criar confirmação de regras no Service.
+- [ ] Registrar auditoria de alteração de status.
+- [ ] Registrar auditoria de alteração de plano.
+- [ ] Testar acesso exclusivo de `super_admin`.
+
+### Provisionamento
+
+- [ ] Definir estados do provisionamento.
+- [ ] Criar `TenantProvisioningService`.
+- [ ] Criar registro central idempotente.
+- [ ] Gerar nome seguro e único do banco.
+- [ ] Criar banco físico.
+- [ ] Aplicar migration do tenant.
+- [ ] Criar primeiro administrador do tenant.
+- [ ] Registrar cada etapa.
+- [ ] Permitir retomada após falha.
+- [ ] Evitar duplicação em retry.
+- [ ] Criar compensações aprovadas para falhas.
+
+### Frontend e documentação
+
+- [ ] Documentar colunas da tela de listagem.
+- [ ] Documentar busca, filtros e paginação.
+- [ ] Documentar estados vazio e carregando.
+- [ ] Documentar ações e confirmações.
+- [ ] Documentar progresso do provisionamento.
+- [ ] Documentar erros recuperáveis e não recuperáveis.
+- [ ] Atualizar Swagger.
+- [ ] Atualizar `docs/api/tenants.md`.
+
+### Checklist de saída
+
+- [ ] Listagem paginada usa índices adequados.
+- [ ] Alterações sensíveis geram auditoria.
+- [ ] Provisionamento suporta retry.
+- [ ] Swagger e Markdown sincronizados.
+- [ ] Testes, lint, typecheck e build aprovados.
+- [ ] Branch pronta para revisão e merge.
+
+---
+
+## Etapa 08 — Infraestrutura local
+
+Branch: `chore/infraestrutura-local`
+
+Objetivo: permitir execução reproduzível da base em ambiente local.
+
+### Containers
+
+- [ ] Criar Dockerfile de desenvolvimento.
+- [ ] Criar Dockerfile de produção multi-stage.
+- [ ] Criar `.dockerignore`.
+- [ ] Criar `docker-compose.dev.yml`.
+- [ ] Adicionar PostgreSQL.
+- [ ] Adicionar Redis.
+- [ ] Adicionar API.
+- [ ] Configurar healthcheck do PostgreSQL.
+- [ ] Configurar healthcheck do Redis.
+- [ ] Configurar healthcheck da API.
+- [ ] Criar volumes nomeados.
+- [ ] Evitar segredos no Compose versionado.
+
+### Operação
+
+- [ ] Documentar subida do ambiente.
+- [ ] Documentar execução de migrations.
+- [ ] Documentar criação do primeiro super admin.
+- [ ] Documentar execução de testes.
+- [ ] Testar inicialização a partir de ambiente limpo.
+- [ ] Testar encerramento gracioso em container.
+
+### Checklist de saída
+
+- [ ] Ambiente sobe com um comando documentado.
+- [ ] API fica pronta somente após dependências.
+- [ ] Dados persistem entre reinicializações.
+- [ ] Testes, lint, typecheck e build aprovados.
+- [ ] Branch pronta para revisão e merge.
+
+---
+
+## Etapa 09 — Filas e idempotência
+
+Branch: `feat/filas-mensageria`
+
+Objetivo: estabelecer Redis, BullMQ e o recebimento seguro de mensagens.
+
+### Redis e filas
+
+- [ ] Criar conexão Redis validada.
+- [ ] Criar nomes de fila centralizados.
+- [ ] Criar factory de filas.
+- [ ] Criar factory de workers.
+- [ ] Incluir identidade do tenant em todo job.
+- [ ] Definir tentativas e backoff padrão.
+- [ ] Definir retenção de jobs concluídos.
+- [ ] Definir retenção de jobs com falha.
+- [ ] Fechar filas e workers no shutdown.
+
+### Webhook WhatsApp
+
+- [ ] Criar rota de challenge.
+- [ ] Criar validação de `X-Hub-Signature-256`.
+- [ ] Preservar raw body para validar assinatura.
+- [ ] Criar schema do payload suportado.
+- [ ] Resolver tenant por `phone_number_id`.
+- [ ] Criar chave de idempotência namespacada.
+- [ ] Impedir processamento duplicado.
+- [ ] Responder rapidamente ao webhook.
+- [ ] Enfileirar mensagem recebida.
+- [ ] Não executar lógica pesada no controller.
+
+### Testes e documentação
+
+- [ ] Testar assinatura válida.
+- [ ] Testar assinatura inválida.
+- [ ] Testar evento duplicado.
+- [ ] Testar isolamento de chaves por tenant.
+- [ ] Testar retry com backoff.
+- [ ] Atualizar Swagger.
+- [ ] Criar `docs/eventos/webhook-whatsapp.md`.
+
+### Checklist de saída
+
+- [ ] Webhook responde dentro da meta local definida.
+- [ ] Duplicidade não gera dois jobs.
+- [ ] Jobs identificam tenant explicitamente.
+- [ ] Swagger e Markdown sincronizados.
+- [ ] Testes, lint, typecheck e build aprovados.
+- [ ] Branch pronta para revisão e merge.
+
+---
+
+## Etapa 10 — Motor de fluxo inicial
+
+Branch: `feat/motor-fluxo-base`
+
+Objetivo: validar, publicar e executar o núcleo determinístico do grafo antes de
+adicionar IA e integrações externas.
+
+### Contratos
+
+- [ ] Criar enums dos tipos de nó.
+- [ ] Criar schema Zod do nó de mensagem.
+- [ ] Criar schema Zod do nó de captura.
+- [ ] Criar schema Zod do nó de condição.
+- [ ] Criar schema Zod do nó de direcionamento.
+- [ ] Criar união discriminada dos nós.
+- [ ] Criar schema da definição do fluxo.
+- [ ] Versionar o schema do fluxo.
+- [ ] Não usar `eval` em condições.
+
+### Validação do grafo
+
+- [ ] Validar existência do nó inicial.
+- [ ] Validar unicidade dos IDs dos nós.
+- [ ] Validar referências `proximo`.
+- [ ] Validar referências de condição.
+- [ ] Validar alcançabilidade.
+- [ ] Detectar ciclos não permitidos.
+- [ ] Validar setor referenciado.
+- [ ] Retornar erros por nó e campo.
+- [ ] Testar grafo mínimo válido.
+- [ ] Testar cada classe de grafo inválido.
+
+### Persistência e publicação
+
+- [ ] Criar repository de fluxos.
+- [ ] Criar fluxo como rascunho.
+- [ ] Atualizar somente rascunho.
+- [ ] Criar versão imutável publicada.
+- [ ] Executar validação antes de publicar.
+- [ ] Usar transação na publicação.
+- [ ] Criar índices de listagem de fluxos.
+- [ ] Implementar soft delete.
+
+### Execução
+
+- [ ] Definir contrato do estado da conversa.
+- [ ] Namespacar estado Redis por tenant.
+- [ ] Carregar versão publicada.
+- [ ] Executar nó de mensagem.
+- [ ] Executar nó de captura.
+- [ ] Executar condição com parser seguro.
+- [ ] Executar direcionamento para setor.
+- [ ] Persistir snapshot do estado.
+- [ ] Limitar quantidade de passos por execução.
+- [ ] Tratar nó desconhecido como erro de domínio.
+
+### API e documentação
+
+- [ ] Implementar listagem paginada de fluxos.
+- [ ] Implementar detalhe por `public_id`.
+- [ ] Implementar criação.
+- [ ] Implementar atualização.
+- [ ] Implementar publicação.
+- [ ] Implementar simulação sem WhatsApp real.
+- [ ] Documentar composição da lista de fluxos.
+- [ ] Documentar editor e erros por nó.
+- [ ] Documentar estados de publicação.
+- [ ] Atualizar Swagger.
+- [ ] Criar `docs/api/fluxos.md`.
+- [ ] Criar `docs/schemas/fluxo-json.md`.
+
+### Checklist de saída
+
+- [ ] Grafo inválido nunca é publicado.
+- [ ] Execução possui limite contra loop infinito.
+- [ ] Versão publicada é imutável.
+- [ ] Swagger e Markdown sincronizados.
+- [ ] Testes, lint, typecheck e build aprovados.
+- [ ] Branch pronta para revisão e merge.
+
+---
+
+## Etapa 11 — CI e qualidade
+
+Branch: `ci/pipeline-qualidade`
+
+Objetivo: tornar automáticas as validações exigidas para merge.
+
+### Pipeline
+
+- [ ] Criar workflow do GitHub Actions.
+- [ ] Fixar versão do Node.
+- [ ] Usar `npm ci`.
+- [ ] Executar `format:check`.
+- [ ] Executar lint.
+- [ ] Executar typecheck.
+- [ ] Executar testes.
+- [ ] Executar build.
+- [ ] Subir PostgreSQL de serviço para testes.
+- [ ] Subir Redis de serviço para testes.
+- [ ] Aplicar migrations no banco de teste.
+- [ ] Publicar relatório de cobertura.
+- [ ] Configurar cache seguro do npm.
+
+### Controles de qualidade
+
+- [ ] Definir cobertura mínima inicial.
+- [ ] Falhar CI quando Swagger não puder ser gerado.
+- [ ] Validar que migrations estão versionadas.
+- [ ] Validar ausência de arquivos `.env`.
+- [ ] Validar dependências vulneráveis conforme política definida.
+- [ ] Documentar checks obrigatórios de pull request.
+- [ ] Criar template de pull request.
+- [ ] Incluir checklist de Swagger.
+- [ ] Incluir checklist de Markdown funcional.
+- [ ] Incluir checklist de atualização deste backlog.
+
+### Checklist de saída
+
+- [ ] Pipeline passa em branch limpa.
+- [ ] Pipeline detecta falha proposital de lint.
+- [ ] Pipeline detecta falha proposital de teste.
+- [ ] Processo de contribuição está documentado.
+- [ ] Branch pronta para revisão e merge.
+
+---
+
+## Backlog posterior à estrutura base
+
+Os itens abaixo pertencem ao produto, mas só devem ser decompostos em etapas
+atômicas quando a estrutura base estiver estável:
+
+- nó de IA com LangChain e controle de custo;
+- nó de integração HTTP com credenciais criptografadas;
+- envio de mensagens pela WhatsApp Cloud API;
+- atendimento humano e claim atômico;
+- Socket.io e presença de atendentes;
+- métricas de uso por tenant;
+- cobrança e webhook do gateway;
+- Bull Board protegido;
+- backup e estratégia de restauração;
+- deploy de produção e observabilidade externa.
