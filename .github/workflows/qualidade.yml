@@ -1,0 +1,144 @@
+name: Qualidade
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qualidade-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validar:
+    name: Validar backend
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: zapbot_central_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d zapbot_central_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 12
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 12
+
+    env:
+      CENTRAL_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/zapbot_central_test
+      TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/zapbot_central_test
+      TEST_TENANT_DATABASE_URL_A: postgresql://postgres:postgres@127.0.0.1:5432/zapbot_tenant_test_a
+      TEST_TENANT_DATABASE_URL_B: postgresql://postgres:postgres@127.0.0.1:5432/zapbot_tenant_test_b
+      TEST_REDIS_URL: redis://127.0.0.1:6379
+
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.17.0
+          cache: npm
+
+      - name: Instalar dependências reproduzíveis
+        run: npm ci
+
+      - name: Bloquear arquivos de ambiente versionados
+        shell: bash
+        run: |
+          arquivos_env="$(git ls-files | grep -E '(^|/)\.env($|\.)' | grep -vE '(^|/)\.env\.example$' || true)"
+          if [ -n "$arquivos_env" ]; then
+            echo "Arquivos de ambiente não permitidos:"
+            echo "$arquivos_env"
+            exit 1
+          fi
+
+      - name: Validar migrations associadas a schemas alterados
+        if: github.event_name == 'pull_request'
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          alterados="$(git diff --name-only "$BASE_SHA"...HEAD)"
+          if echo "$alterados" | grep -qx 'prisma/central/schema.prisma' &&
+             ! echo "$alterados" | grep -q '^prisma/central/migrations/'; then
+            echo "O schema central mudou sem uma migration central versionada."
+            exit 1
+          fi
+          if echo "$alterados" | grep -qx 'prisma/tenant/schema.prisma' &&
+             ! echo "$alterados" | grep -q '^prisma/tenant/migrations/'; then
+            echo "O schema tenant mudou sem uma migration tenant versionada."
+            exit 1
+          fi
+
+      - name: Criar bancos tenant de teste
+        env:
+          PGPASSWORD: postgres
+        run: |
+          createdb -h 127.0.0.1 -U postgres zapbot_tenant_test_a
+          createdb -h 127.0.0.1 -U postgres zapbot_tenant_test_b
+
+      - name: Aplicar migrations centrais
+        run: npm run db:central:migrate:deploy
+
+      - name: Aplicar migrations no tenant A
+        env:
+          TENANT_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/zapbot_tenant_test_a
+        run: npm run db:tenant:migrate:deploy
+
+      - name: Aplicar migrations no tenant B
+        env:
+          TENANT_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/zapbot_tenant_test_b
+        run: npm run db:tenant:migrate:deploy
+
+      - name: Verificar formatação
+        run: npm run format:check
+
+      - name: Executar lint
+        run: npm run lint
+
+      - name: Verificar TypeScript
+        run: npm run typecheck
+
+      - name: Validar geração do Swagger
+        run: npx vitest run tests/config/openapi.test.ts
+
+      - name: Executar testes e cobertura mínima
+        run: npm run test:coverage
+
+      - name: Compilar aplicação
+        run: npm run build
+
+      - name: Auditar dependências de produção
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Publicar relatório de cobertura
+        if: always() && hashFiles('coverage/**') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura-${{ github.run_id }}
+          path: coverage/
+          if-no-files-found: error
+          retention-days: 14

@@ -192,6 +192,10 @@ deve ser usada sem intenção.
 
 ## Validação
 
+O processo de pull request, os checks obrigatórios e a política de cobertura e
+vulnerabilidades estão em
+[`docs/CONTRIBUICAO.md`](docs/CONTRIBUICAO.md).
+
 Execute antes de abrir um pull request:
 
 ```bash

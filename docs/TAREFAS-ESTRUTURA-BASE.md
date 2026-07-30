@@ -24,19 +24,19 @@ Regras:
 
 ## Visão das etapas
 
-| Etapa                        | Branch                           | Dependência | Estado    |
-| ---------------------------- | -------------------------------- | ----------- | --------- |
-| 01. Fundação do repositório  | `chore/estrutura-base`           | Nenhuma     | Concluída |
-| 02. OpenAPI e documentação   | `feat/openapi-documentacao-base` | 01          | Concluída |
-| 03. Banco central            | `feat/banco-central-prisma`      | 01          | Concluída |
-| 04. Autenticação de tenant   | `feat/autenticacao-tenant`       | 03          | Concluída |
-| 05. Autenticação interna     | `feat/autenticacao-interna`      | 03          | Concluída |
-| 06. Resolução multi-tenant   | `feat/resolucao-multitenant`     | 03 e 04     | Concluída |
-| 07. Administração de tenants | `feat/admin-tenants`             | 05 e 06     | Concluída |
-| 08. Infraestrutura local     | `chore/infraestrutura-local`     | 03 e 06     | Concluída |
-| 09. Filas e idempotência     | `feat/filas-mensageria`          | 06 e 08     | Concluída |
-| 10. Motor de fluxo inicial   | `feat/motor-fluxo-base`          | 06 e 09     | Concluída |
-| 11. CI e qualidade           | `ci/pipeline-qualidade`          | 01 a 10     | Pendente  |
+| Etapa                        | Branch                           | Dependência | Estado       |
+| ---------------------------- | -------------------------------- | ----------- | ------------ |
+| 01. Fundação do repositório  | `chore/estrutura-base`           | Nenhuma     | Concluída    |
+| 02. OpenAPI e documentação   | `feat/openapi-documentacao-base` | 01          | Concluída    |
+| 03. Banco central            | `feat/banco-central-prisma`      | 01          | Concluída    |
+| 04. Autenticação de tenant   | `feat/autenticacao-tenant`       | 03          | Concluída    |
+| 05. Autenticação interna     | `feat/autenticacao-interna`      | 03          | Concluída    |
+| 06. Resolução multi-tenant   | `feat/resolucao-multitenant`     | 03 e 04     | Concluída    |
+| 07. Administração de tenants | `feat/admin-tenants`             | 05 e 06     | Concluída    |
+| 08. Infraestrutura local     | `chore/infraestrutura-local`     | 03 e 06     | Concluída    |
+| 09. Filas e idempotência     | `feat/filas-mensageria`          | 06 e 08     | Concluída    |
+| 10. Motor de fluxo inicial   | `feat/motor-fluxo-base`          | 06 e 09     | Concluída    |
+| 11. CI e qualidade           | `ci/pipeline-qualidade`          | 01 a 10     | Em andamento |
 
 ---
 
@@ -783,39 +783,39 @@ Objetivo: tornar automáticas as validações exigidas para merge.
 
 ### Pipeline
 
-- [ ] Criar workflow do GitHub Actions.
-- [ ] Fixar versão do Node.
-- [ ] Usar `npm ci`.
-- [ ] Executar `format:check`.
-- [ ] Executar lint.
-- [ ] Executar typecheck.
-- [ ] Executar testes.
-- [ ] Executar build.
-- [ ] Subir PostgreSQL de serviço para testes.
-- [ ] Subir Redis de serviço para testes.
-- [ ] Aplicar migrations no banco de teste.
-- [ ] Publicar relatório de cobertura.
-- [ ] Configurar cache seguro do npm.
+- [x] Criar workflow do GitHub Actions.
+- [x] Fixar versão do Node.
+- [x] Usar `npm ci`.
+- [x] Executar `format:check`.
+- [x] Executar lint.
+- [x] Executar typecheck.
+- [x] Executar testes.
+- [x] Executar build.
+- [x] Subir PostgreSQL de serviço para testes.
+- [x] Subir Redis de serviço para testes.
+- [x] Aplicar migrations no banco de teste.
+- [x] Publicar relatório de cobertura.
+- [x] Configurar cache seguro do npm.
 
 ### Controles de qualidade
 
-- [ ] Definir cobertura mínima inicial.
-- [ ] Falhar CI quando Swagger não puder ser gerado.
-- [ ] Validar que migrations estão versionadas.
-- [ ] Validar ausência de arquivos `.env`.
-- [ ] Validar dependências vulneráveis conforme política definida.
-- [ ] Documentar checks obrigatórios de pull request.
-- [ ] Criar template de pull request.
-- [ ] Incluir checklist de Swagger.
-- [ ] Incluir checklist de Markdown funcional.
-- [ ] Incluir checklist de atualização deste backlog.
+- [x] Definir cobertura mínima inicial.
+- [x] Falhar CI quando Swagger não puder ser gerado.
+- [x] Validar que migrations estão versionadas.
+- [x] Validar ausência de arquivos `.env`.
+- [x] Validar dependências vulneráveis conforme política definida.
+- [x] Documentar checks obrigatórios de pull request.
+- [x] Criar template de pull request.
+- [x] Incluir checklist de Swagger.
+- [x] Incluir checklist de Markdown funcional.
+- [x] Incluir checklist de atualização deste backlog.
 
 ### Checklist de saída
 
 - [ ] Pipeline passa em branch limpa.
-- [ ] Pipeline detecta falha proposital de lint.
-- [ ] Pipeline detecta falha proposital de teste.
-- [ ] Processo de contribuição está documentado.
+- [x] Pipeline detecta falha proposital de lint.
+- [x] Pipeline detecta falha proposital de teste.
+- [x] Processo de contribuição está documentado.
 - [ ] Branch pronta para revisão e merge.
 
 ---
