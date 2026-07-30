@@ -36,6 +36,7 @@ Documentos funcionais disponíveis:
 - [Banco central](banco-central.md)
 - [Operação multi-tenant](multitenancy.md)
 - [Administração de tenants](api/tenants.md)
+- [Webhook do WhatsApp](eventos/webhook-whatsapp.md)
 
 ## Swagger e Markdown
 

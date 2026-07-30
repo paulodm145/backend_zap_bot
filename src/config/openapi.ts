@@ -10,6 +10,7 @@ import {
   tenantPublicIdSchema,
 } from '../dtos/tenant-interno.dto.js';
 import { estadoInternoSchema, verificarTotpInternoSchema } from '../dtos/totp-interno.dto.js';
+import { challengeWhatsappSchema, webhookWhatsappSchema } from '../dtos/webhook-whatsapp.dto.js';
 import { z } from './zod-openapi.js';
 
 const erroSchema = z
@@ -80,6 +81,18 @@ const loginRespostaSchema = z
   .openapi('LoginResposta');
 
 const refreshRespostaSchema = z.object({ accessToken: z.string() }).openapi('RefreshResposta');
+const assinaturaWebhookSchema = z.object({
+  'x-hub-signature-256': z
+    .string()
+    .startsWith('sha256=')
+    .openapi({ example: 'sha256=hexadecimal-calculado-sobre-o-corpo-bruto' }),
+});
+const webhookRespostaSchema = z
+  .object({
+    recebidas: z.number().int().nonnegative(),
+    duplicadas: z.number().int().nonnegative(),
+  })
+  .openapi('WebhookWhatsappResposta');
 
 function criarRegistro(): OpenAPIRegistry {
   const registro = new OpenAPIRegistry();
@@ -92,6 +105,60 @@ function criarRegistro(): OpenAPIRegistry {
   });
   registro.register('ErroResposta', erroSchema);
   registro.register('PaginacaoResposta', paginacaoSchema);
+
+  registro.registerPath({
+    method: 'get',
+    path: '/api/v1/webhook/whatsapp',
+    tags: ['Webhook WhatsApp'],
+    summary: 'Confirma a configuração do webhook para a Meta',
+    request: { query: challengeWhatsappSchema },
+    responses: {
+      200: {
+        description: 'Challenge devolvido como text/plain.',
+        content: { 'text/plain': { schema: z.string() } },
+      },
+      403: {
+        description: 'Token de verificação inválido.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+      422: {
+        description: 'Parâmetros de challenge inválidos.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+
+  registro.registerPath({
+    method: 'post',
+    path: '/api/v1/webhook/whatsapp',
+    tags: ['Webhook WhatsApp'],
+    summary: 'Valida e enfileira mensagens recebidas da Meta',
+    request: {
+      headers: assinaturaWebhookSchema,
+      body: {
+        required: true,
+        content: { 'application/json': { schema: webhookWhatsappSchema } },
+      },
+    },
+    responses: {
+      200: {
+        description: 'Evento aceito; duplicidades são reconhecidas sem novo job.',
+        content: { 'application/json': { schema: webhookRespostaSchema } },
+      },
+      403: {
+        description: 'Assinatura HMAC inválida ou ausente.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+      404: {
+        description: 'phone_number_id não vinculado a um tenant ativo.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+      422: {
+        description: 'Payload fora do formato suportado.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
 
   registro.registerPath({
     method: 'post',

@@ -5,6 +5,8 @@
 O `central_db` contém somente dados globais necessários para autenticação,
 provisionamento, planos, assinaturas, refresh tokens e auditoria interna. Dados
 operacionais de conversas e fluxos permanecem nos bancos físicos dos tenants.
+O índice `roteamentos_whatsapp` guarda somente a associação técnica entre
+`phone_number_id` e tenant para resolver webhooks sem varrer todos os bancos.
 
 ## Requisitos
 
@@ -91,3 +93,15 @@ Todos os modelos usam:
 Usuários e tenants utilizam soft delete por `deletado_at`. Refresh tokens são
 armazenados por hash, organizados em famílias e possuem dados de rotação e
 revogação.
+
+## Roteamento de contas WhatsApp
+
+Cada número recebido no webhook precisa de um registro único em
+`roteamentos_whatsapp`. A associação referencia o `id` inteiro do tenant e é
+removida em cascata se o tenant for excluído.
+
+Access token, WABA e demais configurações da conta não são duplicados no banco
+central. Eles continuam criptografados em `contas_whatsapp`, no banco físico
+correspondente. O onboarding da conta deve atualizar os dois lados na mesma
+jornada operacional e tratar uma falha parcial como pendência de
+sincronização.

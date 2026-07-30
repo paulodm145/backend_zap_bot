@@ -28,13 +28,13 @@ Regras:
 | ---------------------------- | -------------------------------- | ----------- | --------- |
 | 01. Fundação do repositório  | `chore/estrutura-base`           | Nenhuma     | Concluída |
 | 02. OpenAPI e documentação   | `feat/openapi-documentacao-base` | 01          | Concluída |
-| 03. Banco central            | `feat/banco-central-prisma`      | 01          | Pendente  |
-| 04. Autenticação de tenant   | `feat/autenticacao-tenant`       | 03          | Pendente  |
-| 05. Autenticação interna     | `feat/autenticacao-interna`      | 03          | Pendente  |
-| 06. Resolução multi-tenant   | `feat/resolucao-multitenant`     | 03 e 04     | Pendente  |
-| 07. Administração de tenants | `feat/admin-tenants`             | 05 e 06     | Pendente  |
-| 08. Infraestrutura local     | `chore/infraestrutura-local`     | 03 e 06     | Pendente  |
-| 09. Filas e idempotência     | `feat/filas-mensageria`          | 06 e 08     | Pendente  |
+| 03. Banco central            | `feat/banco-central-prisma`      | 01          | Concluída |
+| 04. Autenticação de tenant   | `feat/autenticacao-tenant`       | 03          | Concluída |
+| 05. Autenticação interna     | `feat/autenticacao-interna`      | 03          | Concluída |
+| 06. Resolução multi-tenant   | `feat/resolucao-multitenant`     | 03 e 04     | Concluída |
+| 07. Administração de tenants | `feat/admin-tenants`             | 05 e 06     | Concluída |
+| 08. Infraestrutura local     | `chore/infraestrutura-local`     | 03 e 06     | Concluída |
+| 09. Filas e idempotência     | `feat/filas-mensageria`          | 06 e 08     | Concluída |
 | 10. Motor de fluxo inicial   | `feat/motor-fluxo-base`          | 06 e 09     | Pendente  |
 | 11. CI e qualidade           | `ci/pipeline-qualidade`          | 01 a 10     | Pendente  |
 
@@ -649,47 +649,47 @@ Objetivo: estabelecer Redis, BullMQ e o recebimento seguro de mensagens.
 
 ### Redis e filas
 
-- [ ] Criar conexão Redis validada.
-- [ ] Criar nomes de fila centralizados.
-- [ ] Criar factory de filas.
-- [ ] Criar factory de workers.
-- [ ] Incluir identidade do tenant em todo job.
-- [ ] Definir tentativas e backoff padrão.
-- [ ] Definir retenção de jobs concluídos.
-- [ ] Definir retenção de jobs com falha.
-- [ ] Fechar filas e workers no shutdown.
+- [x] Criar conexão Redis validada.
+- [x] Criar nomes de fila centralizados.
+- [x] Criar factory de filas.
+- [x] Criar factory de workers.
+- [x] Incluir identidade do tenant em todo job.
+- [x] Definir tentativas e backoff padrão.
+- [x] Definir retenção de jobs concluídos.
+- [x] Definir retenção de jobs com falha.
+- [x] Fechar filas e workers no shutdown.
 
 ### Webhook WhatsApp
 
-- [ ] Criar rota de challenge.
-- [ ] Criar validação de `X-Hub-Signature-256`.
-- [ ] Preservar raw body para validar assinatura.
-- [ ] Criar schema do payload suportado.
-- [ ] Resolver tenant por `phone_number_id`.
-- [ ] Criar chave de idempotência namespacada.
-- [ ] Impedir processamento duplicado.
-- [ ] Responder rapidamente ao webhook.
-- [ ] Enfileirar mensagem recebida.
-- [ ] Não executar lógica pesada no controller.
+- [x] Criar rota de challenge.
+- [x] Criar validação de `X-Hub-Signature-256`.
+- [x] Preservar raw body para validar assinatura.
+- [x] Criar schema do payload suportado.
+- [x] Resolver tenant por `phone_number_id`.
+- [x] Criar chave de idempotência namespacada.
+- [x] Impedir processamento duplicado.
+- [x] Responder rapidamente ao webhook.
+- [x] Enfileirar mensagem recebida.
+- [x] Não executar lógica pesada no controller.
 
 ### Testes e documentação
 
-- [ ] Testar assinatura válida.
-- [ ] Testar assinatura inválida.
-- [ ] Testar evento duplicado.
-- [ ] Testar isolamento de chaves por tenant.
-- [ ] Testar retry com backoff.
-- [ ] Atualizar Swagger.
-- [ ] Criar `docs/eventos/webhook-whatsapp.md`.
+- [x] Testar assinatura válida.
+- [x] Testar assinatura inválida.
+- [x] Testar evento duplicado.
+- [x] Testar isolamento de chaves por tenant.
+- [x] Testar retry com backoff.
+- [x] Atualizar Swagger.
+- [x] Criar `docs/eventos/webhook-whatsapp.md`.
 
 ### Checklist de saída
 
-- [ ] Webhook responde dentro da meta local definida.
-- [ ] Duplicidade não gera dois jobs.
-- [ ] Jobs identificam tenant explicitamente.
-- [ ] Swagger e Markdown sincronizados.
-- [ ] Testes, lint, typecheck e build aprovados.
-- [ ] Branch pronta para revisão e merge.
+- [x] Webhook responde dentro da meta local definida.
+- [x] Duplicidade não gera dois jobs.
+- [x] Jobs identificam tenant explicitamente.
+- [x] Swagger e Markdown sincronizados.
+- [x] Testes, lint, typecheck e build aprovados.
+- [x] Branch pronta para revisão e merge.
 
 ---
 

@@ -63,6 +63,9 @@ Variáveis disponíveis no scaffold atual:
 | `POSTGRES_PORT`                     | Porta do PostgreSQL publicada no host            |
 | `REDIS_URL`                         | Conexão Redis usada pela aplicação               |
 | `REDIS_PORT`                        | Porta do Redis publicada no host                 |
+| `WEBHOOK_WHATSAPP_APP_SECRET`       | App Secret usado para validar a assinatura Meta  |
+| `WEBHOOK_WHATSAPP_VERIFY_TOKEN`     | Token privado usado no challenge da Meta         |
+| `WEBHOOK_IDEMPOTENCIA_SEGUNDOS`     | Retenção da deduplicação de mensagens no Redis   |
 | `ORIGENS_PERMITIDAS`                | Origens CORS separadas por vírgula               |
 | `JWT_INTERNO_SECRET`                | Segredo do JWT interno, mínimo de 32 caracteres  |
 | `JWT_INTERNO_EXPIRACAO_SEGUNDOS`    | Duração do JWT interno em segundos               |
@@ -200,6 +203,14 @@ npm run test:coverage
 npm run build
 ```
 
+Os testes de integração do worker são habilitados quando um Redis descartável
+é informado:
+
+```bash
+TEST_REDIS_URL=redis://127.0.0.1:6379 \
+npx vitest run tests/workers/worker-retry.integration.test.ts
+```
+
 Para aplicar a formatação automaticamente:
 
 ```bash
@@ -284,11 +295,14 @@ src/
   controllers/
   dtos/
   erros/
+  helpers/
   middlewares/
+  queues/
   repositories/
   rotas/
   services/
   types/
+  workers/
 ```
 
 O projeto usa pastas horizontais e segue o fluxo:
@@ -304,7 +318,8 @@ efeitos colaterais.
 ## Estado atual
 
 O banco central, as autenticações de tenant e admin com TOTP, os schemas
-Prisma separados e a resolução física de conexões estão implementados.
+Prisma separados, a resolução física de conexões, as filas e a entrada segura
+do webhook do WhatsApp estão implementados.
 Redis, BullMQ, motor de fluxo, WhatsApp e demais módulos continuam no backlog.
 
 ## Fluxo de contribuição

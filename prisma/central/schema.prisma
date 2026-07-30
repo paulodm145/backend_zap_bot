@@ -76,6 +76,7 @@ model Tenant {
   updated_at               DateTime     @updatedAt @db.Timestamptz(3)
   usuarios                 Usuario[]
   assinaturas              Assinatura[]
+  roteamentos_whatsapp     RoteamentoWhatsapp[]
 
   @@index([status, updated_at])
   @@index([status, created_at])
@@ -83,6 +84,18 @@ model Tenant {
   @@index([etapa_provisionamento, updated_at])
   @@index([deletado_at])
   @@map("tenants")
+}
+
+model RoteamentoWhatsapp {
+  id              Int      @id @default(autoincrement())
+  tenant_id       Int
+  phone_number_id String   @unique @db.VarChar(100)
+  created_at      DateTime @default(now()) @db.Timestamptz(3)
+  updated_at      DateTime @updatedAt @db.Timestamptz(3)
+  tenant          Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@index([tenant_id])
+  @@map("roteamentos_whatsapp")
 }
 
 model Plano {

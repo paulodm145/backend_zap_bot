@@ -15,6 +15,10 @@ process.env.TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE =
   'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789';
 process.env.TENANT_CLIENTES_CACHE_MAXIMO = '20';
 process.env.POSTGRES_ADMIN_URL = 'postgresql://postgres:postgres@127.0.0.1:5432/postgres';
+process.env.REDIS_URL = 'redis://127.0.0.1:6379';
+process.env.WEBHOOK_WHATSAPP_APP_SECRET = 'segredo-app-whatsapp-de-teste-com-mais-de-trinta-e-dois';
+process.env.WEBHOOK_WHATSAPP_VERIFY_TOKEN = 'token-verificacao-whatsapp-teste';
+process.env.WEBHOOK_IDEMPOTENCIA_SEGUNDOS = '604800';
 process.env.HTTP_REQUEST_TIMEOUT_MS = '30000';
 process.env.HTTP_HEADERS_TIMEOUT_MS = '31000';
 process.env.HTTP_KEEP_ALIVE_TIMEOUT_MS = '5000';

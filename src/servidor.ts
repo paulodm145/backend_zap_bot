@@ -1,12 +1,46 @@
 import { criarAplicacao } from './app.js';
 import { ambiente } from './config/ambiente.js';
 import { logger } from './config/logger.js';
+import { NOMES_FILAS } from './config/filas.js';
+import { criarConexaoRedis } from './config/redis.js';
+import { WebhookWhatsappController } from './controllers/webhook-whatsapp.controller.js';
 import { desconectarPrismaCentral, obterPrismaCentral } from './database/prisma-central.js';
 import { fecharConexoesTenant } from './database/gerenciador-conexoes-tenant.js';
+import { criarFila } from './queues/fila.factory.js';
+import { RegistroRecursosMensageria } from './queues/registro-recursos-mensageria.js';
+import { IdempotenciaRedisRepository } from './repositories/idempotencia-redis.repository.js';
+import { RoteamentoWhatsappRepository } from './repositories/roteamento-whatsapp.repository.js';
+import { EnfileiradorMensagemBullMqService } from './services/enfileirador-mensagem.service.js';
 import { VerificadorBancoCentralService } from './services/verificador-banco-central.service.js';
+import { VerificadorRedisService } from './services/verificador-redis.service.js';
+import { WebhookWhatsappService } from './services/webhook-whatsapp.service.js';
+import type { JobMensagemRecebida } from './types/jobs.js';
 
+const prismaCentral = obterPrismaCentral();
+const redis = criarConexaoRedis(ambiente.REDIS_URL, 'api');
+const recursosMensageria = new RegistroRecursosMensageria();
+const filaMensagens = recursosMensageria.registrar(
+  criarFila<JobMensagemRecebida>(NOMES_FILAS.mensagensRecebidas, redis),
+);
+const webhookWhatsappController = new WebhookWhatsappController(
+  new WebhookWhatsappService(
+    new RoteamentoWhatsappRepository(prismaCentral),
+    new IdempotenciaRedisRepository(redis),
+    new EnfileiradorMensagemBullMqService(filaMensagens),
+    ambiente.WEBHOOK_IDEMPOTENCIA_SEGUNDOS,
+  ),
+  ambiente.WEBHOOK_WHATSAPP_VERIFY_TOKEN,
+);
 const aplicacao = criarAplicacao({
-  verificadoresProntidao: [new VerificadorBancoCentralService(obterPrismaCentral())],
+  prismaCentral,
+  verificadoresProntidao: [
+    new VerificadorBancoCentralService(prismaCentral),
+    new VerificadorRedisService(redis),
+  ],
+  webhookWhatsapp: {
+    controller: webhookWhatsappController,
+    appSecret: ambiente.WEBHOOK_WHATSAPP_APP_SECRET,
+  },
 });
 
 const servidor = aplicacao.listen(ambiente.PORTA, () => {
@@ -42,6 +76,12 @@ function encerrar(motivo: string, erro?: unknown): void {
       }
 
       try {
+        await recursosMensageria.fecharTodos();
+        if (redis.status === 'wait') {
+          redis.disconnect();
+        } else {
+          await redis.quit();
+        }
         await fecharConexoesTenant();
         await desconectarPrismaCentral();
       } catch (erroDesconexao) {

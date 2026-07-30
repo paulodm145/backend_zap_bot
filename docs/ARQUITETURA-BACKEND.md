@@ -261,7 +261,21 @@ central_db.tenants (
   status ENUM('ativo','suspenso','cancelado'),
   criado_em TIMESTAMP
 )
+
+central_db.roteamentos_whatsapp (
+  id INTEGER PK SEQUENCIAL,
+  tenant_id INTEGER FK -> tenants,
+  phone_number_id VARCHAR UNIQUE,
+  created_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ
+)
 ```
+
+`roteamentos_whatsapp` é um índice técnico mínimo para resolver webhooks antes
+de abrir qualquer banco de tenant. Ele não armazena access token, WABA,
+credenciais ou dados de conversa. Esses dados permanecem exclusivamente em
+`contas_whatsapp`, no banco físico do tenant. O vínculo central deve ser
+criado ou atualizado junto ao onboarding manual da conta WhatsApp.
 
 ### 7.2 Banco por tenant (`tenant_<id>`)
 
@@ -276,6 +290,11 @@ Réplica do schema completo descrito na seção 6 (`whatsapp_accounts`, `flows`,
 4. API abre/reaproveita conexão com o banco do tenant (via pool gerenciado)
 5. Todas as queries da sessão usam essa conexão específica
 ```
+
+Webhooks não possuem e-mail autenticado. Nesse caso específico, a API consulta
+`central_db.roteamentos_whatsapp` pelo `phone_number_id`, obtém o tenant e só
+então acessa seu banco físico. Subdomínio e valores de conexão enviados pelo
+cliente nunca participam dessa resolução.
 
 ### 7.4 Gerenciamento de conexões (ponto crítico)
 

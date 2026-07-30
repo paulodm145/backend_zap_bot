@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { PapelUsuario, PrismaClient } from '../../src/generated/prisma/client.js';
+import { RoteamentoWhatsappRepository } from '../../src/repositories/roteamento-whatsapp.repository.js';
 import { TenantCentralRepository } from '../../src/repositories/tenant-central.repository.js';
 import { UsuarioCentralRepository } from '../../src/repositories/usuario-central.repository.js';
 
@@ -77,6 +78,28 @@ descreverIntegracao('repositories do banco central', () => {
     expect(encontrado?.id).toBe(criado.id);
   });
 
+  it('resolve tenant ativo pelo phone_number_id central', async () => {
+    const tenant = await prisma.tenant.create({
+      data: { nome: 'Empresa com WhatsApp', status: 'ATIVO' },
+    });
+    await prisma.roteamentoWhatsapp.create({
+      data: {
+        tenant_id: tenant.id,
+        phone_number_id: 'numero-central-teste',
+      },
+    });
+
+    const encontrado = await new RoteamentoWhatsappRepository(prisma).buscarTenantAtivo(
+      'numero-central-teste',
+    );
+
+    expect(encontrado?.tenant).toMatchObject({
+      public_id: tenant.public_id,
+      status: 'ATIVO',
+      deletado_at: null,
+    });
+  });
+
   it('possui os índices essenciais da migration', async () => {
     const indices = await prisma.$queryRaw<{ indexname: string }[]>`
       SELECT indexname
@@ -91,5 +114,7 @@ descreverIntegracao('repositories do banco central', () => {
     expect(nomes).toContain('tenants_nome_trgm_idx');
     expect(nomes).toContain('assinaturas_tenant_id_status_idx');
     expect(nomes).toContain('refresh_tokens_expira_at_idx');
+    expect(nomes).toContain('roteamentos_whatsapp_phone_number_id_key');
+    expect(nomes).toContain('roteamentos_whatsapp_tenant_id_idx');
   });
 });

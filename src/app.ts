@@ -12,6 +12,7 @@ import { AutenticacaoController } from './controllers/autenticacao.controller.js
 import { AutenticacaoInternaController } from './controllers/autenticacao-interna.controller.js';
 import { ProntidaoController } from './controllers/prontidao.controller.js';
 import { TenantsInternosController } from './controllers/tenants-internos.controller.js';
+import type { WebhookWhatsappController } from './controllers/webhook-whatsapp.controller.js';
 import { obterPrismaCentral } from './database/prisma-central.js';
 import type { PrismaClient } from './generated/prisma/client.js';
 import { MuitasRequisicoesError } from './erros/erro-aplicacao.js';
@@ -26,6 +27,7 @@ import { criarRotasAutenticacao } from './rotas/autenticacao.rotas.js';
 import { criarRotasAutenticacaoInterna } from './rotas/autenticacao-interna.rotas.js';
 import { criarRotasInternas } from './rotas/interno.rotas.js';
 import { criarRotasSaude } from './rotas/saude.rotas.js';
+import { criarRotasWebhookWhatsapp } from './rotas/webhook-whatsapp.rotas.js';
 import { AutenticacaoInternaService } from './services/autenticacao-interna.service.js';
 import { AutenticacaoService } from './services/autenticacao.service.js';
 import { AdministracaoTenantsService } from './services/administracao-tenants.service.js';
@@ -43,6 +45,10 @@ import { ProvisionamentoTenantService } from './services/provisionamento-tenant.
 interface OpcoesAplicacao {
   verificadoresProntidao?: VerificadorDependencia[];
   prismaCentral?: PrismaClient;
+  webhookWhatsapp?: {
+    controller: WebhookWhatsappController;
+    appSecret: string;
+  };
 }
 
 export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
@@ -127,6 +133,15 @@ export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
       credentials: true,
     }),
   );
+  if (opcoes.webhookWhatsapp) {
+    aplicacao.use(
+      '/api/v1/webhook/whatsapp',
+      criarRotasWebhookWhatsapp(
+        opcoes.webhookWhatsapp.controller,
+        opcoes.webhookWhatsapp.appSecret,
+      ),
+    );
+  }
   aplicacao.use(express.json({ limit: '1mb' }));
   aplicacao.use('/api/v1/auth', criarRotasAutenticacao(autenticacaoTenantController));
   aplicacao.use(
