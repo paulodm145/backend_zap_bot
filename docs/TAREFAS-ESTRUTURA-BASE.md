@@ -35,7 +35,7 @@ Regras:
 | 07. Administração de tenants | `feat/admin-tenants`             | 05 e 06     | Concluída |
 | 08. Infraestrutura local     | `chore/infraestrutura-local`     | 03 e 06     | Concluída |
 | 09. Filas e idempotência     | `feat/filas-mensageria`          | 06 e 08     | Concluída |
-| 10. Motor de fluxo inicial   | `feat/motor-fluxo-base`          | 06 e 09     | Pendente  |
+| 10. Motor de fluxo inicial   | `feat/motor-fluxo-base`          | 06 e 09     | Concluída |
 | 11. CI e qualidade           | `ci/pipeline-qualidade`          | 01 a 10     | Pendente  |
 
 ---
@@ -702,76 +702,76 @@ adicionar IA e integrações externas.
 
 ### Contratos
 
-- [ ] Criar enums dos tipos de nó.
-- [ ] Criar schema Zod do nó de mensagem.
-- [ ] Criar schema Zod do nó de captura.
-- [ ] Criar schema Zod do nó de condição.
-- [ ] Criar schema Zod do nó de direcionamento.
-- [ ] Criar união discriminada dos nós.
-- [ ] Criar schema da definição do fluxo.
-- [ ] Versionar o schema do fluxo.
-- [ ] Não usar `eval` em condições.
+- [x] Criar enums dos tipos de nó.
+- [x] Criar schema Zod do nó de mensagem.
+- [x] Criar schema Zod do nó de captura.
+- [x] Criar schema Zod do nó de condição.
+- [x] Criar schema Zod do nó de direcionamento.
+- [x] Criar união discriminada dos nós.
+- [x] Criar schema da definição do fluxo.
+- [x] Versionar o schema do fluxo.
+- [x] Não usar `eval` em condições.
 
 ### Validação do grafo
 
-- [ ] Validar existência do nó inicial.
-- [ ] Validar unicidade dos IDs dos nós.
-- [ ] Validar referências `proximo`.
-- [ ] Validar referências de condição.
-- [ ] Validar alcançabilidade.
-- [ ] Detectar ciclos não permitidos.
-- [ ] Validar setor referenciado.
-- [ ] Retornar erros por nó e campo.
-- [ ] Testar grafo mínimo válido.
-- [ ] Testar cada classe de grafo inválido.
+- [x] Validar existência do nó inicial.
+- [x] Validar unicidade dos IDs dos nós.
+- [x] Validar referências `proximo`.
+- [x] Validar referências de condição.
+- [x] Validar alcançabilidade.
+- [x] Detectar ciclos não permitidos.
+- [x] Validar setor referenciado.
+- [x] Retornar erros por nó e campo.
+- [x] Testar grafo mínimo válido.
+- [x] Testar cada classe de grafo inválido.
 
 ### Persistência e publicação
 
-- [ ] Criar repository de fluxos.
-- [ ] Criar fluxo como rascunho.
-- [ ] Atualizar somente rascunho.
-- [ ] Criar versão imutável publicada.
-- [ ] Executar validação antes de publicar.
-- [ ] Usar transação na publicação.
-- [ ] Criar índices de listagem de fluxos.
-- [ ] Implementar soft delete.
+- [x] Criar repository de fluxos.
+- [x] Criar fluxo como rascunho.
+- [x] Atualizar somente rascunho.
+- [x] Criar versão imutável publicada.
+- [x] Executar validação antes de publicar.
+- [x] Usar transação na publicação.
+- [x] Criar índices de listagem de fluxos.
+- [x] Implementar soft delete.
 
 ### Execução
 
-- [ ] Definir contrato do estado da conversa.
-- [ ] Namespacar estado Redis por tenant.
-- [ ] Carregar versão publicada.
-- [ ] Executar nó de mensagem.
-- [ ] Executar nó de captura.
-- [ ] Executar condição com parser seguro.
-- [ ] Executar direcionamento para setor.
-- [ ] Persistir snapshot do estado.
-- [ ] Limitar quantidade de passos por execução.
-- [ ] Tratar nó desconhecido como erro de domínio.
+- [x] Definir contrato do estado da conversa.
+- [x] Namespacar estado Redis por tenant.
+- [x] Carregar versão publicada.
+- [x] Executar nó de mensagem.
+- [x] Executar nó de captura.
+- [x] Executar condição com parser seguro.
+- [x] Executar direcionamento para setor.
+- [x] Persistir snapshot do estado.
+- [x] Limitar quantidade de passos por execução.
+- [x] Tratar nó desconhecido como erro de domínio.
 
 ### API e documentação
 
-- [ ] Implementar listagem paginada de fluxos.
-- [ ] Implementar detalhe por `public_id`.
-- [ ] Implementar criação.
-- [ ] Implementar atualização.
-- [ ] Implementar publicação.
-- [ ] Implementar simulação sem WhatsApp real.
-- [ ] Documentar composição da lista de fluxos.
-- [ ] Documentar editor e erros por nó.
-- [ ] Documentar estados de publicação.
-- [ ] Atualizar Swagger.
-- [ ] Criar `docs/api/fluxos.md`.
-- [ ] Criar `docs/schemas/fluxo-json.md`.
+- [x] Implementar listagem paginada de fluxos.
+- [x] Implementar detalhe por `public_id`.
+- [x] Implementar criação.
+- [x] Implementar atualização.
+- [x] Implementar publicação.
+- [x] Implementar simulação sem WhatsApp real.
+- [x] Documentar composição da lista de fluxos.
+- [x] Documentar editor e erros por nó.
+- [x] Documentar estados de publicação.
+- [x] Atualizar Swagger.
+- [x] Criar `docs/api/fluxos.md`.
+- [x] Criar `docs/schemas/fluxo-json.md`.
 
 ### Checklist de saída
 
-- [ ] Grafo inválido nunca é publicado.
-- [ ] Execução possui limite contra loop infinito.
-- [ ] Versão publicada é imutável.
-- [ ] Swagger e Markdown sincronizados.
-- [ ] Testes, lint, typecheck e build aprovados.
-- [ ] Branch pronta para revisão e merge.
+- [x] Grafo inválido nunca é publicado.
+- [x] Execução possui limite contra loop infinito.
+- [x] Versão publicada é imutável.
+- [x] Swagger e Markdown sincronizados.
+- [x] Testes, lint, typecheck e build aprovados.
+- [x] Branch pronta para revisão e merge.
 
 ---
 

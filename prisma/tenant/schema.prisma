@@ -41,18 +41,37 @@ model ContaWhatsapp {
 }
 
 model Fluxo {
-  id         Int      @id @default(autoincrement())
-  public_id  String   @unique @default(uuid()) @db.Uuid
-  nome       String   @db.VarChar(150)
-  definicao  Json
-  versao     Int      @default(1)
-  ativo      Boolean  @default(false)
-  created_at DateTime @default(now()) @db.Timestamptz(3)
-  updated_at DateTime @updatedAt @db.Timestamptz(3)
+  id                                  Int           @id @default(autoincrement())
+  public_id                           String        @unique @default(uuid()) @db.Uuid
+  nome                                String        @db.VarChar(150)
+  definicao                           Json
+  versao                              Int           @default(0)
+  ativo                               Boolean       @default(false)
+  possui_alteracoes_nao_publicadas    Boolean       @default(true)
+  publicado_at                        DateTime?      @db.Timestamptz(3)
+  deletado_at                         DateTime?      @db.Timestamptz(3)
+  created_at                          DateTime       @default(now()) @db.Timestamptz(3)
+  updated_at                          DateTime       @updatedAt @db.Timestamptz(3)
+  versoes                             FluxoVersao[]
 
   @@index([ativo, updated_at])
-  @@index([nome])
+  @@index([deletado_at, updated_at])
   @@map("fluxos")
+}
+
+model FluxoVersao {
+  id         Int      @id @default(autoincrement())
+  public_id  String   @unique @default(uuid()) @db.Uuid
+  fluxo_id   Int
+  versao     Int
+  definicao  Json
+  created_at DateTime @default(now()) @db.Timestamptz(3)
+  updated_at DateTime @updatedAt @db.Timestamptz(3)
+  fluxo      Fluxo    @relation(fields: [fluxo_id], references: [id], onDelete: Cascade)
+
+  @@unique([fluxo_id, versao])
+  @@index([fluxo_id, created_at])
+  @@map("fluxo_versoes")
 }
 
 model Contato {

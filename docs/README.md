@@ -37,6 +37,8 @@ Documentos funcionais disponíveis:
 - [Operação multi-tenant](multitenancy.md)
 - [Administração de tenants](api/tenants.md)
 - [Webhook do WhatsApp](eventos/webhook-whatsapp.md)
+- [Fluxos e editor visual](api/fluxos.md)
+- [Schema JSON dos fluxos](schemas/fluxo-json.md)
 
 ## Swagger e Markdown
 

@@ -51,3 +51,21 @@ export class MuitasRequisicoesError extends ErroAplicacao {
     super('LIMITE_TENTATIVAS', mensagem, 429);
   }
 }
+
+export class ConflitoError extends ErroAplicacao {
+  public constructor(mensagem: string) {
+    super('CONFLITO', mensagem, 409);
+  }
+}
+
+export class NoFluxoDesconhecidoError extends ErroAplicacao {
+  public constructor(tipo: string) {
+    super('NO_FLUXO_DESCONHECIDO', `Tipo de nó desconhecido: ${tipo}`, 422);
+  }
+}
+
+export class LimiteExecucaoFluxoError extends ErroAplicacao {
+  public constructor() {
+    super('LIMITE_EXECUCAO_FLUXO', 'O fluxo excedeu o limite de passos por execução', 422);
+  }
+}

@@ -599,7 +599,7 @@ Estrutura de grafo (nós + conexões), interpretada pelo `FlowEngineService`:
 
 ```json
 {
-  "versao": 1,
+  "schemaVersao": 1,
   "noInicial": "no_1",
   "nos": [
     {
@@ -661,6 +661,12 @@ Estrutura de grafo (nós + conexões), interpretada pelo `FlowEngineService`:
 - Não pode haver nó órfão (inalcançável a partir de `noInicial`).
 - Nós do tipo `integracao_http` devem referenciar uma `credencialId` existente no tenant.
 - Nós do tipo `direcionar_setor` devem referenciar um `setorId` existente no tenant.
+
+O registro `fluxos.definicao` é o rascunho editável. Cada publicação cria,
+transacionalmente, uma linha imutável em `fluxo_versoes`, com número sequencial
+por fluxo. O motor carrega a versão publicada, nunca o rascunho. Condições da
+versão 1 aceitam apenas comparações `==` e `!=` entre variável e texto,
+interpretadas por parser próprio; não há uso de `eval`.
 
 ## 16. Documentação da API
 

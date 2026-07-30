@@ -18,6 +18,10 @@ describe('OpenAPI', () => {
     expect(documento.paths).toHaveProperty('/api/v1/interno/tenants/{tenantId}/status');
     expect(documento.paths).toHaveProperty('/api/v1/interno/tenants/{tenantId}/plano');
     expect(documento.paths).toHaveProperty('/api/v1/webhook/whatsapp');
+    expect(documento.paths).toHaveProperty('/api/v1/fluxos');
+    expect(documento.paths).toHaveProperty('/api/v1/fluxos/{fluxoId}');
+    expect(documento.paths).toHaveProperty('/api/v1/fluxos/{fluxoId}/publicar');
+    expect(documento.paths).toHaveProperty('/api/v1/fluxos/{fluxoId}/simular');
     expect(documento.paths).toHaveProperty('/api/v1/openapi.json');
     expect(documento.paths).toHaveProperty('/api/v1/docs');
   });

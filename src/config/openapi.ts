@@ -1,5 +1,14 @@
 import { OpenAPIRegistry, OpenApiGeneratorV3 } from '@asteasolutions/zod-to-openapi';
 
+import {
+  atualizarFluxoSchema,
+  criarFluxoSchema,
+  definicaoFluxoSchema,
+  estadoConversaFluxoSchema,
+  fluxoPublicIdSchema,
+  listarFluxosSchema,
+  simularFluxoSchema,
+} from '../dtos/fluxo.dto.js';
 import { loginInternoSchema } from '../dtos/login-interno.dto.js';
 import { loginSchema } from '../dtos/login.dto.js';
 import {
@@ -93,6 +102,56 @@ const webhookRespostaSchema = z
     duplicadas: z.number().int().nonnegative(),
   })
   .openapi('WebhookWhatsappResposta');
+const fluxoResumoSchema = z.object({
+  public_id: z.uuid(),
+  nome: z.string(),
+  versao: z.number().int().nonnegative(),
+  ativo: z.boolean(),
+  possui_alteracoes_nao_publicadas: z.boolean(),
+  publicado_at: z.iso.datetime().nullable(),
+  created_at: z.iso.datetime(),
+  updated_at: z.iso.datetime(),
+});
+const fluxoDetalheSchema = fluxoResumoSchema.extend({
+  definicao: definicaoFluxoSchema,
+  versoes: z.array(
+    z.object({
+      public_id: z.uuid(),
+      versao: z.number().int().positive(),
+      created_at: z.iso.datetime(),
+    }),
+  ),
+});
+const paginaFluxosSchema = z.object({
+  dados: z.array(fluxoResumoSchema),
+  total: z.number().int().nonnegative(),
+  skip: z.number().int().nonnegative(),
+  take: z.number().int().positive(),
+});
+const versaoFluxoSchema = z.object({
+  public_id: z.uuid(),
+  versao: z.number().int().positive(),
+  definicao: definicaoFluxoSchema,
+  created_at: z.iso.datetime(),
+});
+const saidaFluxoSchema = z.discriminatedUnion('tipo', [
+  z.object({ tipo: z.literal('mensagem'), texto: z.string(), noId: z.string() }),
+  z.object({
+    tipo: z.literal('captura'),
+    mensagem: z.string().optional(),
+    variavel: z.string(),
+    noId: z.string(),
+  }),
+  z.object({
+    tipo: z.literal('direcionamento'),
+    setorId: z.uuid(),
+    noId: z.string(),
+  }),
+]);
+const simulacaoFluxoRespostaSchema = z.object({
+  estado: estadoConversaFluxoSchema,
+  saidas: z.array(saidaFluxoSchema),
+});
 
 function criarRegistro(): OpenAPIRegistry {
   const registro = new OpenAPIRegistry();
@@ -455,6 +514,158 @@ function criarRegistro(): OpenAPIRegistry {
       200: { description: 'Assinatura manual criada.' },
       422: {
         description: 'Confirmação ausente ou regra inválida.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+
+  registro.registerPath({
+    method: 'get',
+    path: '/api/v1/fluxos',
+    tags: ['Fluxos'],
+    summary: 'Lista rascunhos e fluxos publicados do tenant',
+    security: [{ bearerAuth: [] }],
+    request: { query: listarFluxosSchema },
+    responses: {
+      200: {
+        description: 'Página ordenada pela atualização mais recente.',
+        content: { 'application/json': { schema: paginaFluxosSchema } },
+      },
+      401: {
+        description: 'Access token ausente ou inválido.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+
+  registro.registerPath({
+    method: 'post',
+    path: '/api/v1/fluxos',
+    tags: ['Fluxos'],
+    summary: 'Cria um fluxo como rascunho',
+    security: [{ bearerAuth: [] }],
+    request: {
+      body: {
+        required: true,
+        content: { 'application/json': { schema: criarFluxoSchema } },
+      },
+    },
+    responses: {
+      201: { description: 'Rascunho criado.' },
+      422: {
+        description: 'Contrato estrutural inválido.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+
+  registro.registerPath({
+    method: 'get',
+    path: '/api/v1/fluxos/{fluxoId}',
+    tags: ['Fluxos'],
+    summary: 'Detalha o rascunho e a última versão publicada',
+    security: [{ bearerAuth: [] }],
+    request: { params: fluxoPublicIdSchema },
+    responses: {
+      200: {
+        description: 'Fluxo encontrado.',
+        content: { 'application/json': { schema: fluxoDetalheSchema } },
+      },
+      404: {
+        description: 'Fluxo inexistente ou excluído.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+
+  registro.registerPath({
+    method: 'put',
+    path: '/api/v1/fluxos/{fluxoId}',
+    tags: ['Fluxos'],
+    summary: 'Atualiza somente o rascunho editável',
+    security: [{ bearerAuth: [] }],
+    request: {
+      params: fluxoPublicIdSchema,
+      body: {
+        required: true,
+        content: { 'application/json': { schema: atualizarFluxoSchema } },
+      },
+    },
+    responses: {
+      200: {
+        description: 'Rascunho atualizado sem alterar versões publicadas.',
+        content: { 'application/json': { schema: fluxoDetalheSchema } },
+      },
+      404: {
+        description: 'Fluxo inexistente ou excluído.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+
+  registro.registerPath({
+    method: 'delete',
+    path: '/api/v1/fluxos/{fluxoId}',
+    tags: ['Fluxos'],
+    summary: 'Exclui logicamente um fluxo',
+    security: [{ bearerAuth: [] }],
+    request: { params: fluxoPublicIdSchema },
+    responses: {
+      204: { description: 'Fluxo ocultado por soft delete.' },
+      404: {
+        description: 'Fluxo inexistente ou já excluído.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+
+  registro.registerPath({
+    method: 'post',
+    path: '/api/v1/fluxos/{fluxoId}/publicar',
+    tags: ['Fluxos'],
+    summary: 'Valida o grafo e cria uma versão publicada imutável',
+    security: [{ bearerAuth: [] }],
+    request: { params: fluxoPublicIdSchema },
+    responses: {
+      201: {
+        description: 'Nova versão publicada.',
+        content: { 'application/json': { schema: versaoFluxoSchema } },
+      },
+      409: {
+        description: 'Não existem alterações pendentes.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+      422: {
+        description: 'Grafo inválido; detalhes contêm erros por nó e campo.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+
+  registro.registerPath({
+    method: 'post',
+    path: '/api/v1/fluxos/{fluxoId}/simular',
+    tags: ['Fluxos'],
+    summary: 'Executa a versão publicada sem enviar mensagens reais',
+    security: [{ bearerAuth: [] }],
+    request: {
+      params: fluxoPublicIdSchema,
+      body: {
+        required: true,
+        content: { 'application/json': { schema: simularFluxoSchema } },
+      },
+    },
+    responses: {
+      200: {
+        description: 'Estado e saídas determinísticas da simulação.',
+        content: { 'application/json': { schema: simulacaoFluxoRespostaSchema } },
+      },
+      404: {
+        description: 'Versão publicada não encontrada.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+      422: {
+        description: 'Estado incompatível ou limite de execução atingido.',
         content: { 'application/json': { schema: erroSchema } },
       },
     },

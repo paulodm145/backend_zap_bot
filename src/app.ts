@@ -13,12 +13,16 @@ import { AutenticacaoInternaController } from './controllers/autenticacao-intern
 import { ProntidaoController } from './controllers/prontidao.controller.js';
 import { TenantsInternosController } from './controllers/tenants-internos.controller.js';
 import type { WebhookWhatsappController } from './controllers/webhook-whatsapp.controller.js';
+import { FluxoController } from './controllers/fluxo.controller.js';
+import { obterGerenciadorConexoesTenant } from './database/gerenciador-conexoes-tenant.js';
 import { obterPrismaCentral } from './database/prisma-central.js';
 import type { PrismaClient } from './generated/prisma/client.js';
 import { MuitasRequisicoesError } from './erros/erro-aplicacao.js';
 import { adicionarCorrelacao } from './middlewares/correlacao.middleware.js';
 import { protegerDocumentacao } from './middlewares/documentacao.middleware.js';
 import { tratarErro } from './middlewares/erro.middleware.js';
+import { criarAutenticacaoMiddleware } from './middlewares/autenticacao.middleware.js';
+import { criarResolucaoTenantMiddleware } from './middlewares/resolucao-tenant.middleware.js';
 import { RefreshTokenRepository } from './repositories/refresh-token.repository.js';
 import { UsuarioInternoMemoriaRepository } from './repositories/memoria/usuario-interno-memoria.repository.js';
 import { UsuarioCentralRepository } from './repositories/usuario-central.repository.js';
@@ -28,6 +32,7 @@ import { criarRotasAutenticacaoInterna } from './rotas/autenticacao-interna.rota
 import { criarRotasInternas } from './rotas/interno.rotas.js';
 import { criarRotasSaude } from './rotas/saude.rotas.js';
 import { criarRotasWebhookWhatsapp } from './rotas/webhook-whatsapp.rotas.js';
+import { criarRotasFluxos } from './rotas/fluxo.rotas.js';
 import { AutenticacaoInternaService } from './services/autenticacao-interna.service.js';
 import { AutenticacaoService } from './services/autenticacao.service.js';
 import { AdministracaoTenantsService } from './services/administracao-tenants.service.js';
@@ -84,6 +89,9 @@ export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
   );
   const autenticacaoTenantController = new AutenticacaoController(autenticacaoTenant);
   const tenantsRepository = new TenantCentralRepository(prismaCentral);
+  const criptografiaConexaoTenant = new CriptografiaService(
+    ambiente.TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE,
+  );
   const tenantsController = new TenantsInternosController(
     tenantsRepository,
     new AdministracaoTenantsService(tenantsRepository),
@@ -144,6 +152,16 @@ export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
   }
   aplicacao.use(express.json({ limit: '1mb' }));
   aplicacao.use('/api/v1/auth', criarRotasAutenticacao(autenticacaoTenantController));
+  aplicacao.use(
+    '/api/v1/fluxos',
+    criarAutenticacaoMiddleware(tokenTenant),
+    criarResolucaoTenantMiddleware(
+      tenantsRepository,
+      criptografiaConexaoTenant,
+      obterGerenciadorConexoesTenant(),
+    ),
+    criarRotasFluxos(new FluxoController()),
+  );
   aplicacao.use(
     '/api/v1/interno/auth',
     rateLimit({
