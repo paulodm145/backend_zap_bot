@@ -53,18 +53,21 @@ jobs:
 
     steps:
       - name: Baixar código
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Configurar Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22.17.0
           cache: npm
 
       - name: Instalar dependências reproduzíveis
         run: npm ci
+
+      - name: Gerar clients Prisma
+        run: npm run prisma:generate
 
       - name: Bloquear arquivos de ambiente versionados
         shell: bash
