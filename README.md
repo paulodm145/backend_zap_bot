@@ -245,7 +245,7 @@ Todos os scripts são executados com `npm run <nome>`.
 | `db:tenant:migrate:deploy`  | Atualiza um banco de tenant específico.                    |
 | `db:tenant:migrate:todos`   | Atualiza todos os tenants ativos, tolerando falha isolada. |
 | `auth:limpar-refresh`       | Remove refresh tokens expirados do banco central.          |
-| `admin:criar`               | Cadastra o primeiro `super_admin` sem senha padrão.        |
+| `admin:criar`               | Cadastra um `super_admin` sem senha padrão.                |
 
 Exemplos de infraestrutura central:
 
@@ -282,6 +282,21 @@ SUPER_ADMIN_EMAIL=admin@empresa.com \
 SUPER_ADMIN_SENHA='uma-senha-forte-e-unica' \
 npm run admin:criar
 ```
+
+O mesmo administrador pode ser criado com argumentos, usando a conexão central
+já configurada no `.env`:
+
+```bash
+npm run admin:criar -- \
+  --nome "Administrador Geral" \
+  --email "admin@zapbot.local" \
+  --senha 'EscolhaUmaSenhaForte123!'
+```
+
+Use aspas simples ao redor da senha para impedir que o shell interprete
+caracteres como `!` e `$`. O comando recusa e-mail duplicado e exige senha com
+12 a 128 caracteres. Em ambientes compartilhados, prefira as variáveis de
+ambiente para não registrar a senha no histórico do terminal.
 
 Para desabilitar o TOTP exclusivamente no desenvolvimento local:
 

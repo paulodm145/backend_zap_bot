@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 
 import { normalizarEmail } from '../src/helpers/email.helper.js';
+import { lerArgumentosNomeados } from '../src/helpers/argumentos-cli.helper.js';
 import { PapelUsuario, PrismaClient } from '../src/generated/prisma/client.js';
 
 const entradaSchema = z.object({
@@ -15,7 +16,13 @@ const entradaSchema = z.object({
 });
 
 async function executar(): Promise<void> {
-  const entrada = entradaSchema.parse(process.env);
+  const argumentos = lerArgumentosNomeados(process.argv.slice(2));
+  const entrada = entradaSchema.parse({
+    CENTRAL_DATABASE_URL: process.env.CENTRAL_DATABASE_URL,
+    SUPER_ADMIN_NOME: argumentos.nome ?? process.env.SUPER_ADMIN_NOME,
+    SUPER_ADMIN_EMAIL: argumentos.email ?? process.env.SUPER_ADMIN_EMAIL,
+    SUPER_ADMIN_SENHA: argumentos.senha ?? process.env.SUPER_ADMIN_SENHA,
+  });
   const prisma = new PrismaClient({
     adapter: new PrismaPg(entrada.CENTRAL_DATABASE_URL),
   });
