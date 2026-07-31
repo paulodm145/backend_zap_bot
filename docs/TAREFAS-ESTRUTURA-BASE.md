@@ -24,19 +24,19 @@ Regras:
 
 ## Visão das etapas
 
-| Etapa                        | Branch                           | Dependência | Estado       |
-| ---------------------------- | -------------------------------- | ----------- | ------------ |
-| 01. Fundação do repositório  | `chore/estrutura-base`           | Nenhuma     | Concluída    |
-| 02. OpenAPI e documentação   | `feat/openapi-documentacao-base` | 01          | Concluída    |
-| 03. Banco central            | `feat/banco-central-prisma`      | 01          | Concluída    |
-| 04. Autenticação de tenant   | `feat/autenticacao-tenant`       | 03          | Concluída    |
-| 05. Autenticação interna     | `feat/autenticacao-interna`      | 03          | Concluída    |
-| 06. Resolução multi-tenant   | `feat/resolucao-multitenant`     | 03 e 04     | Concluída    |
-| 07. Administração de tenants | `feat/admin-tenants`             | 05 e 06     | Concluída    |
-| 08. Infraestrutura local     | `chore/infraestrutura-local`     | 03 e 06     | Concluída    |
-| 09. Filas e idempotência     | `feat/filas-mensageria`          | 06 e 08     | Concluída    |
-| 10. Motor de fluxo inicial   | `feat/motor-fluxo-base`          | 06 e 09     | Concluída    |
-| 11. CI e qualidade           | `ci/pipeline-qualidade`          | 01 a 10     | Em andamento |
+| Etapa                        | Branch                           | Dependência | Estado    |
+| ---------------------------- | -------------------------------- | ----------- | --------- |
+| 01. Fundação do repositório  | `chore/estrutura-base`           | Nenhuma     | Concluída |
+| 02. OpenAPI e documentação   | `feat/openapi-documentacao-base` | 01          | Concluída |
+| 03. Banco central            | `feat/banco-central-prisma`      | 01          | Concluída |
+| 04. Autenticação de tenant   | `feat/autenticacao-tenant`       | 03          | Concluída |
+| 05. Autenticação interna     | `feat/autenticacao-interna`      | 03          | Concluída |
+| 06. Resolução multi-tenant   | `feat/resolucao-multitenant`     | 03 e 04     | Concluída |
+| 07. Administração de tenants | `feat/admin-tenants`             | 05 e 06     | Concluída |
+| 08. Infraestrutura local     | `chore/infraestrutura-local`     | 03 e 06     | Concluída |
+| 09. Filas e idempotência     | `feat/filas-mensageria`          | 06 e 08     | Concluída |
+| 10. Motor de fluxo inicial   | `feat/motor-fluxo-base`          | 06 e 09     | Concluída |
+| 11. CI e qualidade           | `ci/pipeline-qualidade`          | 01 a 10     | Concluída |
 
 ---
 
@@ -812,11 +812,11 @@ Objetivo: tornar automáticas as validações exigidas para merge.
 
 ### Checklist de saída
 
-- [ ] Pipeline passa em branch limpa.
+- [x] Pipeline passa em branch limpa.
 - [x] Pipeline detecta falha proposital de lint.
 - [x] Pipeline detecta falha proposital de teste.
 - [x] Processo de contribuição está documentado.
-- [ ] Branch pronta para revisão e merge.
+- [x] Branch pronta para revisão e merge.
 
 ---
 
