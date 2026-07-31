@@ -14,6 +14,7 @@ import { ProntidaoController } from './controllers/prontidao.controller.js';
 import { TenantsInternosController } from './controllers/tenants-internos.controller.js';
 import type { WebhookWhatsappController } from './controllers/webhook-whatsapp.controller.js';
 import { FluxoController } from './controllers/fluxo.controller.js';
+import { EmpresaController } from './controllers/empresa.controller.js';
 import { obterGerenciadorConexoesTenant } from './database/gerenciador-conexoes-tenant.js';
 import { obterPrismaCentral } from './database/prisma-central.js';
 import type { PrismaClient } from './generated/prisma/client.js';
@@ -33,6 +34,7 @@ import { criarRotasInternas } from './rotas/interno.rotas.js';
 import { criarRotasSaude } from './rotas/saude.rotas.js';
 import { criarRotasWebhookWhatsapp } from './rotas/webhook-whatsapp.rotas.js';
 import { criarRotasFluxos } from './rotas/fluxo.rotas.js';
+import { criarRotasEmpresa } from './rotas/empresa.rotas.js';
 import { AutenticacaoInternaService } from './services/autenticacao-interna.service.js';
 import { AutenticacaoService } from './services/autenticacao.service.js';
 import { AdministracaoTenantsService } from './services/administracao-tenants.service.js';
@@ -46,6 +48,7 @@ import { TotpService } from './services/totp.service.js';
 import { CriptografiaService } from './services/criptografia.service.js';
 import { ProvisionadorBancoTenantService } from './services/provisionador-banco-tenant.service.js';
 import { ProvisionamentoTenantService } from './services/provisionamento-tenant.service.js';
+import { BrasilApiService } from './services/brasil-api.service.js';
 
 interface OpcoesAplicacao {
   verificadoresProntidao?: VerificadorDependencia[];
@@ -161,6 +164,24 @@ export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
       obterGerenciadorConexoesTenant(),
     ),
     criarRotasFluxos(new FluxoController()),
+  );
+  aplicacao.use(
+    '/api/v1/empresa',
+    criarAutenticacaoMiddleware(tokenTenant),
+    criarResolucaoTenantMiddleware(
+      tenantsRepository,
+      criptografiaConexaoTenant,
+      obterGerenciadorConexoesTenant(),
+    ),
+    criarRotasEmpresa(
+      new EmpresaController(
+        new BrasilApiService(
+          ambiente.BRASIL_API_URL,
+          ambiente.BRASIL_API_TIMEOUT_MS,
+          ambiente.BRASIL_API_TENTATIVAS,
+        ),
+      ),
+    ),
   );
   aplicacao.use(
     '/api/v1/interno/auth',

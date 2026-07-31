@@ -47,6 +47,9 @@ const ambienteSchema = z
     HTTP_SHUTDOWN_TIMEOUT_MS: z.coerce.number().int().positive().default(10_000),
     SWAGGER_USUARIO: z.string().min(1).optional(),
     SWAGGER_SENHA: z.string().min(12).optional(),
+    BRASIL_API_URL: z.url().default('https://brasilapi.com.br/api'),
+    BRASIL_API_TIMEOUT_MS: z.coerce.number().int().positive().default(10_000),
+    BRASIL_API_TENTATIVAS: z.coerce.number().int().positive().max(5).default(3),
   })
   .superRefine((valor, contexto) => {
     if (valor.NODE_ENV !== 'production') {

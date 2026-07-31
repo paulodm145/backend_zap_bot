@@ -3,6 +3,7 @@ import '../configurar-ambiente.js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { GerenciadorConexoesTenantLru } from '../../src/database/gerenciador-conexoes-tenant.js';
+import { EmpresaRepository } from '../../src/repositories/empresa.repository.js';
 
 const urlA = process.env.TEST_TENANT_DATABASE_URL_A;
 const urlB = process.env.TEST_TENANT_DATABASE_URL_B;
@@ -14,8 +15,10 @@ descreverIntegracao('isolamento físico e cache LRU dos tenants', () => {
   beforeAll(async () => {
     const clienteA = await gerenciador.obter(1, urlA ?? '');
     await clienteA.contato.deleteMany();
+    await clienteA.empresa.deleteMany();
     const clienteB = await gerenciador.obter(2, urlB ?? '');
     await clienteB.contato.deleteMany();
+    await clienteB.empresa.deleteMany();
   });
 
   afterAll(async () => gerenciador.fecharTodos());
@@ -41,5 +44,17 @@ descreverIntegracao('isolamento físico e cache LRU dos tenants', () => {
     ]);
     expect(primeiro).toBe(segundo);
     await gerenciadorConcorrente.fecharTodos();
+  });
+
+  it('mantém o cadastro empresarial somente no banco do tenant', async () => {
+    const clienteA = await gerenciador.obter(1, urlA ?? '');
+    const clienteB = await gerenciador.obter(2, urlB ?? '');
+    const empresaA = new EmpresaRepository(clienteA);
+    const empresaB = new EmpresaRepository(clienteB);
+
+    await empresaA.salvar({ nomeFantasia: 'Empresa exclusiva A', cep: '01001000' });
+
+    expect(await empresaA.buscar()).toMatchObject({ nome_fantasia: 'Empresa exclusiva A' });
+    expect(await empresaB.buscar()).toBeNull();
   });
 });

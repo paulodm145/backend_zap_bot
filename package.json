@@ -28,6 +28,7 @@
     "db:tenant:migrate:dev": "prisma migrate dev --config prisma.tenant.config.ts",
     "db:tenant:migrate:deploy": "prisma migrate deploy --config prisma.tenant.config.ts",
     "db:tenant:migrate:todos": "tsx scripts/migrar-tenants.ts",
+    "catalogo:geografia:importar": "tsx scripts/importar-geografia.ts",
     "auth:limpar-refresh": "tsx scripts/limpar-refresh-tokens.ts",
     "admin:criar": "tsx scripts/criar-super-admin.ts"
   },

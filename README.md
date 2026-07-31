@@ -300,27 +300,28 @@ npm run format
 
 Todos os scripts são executados com `npm run <nome>`.
 
-| Script                      | Finalidade                                                 |
-| --------------------------- | ---------------------------------------------------------- |
-| `dev`                       | Inicia a API em modo watch.                                |
-| `build`                     | Gera os dois clients Prisma e compila o TypeScript.        |
-| `start`                     | Executa a saída compilada em `dist/`.                      |
-| `lint` / `lint:fix`         | Verifica ou corrige regras estáticas.                      |
-| `format` / `format:check`   | Aplica ou verifica o Prettier.                             |
-| `typecheck`                 | Valida tipos sem emitir arquivos.                          |
-| `test` / `test:watch`       | Executa testes uma vez ou em observação.                   |
-| `test:coverage`             | Executa testes com limites de cobertura.                   |
-| `prisma:generate`           | Gera os clients central e tenant.                          |
-| `prisma:central:generate`   | Gera somente o client do banco central/admin.              |
-| `prisma:tenant:generate`    | Gera somente o client dos bancos de tenant.                |
-| `db:central:migrate:dev`    | Cria/aplica migration central em desenvolvimento.          |
-| `db:central:migrate:deploy` | Aplica migrations centrais pendentes.                      |
-| `db:central:seed`           | Cadastra ou atualiza os planos iniciais.                   |
-| `db:tenant:migrate:dev`     | Cria migration no schema separado de tenant.               |
-| `db:tenant:migrate:deploy`  | Atualiza um banco de tenant específico.                    |
-| `db:tenant:migrate:todos`   | Atualiza todos os tenants ativos, tolerando falha isolada. |
-| `auth:limpar-refresh`       | Remove refresh tokens expirados do banco central.          |
-| `admin:criar`               | Cadastra um `super_admin` sem senha padrão.                |
+| Script                        | Finalidade                                                  |
+| ----------------------------- | ----------------------------------------------------------- |
+| `dev`                         | Inicia a API em modo watch.                                 |
+| `build`                       | Gera os dois clients Prisma e compila o TypeScript.         |
+| `start`                       | Executa a saída compilada em `dist/`.                       |
+| `lint` / `lint:fix`           | Verifica ou corrige regras estáticas.                       |
+| `format` / `format:check`     | Aplica ou verifica o Prettier.                              |
+| `typecheck`                   | Valida tipos sem emitir arquivos.                           |
+| `test` / `test:watch`         | Executa testes uma vez ou em observação.                    |
+| `test:coverage`               | Executa testes com limites de cobertura.                    |
+| `prisma:generate`             | Gera os clients central e tenant.                           |
+| `prisma:central:generate`     | Gera somente o client do banco central/admin.               |
+| `prisma:tenant:generate`      | Gera somente o client dos bancos de tenant.                 |
+| `db:central:migrate:dev`      | Cria/aplica migration central em desenvolvimento.           |
+| `db:central:migrate:deploy`   | Aplica migrations centrais pendentes.                       |
+| `db:central:seed`             | Cadastra ou atualiza os planos iniciais.                    |
+| `db:tenant:migrate:dev`       | Cria migration no schema separado de tenant.                |
+| `db:tenant:migrate:deploy`    | Atualiza um banco de tenant específico.                     |
+| `db:tenant:migrate:todos`     | Atualiza todos os tenants ativos, tolerando falha isolada.  |
+| `catalogo:geografia:importar` | Importa estados e municípios da BrasilAPI no banco central. |
+| `auth:limpar-refresh`         | Remove refresh tokens expirados do banco central.           |
+| `admin:criar`                 | Cadastra um `super_admin` sem senha padrão.                 |
 
 Exemplos de infraestrutura central:
 
@@ -357,6 +358,23 @@ SUPER_ADMIN_EMAIL=admin@empresa.com \
 SUPER_ADMIN_SENHA='uma-senha-forte-e-unica' \
 npm run admin:criar
 ```
+
+Importação completa e idempotente do catálogo geográfico:
+
+```bash
+npm run catalogo:geografia:importar
+```
+
+Para atualizar somente uma UF (útil em desenvolvimento e diagnóstico):
+
+```bash
+npm run catalogo:geografia:importar -- --uf SP
+```
+
+O comando usa `CENTRAL_DATABASE_URL`, aceita `BRASIL_API_URL`,
+`BRASIL_API_TIMEOUT_MS` e `BRASIL_API_TENTATIVAS`, mostra um resumo em JSON e
+termina com código diferente de zero se alguma UF falhar. Execute primeiro
+`npm run db:central:migrate:deploy`.
 
 O mesmo administrador pode ser criado com argumentos, usando a conexão central
 já configurada no `.env`:

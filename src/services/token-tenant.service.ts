@@ -9,6 +9,7 @@ export interface UsuarioTokenTenant {
   publicId: string;
   tenantPublicId: string;
   email: string;
+  papel?: 'ADMIN_TENANT' | 'USUARIO';
 }
 
 export class TokenTenantService {
@@ -22,6 +23,7 @@ export class TokenTenantService {
       {
         email: usuario.email,
         tenantId: usuario.tenantPublicId,
+        papel: usuario.papel ?? 'USUARIO',
         tipo: 'tenant',
       },
       this.segredo,
@@ -38,6 +40,7 @@ export class TokenTenantService {
     sub: string;
     email: string;
     tenantId: string;
+    papel: 'ADMIN_TENANT' | 'USUARIO';
     tipo: 'tenant';
   } {
     try {
@@ -51,6 +54,7 @@ export class TokenTenantService {
         typeof payload.sub !== 'string' ||
         typeof payload.email !== 'string' ||
         typeof payload.tenantId !== 'string' ||
+        (payload.papel !== 'ADMIN_TENANT' && payload.papel !== 'USUARIO') ||
         payload.tipo !== 'tenant'
       ) {
         throw new Error('Payload inválido');
@@ -60,6 +64,7 @@ export class TokenTenantService {
         sub: string;
         email: string;
         tenantId: string;
+        papel: 'ADMIN_TENANT' | 'USUARIO';
         tipo: 'tenant';
       };
     } catch {

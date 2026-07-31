@@ -55,6 +55,9 @@ dependem do cookie HttpOnly. Uma implementação sugerida do cliente HTTP está 
 | DELETE | `/api/v1/fluxos/{fluxoId}`                  | JWT tenant                        | Excluir logicamente                       |
 | POST   | `/api/v1/fluxos/{fluxoId}/publicar`         | JWT tenant                        | Publicar versão imutável                  |
 | POST   | `/api/v1/fluxos/{fluxoId}/simular`          | JWT tenant                        | Simular conversa sem WhatsApp             |
+| GET    | `/api/v1/empresa`                           | JWT tenant                        | Consultar cadastro empresarial            |
+| PUT    | `/api/v1/empresa`                           | Admin do tenant                   | Atualizar cadastro empresarial            |
+| GET    | `/api/v1/empresa/consultar-cep/{cep}`       | JWT tenant                        | Sugerir endereço pelo CEP                 |
 | GET    | `/api/v1/webhook/whatsapp`                  | Token de verificação Meta         | Confirmar cadastro do webhook             |
 | POST   | `/api/v1/webhook/whatsapp`                  | Assinatura HMAC Meta              | Receber e enfileirar eventos              |
 

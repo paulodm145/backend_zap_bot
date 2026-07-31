@@ -174,3 +174,37 @@ model AuditoriaInterna {
   @@index([created_at])
   @@map("auditoria_interna")
 }
+
+model Estado {
+  id               Int         @id @default(autoincrement())
+  codigo_ibge      Int         @unique
+  sigla            String      @unique @db.VarChar(2)
+  nome             String      @db.VarChar(80)
+  nome_normalizado String      @db.VarChar(80)
+  regiao           String?     @db.VarChar(30)
+  ativo            Boolean     @default(true)
+  created_at       DateTime    @default(now()) @db.Timestamptz(3)
+  updated_at       DateTime    @updatedAt @db.Timestamptz(3)
+  municipios       Municipio[]
+
+  @@index([ativo, nome])
+  @@index([nome_normalizado])
+  @@map("estados")
+}
+
+model Municipio {
+  id               Int      @id @default(autoincrement())
+  codigo_ibge      String   @unique @db.VarChar(12)
+  estado_id        Int
+  nome             String   @db.VarChar(150)
+  nome_normalizado String   @db.VarChar(150)
+  ativo            Boolean  @default(true)
+  created_at       DateTime @default(now()) @db.Timestamptz(3)
+  updated_at       DateTime @updatedAt @db.Timestamptz(3)
+  estado           Estado   @relation(fields: [estado_id], references: [id], onDelete: Restrict)
+
+  @@index([estado_id, ativo, nome])
+  @@index([estado_id, nome_normalizado])
+  @@index([nome_normalizado])
+  @@map("municipios")
+}

@@ -8,6 +8,7 @@ import { PapelUsuario, PrismaClient } from '../../src/generated/prisma/client.js
 import { RoteamentoWhatsappRepository } from '../../src/repositories/roteamento-whatsapp.repository.js';
 import { TenantCentralRepository } from '../../src/repositories/tenant-central.repository.js';
 import { UsuarioCentralRepository } from '../../src/repositories/usuario-central.repository.js';
+import { CatalogoGeograficoRepository } from '../../src/repositories/catalogo-geografico.repository.js';
 
 const urlTeste =
   process.env.TEST_DATABASE_URL ??
@@ -19,6 +20,8 @@ const descreverIntegracao = process.env.TEST_DATABASE_URL ? describe : describe.
 
 descreverIntegracao('repositories do banco central', () => {
   beforeEach(async () => {
+    await prisma.municipio.deleteMany();
+    await prisma.estado.deleteMany();
     await prisma.auditoriaInterna.deleteMany();
     await prisma.refreshToken.deleteMany();
     await prisma.assinatura.deleteMany();
@@ -116,5 +119,21 @@ descreverIntegracao('repositories do banco central', () => {
     expect(nomes).toContain('refresh_tokens_expira_at_idx');
     expect(nomes).toContain('roteamentos_whatsapp_phone_number_id_key');
     expect(nomes).toContain('roteamentos_whatsapp_tenant_id_idx');
+    expect(nomes).toContain('estados_nome_normalizado_idx');
+    expect(nomes).toContain('municipios_estado_id_nome_normalizado_idx');
+  });
+
+  it('importa o catálogo geográfico de forma idempotente', async () => {
+    const repository = new CatalogoGeograficoRepository(prisma);
+    const estado = { id: 35, sigla: 'SP', nome: 'São Paulo', regiao: { nome: 'Sudeste' } };
+    const municipios = [{ nome: 'São Paulo', codigo_ibge: '3550308' }];
+
+    const primeira = await repository.importarEstado(estado, municipios);
+    const segunda = await repository.importarEstado(estado, municipios);
+
+    expect(primeira).toMatchObject({ estadosCriados: 1, municipiosCriados: 1 });
+    expect(segunda).toMatchObject({ estadosInalterados: 1, municipiosInalterados: 1 });
+    expect(await prisma.estado.count()).toBe(1);
+    expect(await prisma.municipio.count()).toBe(1);
   });
 });

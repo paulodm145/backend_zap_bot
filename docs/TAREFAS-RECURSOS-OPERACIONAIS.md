@@ -81,7 +81,7 @@ tarefa.
 | Etapa                                | Branch                               | Dependência    | Estado    |
 | ------------------------------------ | ------------------------------------ | -------------- | --------- |
 | 00. Planejamento e decisões          | `docs/backlog-recursos-operacionais` | Estrutura base | Concluída |
-| 12. Catálogo geográfico e empresa    | `feat/cadastro-empresa-geografia`    | 00             | Pendente  |
+| 12. Catálogo geográfico e empresa    | `feat/cadastro-empresa-geografia`    | 00             | Concluída |
 | 13. Configuração WhatsApp por tenant | `feat/configuracao-whatsapp-tenant`  | 00 e 12        | Pendente  |
 | 14. Usuários e RBAC                  | `feat/usuarios-permissoes`           | 00             | Pendente  |
 | 15. Recuperação de senha             | `feat/recuperacao-senha`             | 14             | Pendente  |
@@ -117,56 +117,56 @@ Branch: `feat/cadastro-empresa-geografia`
 
 ### Catálogo central
 
-- [ ] Criar modelo central `Estado` com ID inteiro, código IBGE e sigla única.
-- [ ] Criar modelo central `Municipio` com ID inteiro e código IBGE único.
-- [ ] Relacionar município ao estado.
-- [ ] Adicionar `created_at` e `updated_at`.
-- [ ] Criar índices por sigla, nome normalizado, estado e código IBGE.
-- [ ] Criar migration central separada.
-- [ ] Criar schemas Zod para respostas externas de UF.
-- [ ] Criar schemas Zod para respostas externas de municípios.
-- [ ] Criar cliente BrasilAPI com timeout.
-- [ ] Implementar retry limitado somente para falhas transitórias.
-- [ ] Não usar `any` nos payloads externos.
-- [ ] Criar upsert idempotente de estados.
-- [ ] Criar upsert idempotente de municípios.
-- [ ] Desativar registros ausentes sem excluí-los fisicamente.
-- [ ] Criar comando `catalogo:geografia:importar`.
-- [ ] Permitir importar uma UF específica.
-- [ ] Exibir resumo de criados, atualizados, inalterados e falhos.
-- [ ] Retornar exit code diferente de zero em falha incompleta.
-- [ ] Documentar comando e exemplos no README.
-- [ ] Testar respostas inválidas e indisponibilidade da BrasilAPI.
-- [ ] Testar idempotência de duas importações.
+- [x] Criar modelo central `Estado` com ID inteiro, código IBGE e sigla única.
+- [x] Criar modelo central `Municipio` com ID inteiro e código IBGE único.
+- [x] Relacionar município ao estado.
+- [x] Adicionar `created_at` e `updated_at`.
+- [x] Criar índices por sigla, nome normalizado, estado e código IBGE.
+- [x] Criar migration central separada.
+- [x] Criar schemas Zod para respostas externas de UF.
+- [x] Criar schemas Zod para respostas externas de municípios.
+- [x] Criar cliente BrasilAPI com timeout.
+- [x] Implementar retry limitado somente para falhas transitórias.
+- [x] Não usar `any` nos payloads externos.
+- [x] Criar upsert idempotente de estados.
+- [x] Criar upsert idempotente de municípios.
+- [x] Desativar registros ausentes sem excluí-los fisicamente.
+- [x] Criar comando `catalogo:geografia:importar`.
+- [x] Permitir importar uma UF específica.
+- [x] Exibir resumo de criados, atualizados, inalterados e falhos.
+- [x] Retornar exit code diferente de zero em falha incompleta.
+- [x] Documentar comando e exemplos no README.
+- [x] Testar respostas inválidas e indisponibilidade da BrasilAPI.
+- [x] Testar idempotência de duas importações.
 
 ### Perfil da empresa no tenant
 
-- [ ] Criar modelo singleton `Empresa` no schema tenant.
-- [ ] Usar ID inteiro sequencial e `public_id` UUID.
-- [ ] Adicionar razão social, nome fantasia e CNPJ normalizado.
-- [ ] Adicionar e-mail, telefone e site opcionais.
-- [ ] Adicionar CEP, logradouro, número, complemento e bairro.
-- [ ] Adicionar código IBGE, município e UF como snapshot.
-- [ ] Adicionar `created_at` e `updated_at`.
-- [ ] Criar índices necessários para CNPJ e código IBGE.
-- [ ] Criar migration tenant separada.
-- [ ] Criar `GET /api/v1/empresa`.
-- [ ] Criar `PUT /api/v1/empresa`.
-- [ ] Restringir atualização ao admin do tenant.
-- [ ] Validar e normalizar CNPJ, CEP, telefone e e-mail com helpers.
-- [ ] Permitir preenchimento gradual após contratação.
-- [ ] Implementar consulta opcional de CEP como sugestão de endereço.
-- [ ] Não sobrescrever campos editados sem confirmação.
-- [ ] Documentar formulário e estados para o frontend.
-- [ ] Atualizar Swagger e referência geral de endpoints.
+- [x] Criar modelo singleton `Empresa` no schema tenant.
+- [x] Usar ID inteiro sequencial e `public_id` UUID.
+- [x] Adicionar razão social, nome fantasia e CNPJ normalizado.
+- [x] Adicionar e-mail, telefone e site opcionais.
+- [x] Adicionar CEP, logradouro, número, complemento e bairro.
+- [x] Adicionar código IBGE, município e UF como snapshot.
+- [x] Adicionar `created_at` e `updated_at`.
+- [x] Criar índices necessários para CNPJ e código IBGE.
+- [x] Criar migration tenant separada.
+- [x] Criar `GET /api/v1/empresa`.
+- [x] Criar `PUT /api/v1/empresa`.
+- [x] Restringir atualização ao admin do tenant.
+- [x] Validar e normalizar CNPJ, CEP, telefone e e-mail com helpers.
+- [x] Permitir preenchimento gradual após contratação.
+- [x] Implementar consulta opcional de CEP como sugestão de endereço.
+- [x] Não sobrescrever campos editados sem confirmação.
+- [x] Documentar formulário e estados para o frontend.
+- [x] Atualizar Swagger e referência geral de endpoints.
 
 ### Saída
 
-- [ ] Importação geográfica passa em execução limpa.
-- [ ] Perfil empresarial permanece isolado no banco tenant.
-- [ ] Migrations central e tenant podem ser aplicadas separadamente.
-- [ ] Testes, cobertura, lint, typecheck e build aprovados.
-- [ ] Branch pronta para integração.
+- [x] Importação geográfica passa em execução limpa.
+- [x] Perfil empresarial permanece isolado no banco tenant.
+- [x] Migrations central e tenant podem ser aplicadas separadamente.
+- [x] Testes, cobertura, lint, typecheck e build aprovados.
+- [x] Branch pronta para integração.
 
 ---
 

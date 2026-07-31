@@ -61,6 +61,7 @@ export class AutenticacaoService {
         publicId: usuario.public_id,
         tenantPublicId: usuario.tenant.public_id,
         email: usuario.email,
+        papel: usuario.papel === 'ADMIN_TENANT' ? 'ADMIN_TENANT' : 'USUARIO',
       }),
       refreshToken,
       usuario: {
@@ -116,6 +117,7 @@ export class AutenticacaoService {
         publicId: usuario.public_id,
         tenantPublicId: usuario.tenant.public_id,
         email: usuario.email,
+        papel: usuario.papel === 'ADMIN_TENANT' ? 'ADMIN_TENANT' : 'USUARIO',
       }),
       refreshToken: novoRefreshToken,
     };

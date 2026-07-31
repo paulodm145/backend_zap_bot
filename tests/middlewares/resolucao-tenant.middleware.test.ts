@@ -31,6 +31,7 @@ describe('resolução do tenant', () => {
         id: 'usuario-publico',
         email: 'usuario@empresa.com',
         tenantId: 'tenant-autenticado',
+        papel: 'USUARIO',
       };
       proximo();
     });

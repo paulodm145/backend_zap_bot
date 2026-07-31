@@ -11,6 +11,7 @@ import {
 } from '../dtos/fluxo.dto.js';
 import { loginInternoSchema } from '../dtos/login-interno.dto.js';
 import { loginSchema } from '../dtos/login.dto.js';
+import { atualizarEmpresaSchema, consultarCepSchema } from '../dtos/empresa.dto.js';
 import {
   alterarPlanoTenantSchema,
   alterarStatusTenantSchema,
@@ -152,6 +153,33 @@ const simulacaoFluxoRespostaSchema = z.object({
   estado: estadoConversaFluxoSchema,
   saidas: z.array(saidaFluxoSchema),
 });
+const empresaSchema = z.object({
+  public_id: z.uuid(),
+  razao_social: z.string().nullable(),
+  nome_fantasia: z.string().nullable(),
+  cnpj: z.string().nullable(),
+  email: z.string().nullable(),
+  telefone: z.string().nullable(),
+  site: z.string().nullable(),
+  cep: z.string().nullable(),
+  logradouro: z.string().nullable(),
+  numero: z.string().nullable(),
+  complemento: z.string().nullable(),
+  bairro: z.string().nullable(),
+  municipio_codigo_ibge: z.string().nullable(),
+  municipio_nome: z.string().nullable(),
+  uf: z.string().nullable(),
+  created_at: z.iso.datetime(),
+  updated_at: z.iso.datetime(),
+});
+const enderecoCepSchema = z.object({
+  cep: z.string(),
+  uf: z.string(),
+  municipio: z.string(),
+  bairro: z.string().nullable().optional(),
+  logradouro: z.string().nullable().optional(),
+  municipioCodigoIbge: z.string().nullable().optional(),
+});
 
 function criarRegistro(): OpenAPIRegistry {
   const registro = new OpenAPIRegistry();
@@ -164,6 +192,68 @@ function criarRegistro(): OpenAPIRegistry {
   });
   registro.register('ErroResposta', erroSchema);
   registro.register('PaginacaoResposta', paginacaoSchema);
+
+  registro.registerPath({
+    method: 'get',
+    path: '/api/v1/empresa',
+    tags: ['Empresa'],
+    summary: 'Obtém o perfil empresarial do tenant autenticado',
+    security: [{ bearerAuth: [] }],
+    responses: {
+      200: {
+        description: 'Perfil preenchido ou null quando ainda não iniciado.',
+        content: { 'application/json': { schema: empresaSchema.nullable() } },
+      },
+      401: {
+        description: 'Sessão ausente ou expirada.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+
+  registro.registerPath({
+    method: 'put',
+    path: '/api/v1/empresa',
+    tags: ['Empresa'],
+    summary: 'Cria ou atualiza parcialmente o perfil empresarial',
+    security: [{ bearerAuth: [] }],
+    request: {
+      body: { required: true, content: { 'application/json': { schema: atualizarEmpresaSchema } } },
+    },
+    responses: {
+      200: {
+        description: 'Perfil salvo.',
+        content: { 'application/json': { schema: empresaSchema } },
+      },
+      403: {
+        description: 'Somente ADMIN_TENANT pode alterar.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+      422: {
+        description: 'Dados inválidos.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+
+  registro.registerPath({
+    method: 'get',
+    path: '/api/v1/empresa/consultar-cep/{cep}',
+    tags: ['Empresa'],
+    summary: 'Consulta uma sugestão de endereço sem salvar dados',
+    security: [{ bearerAuth: [] }],
+    request: { params: consultarCepSchema },
+    responses: {
+      200: {
+        description: 'Sugestão retornada pela BrasilAPI.',
+        content: { 'application/json': { schema: enderecoCepSchema } },
+      },
+      422: {
+        description: 'CEP inválido.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
 
   registro.registerPath({
     method: 'get',
