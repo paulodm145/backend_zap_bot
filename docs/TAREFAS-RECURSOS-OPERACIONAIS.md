@@ -78,19 +78,19 @@ tarefa.
 
 ## Visão das etapas
 
-| Etapa                                | Branch                               | Dependência    | Estado       |
-| ------------------------------------ | ------------------------------------ | -------------- | ------------ |
-| 00. Planejamento e decisões          | `docs/backlog-recursos-operacionais` | Estrutura base | Em andamento |
-| 12. Catálogo geográfico e empresa    | `feat/cadastro-empresa-geografia`    | 00             | Pendente     |
-| 13. Configuração WhatsApp por tenant | `feat/configuracao-whatsapp-tenant`  | 00 e 12        | Pendente     |
-| 14. Usuários e RBAC                  | `feat/usuarios-permissoes`           | 00             | Pendente     |
-| 15. Recuperação de senha             | `feat/recuperacao-senha`             | 14             | Pendente     |
-| 16. Setores e vínculos de atendentes | `feat/setores-atendentes`            | 14             | Pendente     |
-| 17. Perfil do usuário autenticado    | `feat/perfil-usuario-logado`         | 14             | Pendente     |
-| 18. Histórico de conversas           | `feat/historico-conversas`           | 13 e 16        | Pendente     |
-| 19. Direcionamento e claim           | `feat/direcionamento-atendimento`    | 16 e 18        | Pendente     |
-| 20. Mensagens e Cloud API            | `feat/mensagens-whatsapp`            | 13, 18 e 19    | Pendente     |
-| 21. Chat em tempo real               | `feat/chat-atendimento`              | 19 e 20        | Pendente     |
+| Etapa                                | Branch                               | Dependência    | Estado    |
+| ------------------------------------ | ------------------------------------ | -------------- | --------- |
+| 00. Planejamento e decisões          | `docs/backlog-recursos-operacionais` | Estrutura base | Concluída |
+| 12. Catálogo geográfico e empresa    | `feat/cadastro-empresa-geografia`    | 00             | Pendente  |
+| 13. Configuração WhatsApp por tenant | `feat/configuracao-whatsapp-tenant`  | 00 e 12        | Pendente  |
+| 14. Usuários e RBAC                  | `feat/usuarios-permissoes`           | 00             | Pendente  |
+| 15. Recuperação de senha             | `feat/recuperacao-senha`             | 14             | Pendente  |
+| 16. Setores e vínculos de atendentes | `feat/setores-atendentes`            | 14             | Pendente  |
+| 17. Perfil do usuário autenticado    | `feat/perfil-usuario-logado`         | 14             | Pendente  |
+| 18. Histórico de conversas           | `feat/historico-conversas`           | 13 e 16        | Pendente  |
+| 19. Direcionamento e claim           | `feat/direcionamento-atendimento`    | 16 e 18        | Pendente  |
+| 20. Mensagens e Cloud API            | `feat/mensagens-whatsapp`            | 13, 18 e 19    | Pendente  |
+| 21. Chat em tempo real               | `feat/chat-atendimento`              | 19 e 20        | Pendente  |
 
 ---
 
@@ -106,8 +106,8 @@ Branch: `docs/backlog-recursos-operacionais`
 - [x] Definir localização dos dados cadastrais da empresa.
 - [x] Verificar endpoints de UF e municípios da BrasilAPI.
 - [x] Definir ordem de dependência das próximas etapas.
-- [ ] Revisar e aprovar este backlog com o responsável pelo produto.
-- [ ] Marcar esta etapa como concluída.
+- [x] Revisar e aprovar este backlog com o responsável pelo produto.
+- [x] Marcar esta etapa como concluída.
 
 ---
 
