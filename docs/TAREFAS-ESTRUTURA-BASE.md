@@ -822,6 +822,10 @@ Objetivo: tornar automáticas as validações exigidas para merge.
 
 ## Backlog posterior à estrutura base
 
+O detalhamento aprovado para usuários, empresa, WhatsApp, setores, conversas e
+chat deve ser acompanhado em
+[`TAREFAS-RECURSOS-OPERACIONAIS.md`](TAREFAS-RECURSOS-OPERACIONAIS.md).
+
 Os itens abaixo pertencem ao produto, mas só devem ser decompostos em etapas
 atômicas quando a estrutura base estiver estável:
 
