@@ -116,8 +116,9 @@ token e expira o cookie.
 
 ## Autenticação do admin interno
 
-> Estado atual: scaffold disponível; persistência e TOTP completo pendentes na
-> Etapa 05. O repository temporário recusa todos os logins.
+> Estado atual: persistência no banco central, limitação de tentativas, TOTP e
+> emissão de JWT interno implementados. Em desenvolvimento, o TOTP pode ser
+> desabilitado por configuração.
 
 ### Login atual
 
@@ -148,8 +149,9 @@ Possíveis respostas de sucesso:
 }
 ```
 
-O segundo formato ainda não possui endpoint de conclusão e não deve ser
-integrado pelo frontend até o contrato TOTP ser fechado.
+Quando `exigeSegundoFator=true`, use o `estadoToken` somente nas rotas de TOTP.
+Se `exigeConfiguracao=true`, configure e confirme o segredo antes de abrir o
+painel. Caso contrário, solicite apenas o código atual do autenticador.
 
 ### Validação da sessão interna
 

@@ -86,6 +86,83 @@ Variáveis disponíveis no scaffold atual:
 A aplicação valida as variáveis com Zod durante a inicialização e falha
 imediatamente quando uma configuração obrigatória é inválida.
 
+## Início rápido com serviços locais
+
+Use este fluxo quando PostgreSQL e Redis já estiverem instalados na máquina.
+Todos os comandos devem ser executados na pasta que contém `package.json`:
+
+```bash
+cd ~/Projetos/ZapBot/backend_zap_bot
+npm ci
+cp .env.example .env
+```
+
+No `.env`, aponte `CENTRAL_DATABASE_URL` para o banco central,
+`TENANT_DATABASE_URL` para o banco tenant modelo e `REDIS_URL` para uma
+instância Redis 6.2 ou superior. Nunca versione esse arquivo. Para conferir as
+dependências:
+
+```bash
+pg_isready -h 127.0.0.1 -p 5432 -U postgres
+redis-cli -u redis://127.0.0.1:6379 ping
+```
+
+Crie os bancos somente quando eles ainda não existirem:
+
+```bash
+PGPASSWORD=postgres createdb -h 127.0.0.1 -p 5432 -U postgres zapbot_central_dev
+PGPASSWORD=postgres createdb -h 127.0.0.1 -p 5432 -U postgres zapbot_tenant_modelo
+```
+
+Atualize separadamente os bancos central e tenant modelo e cadastre os planos:
+
+```bash
+npm run db:central:migrate:deploy
+npm run db:central:seed
+npm run db:tenant:migrate:deploy
+```
+
+Crie o administrador geral. O comando usa `CENTRAL_DATABASE_URL` do `.env`:
+
+```bash
+npm run admin:criar -- \
+  --nome "Administrador Geral" \
+  --email "admin@zapbot.local" \
+  --senha 'EscolhaUmaSenhaForte123!'
+```
+
+Em localhost, mantenha `NODE_ENV=development` e defina
+`TOTP_INTERNO_OBRIGATORIO=false` se quiser testar o painel sem segundo fator.
+Inicie a API:
+
+```bash
+npm run dev
+```
+
+Valide em outro terminal:
+
+```bash
+curl http://localhost:3000/api/v1/saude
+curl http://localhost:3000/api/v1/prontidao
+```
+
+Abra `http://localhost:3000/api/v1/docs/`. O roteiro completo de chamadas está
+em [Referência de endpoints](docs/api/REFERENCIA-ENDPOINTS.md). Para encerrar o
+servidor em modo watch, pressione `Ctrl+C`.
+
+### Ordem recomendada do primeiro teste
+
+1. Fazer login interno com o administrador geral.
+2. Usar o token interno para provisionar um tenant.
+3. Fazer login de tenant com o administrador criado no provisionamento.
+4. Substituir o token no botão **Authorize** do Swagger.
+5. Criar, publicar e simular um fluxo.
+6. Testar refresh/logout com um cliente que preserve cookies.
+
+O token interno e o token de tenant têm escopos diferentes. Como o Swagger usa
+um único campo Bearer, substitua o valor ao trocar de área. Para autenticação
+do frontend, envie `credentials: 'include'` em login, refresh e logout.
+
 ## Execução
 
 Desenvolvimento com recarga automática:
@@ -107,11 +184,9 @@ Com a configuração padrão, a rota pública de saúde fica disponível em:
 GET http://localhost:3000/api/v1/saude
 ```
 
-A rota `GET /api/v1/prontidao` informa se as dependências necessárias estão
-disponíveis. No estado atual, a API verifica a conexão com o PostgreSQL; o
-Compose também condiciona sua inicialização aos healthchecks do PostgreSQL e
-do Redis. A verificação do Redis pela própria aplicação será adicionada na
-etapa de filas.
+A rota `GET /api/v1/prontidao` informa se PostgreSQL central e Redis estão
+disponíveis. O Compose também condiciona sua inicialização aos healthchecks
+dessas dependências.
 
 Em desenvolvimento, a documentação fica disponível em:
 
