@@ -103,6 +103,41 @@ export class UsuarioCentralRepository implements UsuarioInternoRepository {
     });
   }
 
+  public buscarPerfilPorPublicId(publicId: string) {
+    return this.prisma.usuario.findFirst({
+      where: { public_id: publicId, ativo: true, deletado_at: null, tenant_id: { not: null } },
+      include: { tenant: true },
+    });
+  }
+
+  public async alterarSenhaERevogar(publicId: string, senhaHash: string) {
+    return this.prisma.$transaction(async (transacao) => {
+      const usuario = await transacao.usuario.update({
+        where: { public_id: publicId },
+        data: { senha_hash: senhaHash },
+      });
+      await transacao.refreshToken.updateMany({
+        where: { usuario_id: usuario.id, revogado_at: null },
+        data: { revogado_at: new Date(), motivo_revogacao: 'SENHA_ALTERADA' },
+      });
+      return usuario;
+    });
+  }
+
+  public async alterarEmailERevogar(publicId: string, email: string) {
+    return this.prisma.$transaction(async (transacao) => {
+      const usuario = await transacao.usuario.update({
+        where: { public_id: publicId },
+        data: { email },
+      });
+      await transacao.refreshToken.updateMany({
+        where: { usuario_id: usuario.id, revogado_at: null },
+        data: { revogado_at: new Date(), motivo_revogacao: 'EMAIL_ALTERADO' },
+      });
+      return usuario;
+    });
+  }
+
   public atualizarOperacional(
     publicId: string,
     entrada: { nome?: string; email?: string; papel?: PapelUsuario },

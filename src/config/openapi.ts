@@ -13,6 +13,11 @@ import { loginInternoSchema } from '../dtos/login-interno.dto.js';
 import { loginSchema } from '../dtos/login.dto.js';
 import { esqueciSenhaSchema, redefinirSenhaSchema } from '../dtos/recuperacao-senha.dto.js';
 import {
+  alterarEmailPerfilSchema,
+  alterarSenhaPerfilSchema,
+  atualizarPerfilSchema,
+} from '../dtos/perfil.dto.js';
+import {
   atualizarSetorSchema,
   criarSetorSchema,
   listarSetoresSchema,
@@ -264,6 +269,16 @@ const atendenteElegivelSchema = z.object({
     papel: z.enum(['ADMIN_TENANT', 'GESTOR', 'ATENDENTE']),
   }),
 });
+const perfilRespostaSchema = z.object({
+  id: z.uuid(),
+  nome: z.string(),
+  email: z.email(),
+  papel: z.enum(['ADMIN_TENANT', 'GESTOR', 'ATENDENTE']),
+  ativo: z.boolean(),
+  tenant: z.object({ id: z.uuid(), nome: z.string(), status: z.string() }),
+  permissoes: z.array(z.string()),
+  setores: z.array(z.object({ public_id: z.uuid(), nome: z.string() })),
+});
 
 function criarRegistro(): OpenAPIRegistry {
   const registro = new OpenAPIRegistry();
@@ -276,6 +291,80 @@ function criarRegistro(): OpenAPIRegistry {
   });
   registro.register('ErroResposta', erroSchema);
   registro.register('PaginacaoResposta', paginacaoSchema);
+
+  registro.registerPath({
+    method: 'get',
+    path: '/api/v1/me',
+    tags: ['Perfil'],
+    summary: 'Retorna perfil e permissões efetivas',
+    security: [{ bearerAuth: [] }],
+    responses: {
+      200: {
+        description: 'Perfil autenticado.',
+        content: { 'application/json': { schema: perfilRespostaSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'put',
+    path: '/api/v1/me',
+    tags: ['Perfil'],
+    summary: 'Atualiza somente dados pessoais permitidos',
+    security: [{ bearerAuth: [] }],
+    request: {
+      body: { required: true, content: { 'application/json': { schema: atualizarPerfilSchema } } },
+    },
+    responses: {
+      200: {
+        description: 'Perfil sincronizado.',
+        content: { 'application/json': { schema: perfilRespostaSchema } },
+      },
+      422: {
+        description: 'Campo administrativo não permitido.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'put',
+    path: '/api/v1/me/senha',
+    tags: ['Perfil'],
+    summary: 'Altera senha após reautenticação',
+    security: [{ bearerAuth: [] }],
+    request: {
+      body: {
+        required: true,
+        content: { 'application/json': { schema: alterarSenhaPerfilSchema } },
+      },
+    },
+    responses: {
+      204: { description: 'Senha alterada e sessões revogadas.' },
+      401: {
+        description: 'Senha atual inválida.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'put',
+    path: '/api/v1/me/email',
+    tags: ['Perfil'],
+    summary: 'Altera e-mail em fluxo sensível separado',
+    security: [{ bearerAuth: [] }],
+    request: {
+      body: {
+        required: true,
+        content: { 'application/json': { schema: alterarEmailPerfilSchema } },
+      },
+    },
+    responses: {
+      200: { description: 'E-mail sincronizado; novo login necessário.' },
+      409: {
+        description: 'E-mail já utilizado.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
 
   registro.registerPath({
     method: 'get',

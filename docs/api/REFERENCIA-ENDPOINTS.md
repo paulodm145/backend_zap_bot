@@ -47,6 +47,10 @@ dependem do cookie HttpOnly. Uma implementação sugerida do cliente HTTP está 
 | DELETE | `/api/v1/setores/{setorId}`                      | Admin/gestor tenant               | Excluir setor logicamente                 |
 | GET    | `/api/v1/setores/{setorId}/atendentes-elegiveis` | Admin/gestor tenant               | Listar atendentes vinculados ativos       |
 | PUT    | `/api/v1/usuarios/{usuarioId}/setores`           | Admin/gestor tenant               | Substituir vínculos N:N                   |
+| GET    | `/api/v1/me`                                     | Tenant autenticado                | Perfil, tenant, permissões e setores      |
+| PUT    | `/api/v1/me`                                     | Tenant autenticado                | Alterar nome do próprio perfil            |
+| PUT    | `/api/v1/me/senha`                               | Tenant autenticado                | Alterar senha com reautenticação          |
+| PUT    | `/api/v1/me/email`                               | Tenant autenticado                | Alterar e-mail em fluxo separado          |
 | POST   | `/api/v1/auth/logout`                            | Cookie HttpOnly                   | Encerrar sessão de tenant                 |
 | POST   | `/api/v1/interno/auth/login`                     | Público                           | Iniciar sessão do superadministrador      |
 | POST   | `/api/v1/interno/auth/2fa/configurar`            | `estadoToken`                     | Obter QR code da primeira configuração    |

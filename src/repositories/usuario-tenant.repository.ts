@@ -61,6 +61,28 @@ export class UsuarioTenantRepository {
     });
   }
 
+  public buscarPerfilCompleto(centralPublicId: string) {
+    return this.prisma.usuarioTenant.findFirst({
+      where: { usuario_central_public_id: centralPublicId, deletado_at: null },
+      select: {
+        public_id: true,
+        nome: true,
+        email: true,
+        papel: true,
+        ativo: true,
+        atendente: {
+          select: {
+            setores: {
+              where: { setor: { ativo: true, deletado_at: null } },
+              select: { setor: { select: { public_id: true, nome: true } } },
+              orderBy: { setor: { nome_normalizado: 'asc' } },
+            },
+          },
+        },
+      },
+    });
+  }
+
   public contarAdministradoresAtivos() {
     return this.prisma.usuarioTenant.count({
       where: { papel: 'ADMIN_TENANT', ativo: true, deletado_at: null },
@@ -118,6 +140,15 @@ export class UsuarioTenantRepository {
           ...(entrada.papel === undefined ? {} : { papel: entrada.papel }),
         },
       });
+      if (entrada.nome !== undefined || entrada.email !== undefined) {
+        await transacao.atendente.updateMany({
+          where: { usuario_tenant_id: usuario.id },
+          data: {
+            ...(entrada.nome === undefined ? {} : { nome: entrada.nome }),
+            ...(entrada.email === undefined ? {} : { email: entrada.email }),
+          },
+        });
+      }
       await this.auditar(transacao, usuario.public_id, autorPublicId, 'ATUALIZAR');
       return { anterior: atual, usuario };
     });

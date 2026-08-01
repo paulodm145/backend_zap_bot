@@ -86,7 +86,7 @@ tarefa.
 | 14. Usuários e RBAC                  | `feat/usuarios-permissoes`           | 00             | Concluída |
 | 15. Recuperação de senha             | `feat/recuperacao-senha`             | 14             | Concluída |
 | 16. Setores e vínculos de atendentes | `feat/setores-atendentes`            | 14             | Concluída |
-| 17. Perfil do usuário autenticado    | `feat/perfil-usuario-logado`         | 14             | Pendente  |
+| 17. Perfil do usuário autenticado    | `feat/perfil-usuario-logado`         | 14             | Concluída |
 | 18. Histórico de conversas           | `feat/historico-conversas`           | 13 e 16        | Pendente  |
 | 19. Direcionamento e claim           | `feat/direcionamento-atendimento`    | 16 e 18        | Pendente  |
 | 20. Mensagens e Cloud API            | `feat/mensagens-whatsapp`            | 13, 18 e 19    | Pendente  |
@@ -338,34 +338,34 @@ Branch: `feat/setores-atendentes`
 
 ---
 
-## Etapa 17 — Dados do usuário autenticado
+## Etapa 17 — Dados do usuário autenticado — Concluída
 
 Branch: `feat/perfil-usuario-logado`
 
-- [ ] Definir campos editáveis pelo próprio usuário.
-- [ ] Separar campos editáveis de papel, status e permissões.
-- [ ] Criar `GET /api/v1/me`.
-- [ ] Retornar perfil, tenant, papel, permissões e setores.
-- [ ] Criar `PUT /api/v1/me` para nome e dados pessoais permitidos.
-- [ ] Criar `PUT /api/v1/me/senha` com senha atual.
-- [ ] Validar senha atual antes da alteração.
-- [ ] Revogar outras sessões após alteração de senha.
-- [ ] Definir fluxo separado para alteração de e-mail.
-- [ ] Exigir reautenticação para ações sensíveis.
-- [ ] Sincronizar nome central e perfil tenant idempotentemente.
-- [ ] Criar upload de avatar somente após definir storage.
-- [ ] Não armazenar binário de avatar no PostgreSQL.
-- [ ] Documentar tela de perfil, segurança e sessões.
-- [ ] Atualizar Swagger e Markdown.
-- [ ] Testar que usuário não altera papel ou permissões.
+- [x] Definir campos editáveis pelo próprio usuário.
+- [x] Separar campos editáveis de papel, status e permissões.
+- [x] Criar `GET /api/v1/me`.
+- [x] Retornar perfil, tenant, papel, permissões e setores.
+- [x] Criar `PUT /api/v1/me` para nome e dados pessoais permitidos.
+- [x] Criar `PUT /api/v1/me/senha` com senha atual.
+- [x] Validar senha atual antes da alteração.
+- [x] Revogar outras sessões após alteração de senha.
+- [x] Definir fluxo separado para alteração de e-mail.
+- [x] Exigir reautenticação para ações sensíveis.
+- [x] Sincronizar nome central e perfil tenant idempotentemente.
+- [x] Adiar upload de avatar até definir storage.
+- [x] Não armazenar binário de avatar no PostgreSQL.
+- [x] Documentar tela de perfil, segurança e sessões.
+- [x] Atualizar Swagger e Markdown.
+- [x] Testar que usuário não altera papel ou permissões.
 
 ### Saída
 
-- [ ] Perfil retorna permissões efetivas para compor o frontend.
-- [ ] Campos administrativos não são alteráveis pelo usuário.
-- [ ] Alteração de senha invalida sessões conforme contrato.
-- [ ] Testes, cobertura, lint, typecheck e build aprovados.
-- [ ] Branch pronta para integração.
+- [x] Perfil retorna permissões efetivas para compor o frontend.
+- [x] Campos administrativos não são alteráveis pelo usuário.
+- [x] Alteração de senha invalida sessões conforme contrato.
+- [x] Testes, cobertura, lint, typecheck e build aprovados.
+- [x] Branch pronta para integração.
 
 ---
 
