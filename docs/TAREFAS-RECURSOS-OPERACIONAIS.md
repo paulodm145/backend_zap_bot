@@ -88,7 +88,7 @@ tarefa.
 | 16. Setores e vínculos de atendentes | `feat/setores-atendentes`            | 14             | Concluída |
 | 17. Perfil do usuário autenticado    | `feat/perfil-usuario-logado`         | 14             | Concluída |
 | 18. Histórico de conversas           | `feat/historico-conversas`           | 13 e 16        | Concluída |
-| 19. Direcionamento e claim           | `feat/direcionamento-atendimento`    | 16 e 18        | Pendente  |
+| 19. Direcionamento e claim           | `feat/direcionamento-atendimento`    | 16 e 18        | Concluída |
 | 20. Mensagens e Cloud API            | `feat/mensagens-whatsapp`            | 13, 18 e 19    | Pendente  |
 | 21. Chat em tempo real               | `feat/chat-atendimento`              | 19 e 20        | Pendente  |
 
@@ -409,39 +409,39 @@ Branch: `feat/historico-conversas`
 
 ---
 
-## Etapa 19 — Direcionamento, fila e claim de atendente
+## Etapa 19 — Direcionamento, fila e claim de atendente — Concluída
 
 Branch: `feat/direcionamento-atendimento`
 
-- [ ] Integrar saída `direcionar_setor` com conversa persistida.
-- [ ] Mudar estado para `AGUARDANDO_ATENDENTE`.
-- [ ] Registrar setor de destino e evento de sistema.
-- [ ] Criar visão de fila por setor.
-- [ ] Criar visão “minhas conversas”.
-- [ ] Implementar claim com `UPDATE` condicional atômico.
-- [ ] Validar vínculo ativo do atendente com o setor.
-- [ ] Retornar conflito quando outro atendente assumir primeiro.
-- [ ] Criar reatribuição manual para admin/gestor.
-- [ ] Registrar autor, origem, destino, motivo e data.
-- [ ] Criar encerramento da conversa.
-- [ ] Definir opção de devolver ao bot.
-- [ ] Restaurar snapshot correto ao devolver ao bot.
-- [ ] Criar `POST /api/v1/conversas/{conversaId}/assumir`.
-- [ ] Criar `POST /api/v1/conversas/{conversaId}/reatribuir`.
-- [ ] Criar `POST /api/v1/conversas/{conversaId}/encerrar`.
-- [ ] Testar corrida entre dois atendentes.
-- [ ] Testar claim fora do setor.
-- [ ] Testar reatribuição e auditoria.
-- [ ] Documentar fila, confirmações e tratamento de conflito.
-- [ ] Atualizar Swagger e Markdown.
+- [x] Integrar saída `direcionar_setor` com conversa persistida.
+- [x] Mudar estado para `AGUARDANDO_ATENDENTE`.
+- [x] Registrar setor de destino e evento de sistema.
+- [x] Criar visão de fila por setor.
+- [x] Criar visão “minhas conversas”.
+- [x] Implementar claim com `UPDATE` condicional atômico.
+- [x] Validar vínculo ativo do atendente com o setor.
+- [x] Retornar conflito quando outro atendente assumir primeiro.
+- [x] Criar reatribuição manual para admin/gestor.
+- [x] Registrar autor, origem, destino, motivo e data.
+- [x] Criar encerramento da conversa.
+- [x] Definir opção de devolver ao bot.
+- [x] Restaurar snapshot correto ao devolver ao bot.
+- [x] Criar `POST /api/v1/conversas/{conversaId}/assumir`.
+- [x] Criar `POST /api/v1/conversas/{conversaId}/reatribuir`.
+- [x] Criar `POST /api/v1/conversas/{conversaId}/encerrar`.
+- [x] Testar corrida entre dois atendentes.
+- [x] Testar claim fora do setor.
+- [x] Testar reatribuição e auditoria.
+- [x] Documentar fila, confirmações e tratamento de conflito.
+- [x] Atualizar Swagger e Markdown.
 
 ### Saída
 
-- [ ] Apenas um atendente vence o claim.
-- [ ] Permissões e setores limitam fila e ações.
-- [ ] Toda transferência possui trilha persistente.
-- [ ] Testes, cobertura, lint, typecheck e build aprovados.
-- [ ] Branch pronta para integração.
+- [x] Apenas um atendente vence o claim.
+- [x] Permissões e setores limitam fila e ações.
+- [x] Toda transferência possui trilha persistente.
+- [x] Testes, cobertura, lint, typecheck e build aprovados.
+- [x] Branch pronta para integração.
 
 ---
 

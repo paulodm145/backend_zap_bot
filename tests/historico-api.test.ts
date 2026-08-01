@@ -19,6 +19,7 @@ descreverIntegracao('histórico de conversas', () => {
   let conversaVisivelId = '';
 
   beforeEach(async () => {
+    await prisma.movimentacaoAtendimento.deleteMany();
     await prisma.mensagem.deleteMany();
     await prisma.conversa.deleteMany();
     await prisma.atendenteSetor.deleteMany();

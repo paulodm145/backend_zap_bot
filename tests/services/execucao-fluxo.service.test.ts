@@ -38,4 +38,46 @@ describe('execução persistida de fluxo', () => {
       expect.objectContaining({ fluxoVersaoId: versao.public_id }),
     );
   });
+
+  it('persiste o direcionamento produzido pelo nó de setor', async () => {
+    const estados = { carregar: vi.fn().mockResolvedValue(null), salvar: vi.fn() };
+    const fluxos = {
+      buscarVersaoPorPublicId: vi.fn(),
+      buscarVersaoPublicada: vi.fn().mockResolvedValue({
+        versoes: [
+          {
+            public_id: versao.public_id,
+            definicao: {
+              schemaVersao: 1,
+              noInicial: 'setor',
+              nos: [
+                {
+                  id: 'setor',
+                  tipo: 'direcionar_setor',
+                  dados: { setorId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb' },
+                },
+              ],
+            },
+          },
+        ],
+      }),
+    };
+    const direcionamentos = { direcionarPeloFluxo: vi.fn().mockResolvedValue(true) };
+    const servico = new ExecucaoFluxoService(
+      fluxos,
+      estados,
+      new MotorFluxoService(),
+      direcionamentos,
+    );
+    await servico.executarConversa({
+      tenantId: 'tenant',
+      conversaId: 'conversa',
+      fluxoId: 'fluxo',
+    });
+    expect(direcionamentos.direcionarPeloFluxo).toHaveBeenCalledWith(
+      'conversa',
+      'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+      expect.objectContaining({ concluido: true }),
+    );
+  });
 });

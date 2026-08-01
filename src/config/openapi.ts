@@ -24,6 +24,10 @@ import {
   listarMensagensSchema,
 } from '../dtos/historico.dto.js';
 import {
+  encerrarConversaSchema,
+  reatribuirConversaSchema,
+} from '../dtos/direcionamento-atendimento.dto.js';
+import {
   atualizarSetorSchema,
   criarSetorSchema,
   listarSetoresSchema,
@@ -424,6 +428,72 @@ function criarRegistro(): OpenAPIRegistry {
             }),
           },
         },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'post',
+    path: '/api/v1/conversas/{conversaId}/assumir',
+    tags: ['Atendimento'],
+    summary: 'Assume atomicamente uma conversa da fila do setor',
+    security: [{ bearerAuth: [] }],
+    request: { params: conversaParametroSchema },
+    responses: {
+      200: { description: 'Conversa atribuída ao atendente autenticado.' },
+      403: {
+        description: 'Atendente sem vínculo com o setor.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+      409: {
+        description: 'Outro atendente venceu o claim.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'post',
+    path: '/api/v1/conversas/{conversaId}/reatribuir',
+    tags: ['Atendimento'],
+    summary: 'Reatribui uma conversa com trilha de auditoria',
+    security: [{ bearerAuth: [] }],
+    request: {
+      params: conversaParametroSchema,
+      body: {
+        required: true,
+        content: { 'application/json': { schema: reatribuirConversaSchema } },
+      },
+    },
+    responses: {
+      200: { description: 'Conversa enviada ao setor ou atendente informado.' },
+      403: {
+        description: 'Ação restrita a admin e gestor.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+      422: {
+        description: 'Atendente sem vínculo com setor de destino.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'post',
+    path: '/api/v1/conversas/{conversaId}/encerrar',
+    tags: ['Atendimento'],
+    summary: 'Encerra a conversa ou a devolve ao snapshot do bot',
+    security: [{ bearerAuth: [] }],
+    request: {
+      params: conversaParametroSchema,
+      body: { required: true, content: { 'application/json': { schema: encerrarConversaSchema } } },
+    },
+    responses: {
+      200: { description: 'Novo estado da conversa.' },
+      403: {
+        description: 'Atendente não é o responsável.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+      422: {
+        description: 'Snapshot ausente ao devolver ao bot.',
+        content: { 'application/json': { schema: erroSchema } },
       },
     },
   });

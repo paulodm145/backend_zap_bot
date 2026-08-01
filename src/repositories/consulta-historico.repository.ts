@@ -59,6 +59,18 @@ export class ConsultaHistoricoRepository {
           }
         : {}),
       ...(usuarioCentralPublicId ? this.escopoConversa(usuarioCentralPublicId) : {}),
+      ...(entrada.visao === 'FILA' ? { status: 'AGUARDANDO_ATENDENTE', atendente_id: null } : {}),
+      ...(entrada.visao === 'MINHAS' && usuarioCentralPublicId
+        ? {
+            atendente: {
+              usuario: {
+                usuario_central_public_id: usuarioCentralPublicId,
+                ativo: true,
+                deletado_at: null,
+              },
+            },
+          }
+        : {}),
     };
     const selecao = this.selecaoConversa();
     const [dados, total] = await this.prisma.$transaction([

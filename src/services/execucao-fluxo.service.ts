@@ -1,4 +1,4 @@
-import { definicaoFluxoSchema } from '../dtos/fluxo.dto.js';
+import { definicaoFluxoSchema, type EstadoConversaFluxo } from '../dtos/fluxo.dto.js';
 import { NaoEncontradoError } from '../erros/erro-aplicacao.js';
 import type { EstadoFluxoRepository } from '../repositories/estado-fluxo-redis.repository.js';
 import type { MotorFluxoService } from './motor-fluxo.service.js';
@@ -13,11 +13,20 @@ interface LeitorVersaoFluxo {
   } | null>;
 }
 
+interface PersistidorDirecionamento {
+  direcionarPeloFluxo(
+    conversaPublicId: string,
+    setorPublicId: string,
+    estadoFluxo: EstadoConversaFluxo,
+  ): Promise<boolean>;
+}
+
 export class ExecucaoFluxoService {
   public constructor(
     private readonly fluxos: LeitorVersaoFluxo,
     private readonly estados: EstadoFluxoRepository,
     private readonly motor: MotorFluxoService,
+    private readonly direcionamentos?: PersistidorDirecionamento,
   ) {}
 
   public async executarConversa(entrada: {
@@ -41,6 +50,15 @@ export class ExecucaoFluxoService {
       maxPassos: entrada.maxPassos ?? 50,
     });
     await this.estados.salvar(entrada.tenantId, entrada.conversaId, resultado.estado);
+    for (const saida of resultado.saidas) {
+      if (saida.tipo === 'direcionamento' && this.direcionamentos) {
+        await this.direcionamentos.direcionarPeloFluxo(
+          entrada.conversaId,
+          saida.setorId,
+          resultado.estado,
+        );
+      }
+    }
     return resultado;
   }
 }

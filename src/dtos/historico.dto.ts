@@ -10,6 +10,7 @@ export const listarConversasSchema = paginacaoSchema.extend({
   setorId: z.uuid().optional(),
   atendenteId: z.uuid().optional(),
   contaId: z.uuid().optional(),
+  visao: z.enum(['TODAS', 'FILA', 'MINHAS']).default('TODAS'),
 });
 export const conversaParametroSchema = z.object({ conversaId: z.uuid() });
 export const listarMensagensSchema = z.object({

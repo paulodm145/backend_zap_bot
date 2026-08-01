@@ -21,6 +21,7 @@ import { UsuarioTenantController } from './controllers/usuario-tenant.controller
 import { SetorController } from './controllers/setor.controller.js';
 import { PerfilController } from './controllers/perfil.controller.js';
 import { HistoricoController } from './controllers/historico.controller.js';
+import { DirecionamentoAtendimentoController } from './controllers/direcionamento-atendimento.controller.js';
 import { obterGerenciadorConexoesTenant } from './database/gerenciador-conexoes-tenant.js';
 import { obterPrismaCentral } from './database/prisma-central.js';
 import type { PrismaClient } from './generated/prisma/client.js';
@@ -250,7 +251,7 @@ export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
       criptografiaConexaoTenant,
       obterGerenciadorConexoesTenant(),
     ),
-    criarRotasConversas(new HistoricoController()),
+    criarRotasConversas(new HistoricoController(), new DirecionamentoAtendimentoController()),
   );
   aplicacao.use(
     '/api/v1/me',
