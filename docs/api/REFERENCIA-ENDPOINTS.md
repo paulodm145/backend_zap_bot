@@ -30,51 +30,58 @@ dependem do cookie HttpOnly. Uma implementação sugerida do cliente HTTP está 
 
 ## Índice completo
 
-| Método | Endpoint                                    | Acesso                            | Uso no frontend                           |
-| ------ | ------------------------------------------- | --------------------------------- | ----------------------------------------- |
-| GET    | `/api/v1/saude`                             | Público                           | Verificar se o processo HTTP responde     |
-| GET    | `/api/v1/prontidao`                         | Público                           | Diagnóstico de PostgreSQL e Redis         |
-| GET    | `/api/v1/docs/`                             | Público em dev; Basic em produção | Interface Swagger                         |
-| GET    | `/api/v1/openapi.json`                      | Público em dev; Basic em produção | Geração de cliente e consulta do contrato |
-| POST   | `/api/v1/auth/login`                        | Público                           | Iniciar sessão de tenant                  |
-| POST   | `/api/v1/auth/refresh`                      | Cookie HttpOnly                   | Renovar access token                      |
-| POST   | `/api/v1/auth/esqueci-senha`                | Público                           | Solicitar recuperação sem enumerar contas |
-| POST   | `/api/v1/auth/redefinir-senha`              | Público                           | Consumir token e redefinir senha          |
-| POST   | `/api/v1/auth/logout`                       | Cookie HttpOnly                   | Encerrar sessão de tenant                 |
-| POST   | `/api/v1/interno/auth/login`                | Público                           | Iniciar sessão do superadministrador      |
-| POST   | `/api/v1/interno/auth/2fa/configurar`       | `estadoToken`                     | Obter QR code da primeira configuração    |
-| POST   | `/api/v1/interno/auth/2fa/verificar`        | `estadoToken`                     | Confirmar TOTP e receber JWT interno      |
-| GET    | `/api/v1/interno/saude`                     | JWT interno                       | Validar a sessão administrativa           |
-| GET    | `/api/v1/interno/tenants`                   | JWT interno                       | Lista administrativa paginada             |
-| POST   | `/api/v1/interno/tenants`                   | JWT interno                       | Provisionar tenant idempotentemente       |
-| GET    | `/api/v1/interno/tenants/{tenantId}`        | JWT interno                       | Detalhar tenant                           |
-| PATCH  | `/api/v1/interno/tenants/{tenantId}/status` | JWT interno                       | Suspender, reativar ou cancelar           |
-| PATCH  | `/api/v1/interno/tenants/{tenantId}/plano`  | JWT interno                       | Alterar plano manualmente                 |
-| GET    | `/api/v1/fluxos`                            | JWT tenant                        | Listar fluxos                             |
-| POST   | `/api/v1/fluxos`                            | JWT tenant                        | Criar rascunho                            |
-| GET    | `/api/v1/fluxos/{fluxoId}`                  | JWT tenant                        | Abrir editor                              |
-| PUT    | `/api/v1/fluxos/{fluxoId}`                  | JWT tenant                        | Salvar rascunho                           |
-| DELETE | `/api/v1/fluxos/{fluxoId}`                  | JWT tenant                        | Excluir logicamente                       |
-| POST   | `/api/v1/fluxos/{fluxoId}/publicar`         | JWT tenant                        | Publicar versão imutável                  |
-| POST   | `/api/v1/fluxos/{fluxoId}/simular`          | JWT tenant                        | Simular conversa sem WhatsApp             |
-| GET    | `/api/v1/empresa`                           | JWT tenant                        | Consultar cadastro empresarial            |
-| PUT    | `/api/v1/empresa`                           | Admin do tenant                   | Atualizar cadastro empresarial            |
-| GET    | `/api/v1/empresa/consultar-cep/{cep}`       | JWT tenant                        | Sugerir endereço pelo CEP                 |
-| GET    | `/api/v1/contas-whatsapp`                   | Admin do tenant                   | Listar contas WhatsApp                    |
-| POST   | `/api/v1/contas-whatsapp`                   | Admin do tenant                   | Cadastrar conta WhatsApp                  |
-| GET    | `/api/v1/contas-whatsapp/{contaId}`         | Admin do tenant                   | Detalhar conta WhatsApp                   |
-| PUT    | `/api/v1/contas-whatsapp/{contaId}`         | Admin do tenant                   | Atualizar conta WhatsApp                  |
-| PATCH  | `/api/v1/contas-whatsapp/{contaId}/token`   | Admin do tenant                   | Rotacionar token                          |
-| PATCH  | `/api/v1/contas-whatsapp/{contaId}/status`  | Admin do tenant                   | Ativar ou desativar conta                 |
-| POST   | `/api/v1/contas-whatsapp/{contaId}/testar`  | Admin do tenant                   | Testar credencial na Meta                 |
-| GET    | `/api/v1/usuarios`                          | Admin ou gestor                   | Listar usuários                           |
-| POST   | `/api/v1/usuarios`                          | Admin ou gestor                   | Cadastrar usuário                         |
-| GET    | `/api/v1/usuarios/{usuarioId}`              | Admin ou gestor                   | Detalhar usuário                          |
-| PUT    | `/api/v1/usuarios/{usuarioId}`              | Admin ou gestor                   | Editar usuário                            |
-| PATCH  | `/api/v1/usuarios/{usuarioId}/status`       | Admin ou gestor                   | Ativar ou desativar usuário               |
-| DELETE | `/api/v1/usuarios/{usuarioId}`              | Admin ou gestor                   | Excluir usuário                           |
-| GET    | `/api/v1/webhook/whatsapp`                  | Token de verificação Meta         | Confirmar cadastro do webhook             |
-| POST   | `/api/v1/webhook/whatsapp`                  | Assinatura HMAC Meta              | Receber e enfileirar eventos              |
+| Método | Endpoint                                         | Acesso                            | Uso no frontend                           |
+| ------ | ------------------------------------------------ | --------------------------------- | ----------------------------------------- |
+| GET    | `/api/v1/saude`                                  | Público                           | Verificar se o processo HTTP responde     |
+| GET    | `/api/v1/prontidao`                              | Público                           | Diagnóstico de PostgreSQL e Redis         |
+| GET    | `/api/v1/docs/`                                  | Público em dev; Basic em produção | Interface Swagger                         |
+| GET    | `/api/v1/openapi.json`                           | Público em dev; Basic em produção | Geração de cliente e consulta do contrato |
+| POST   | `/api/v1/auth/login`                             | Público                           | Iniciar sessão de tenant                  |
+| POST   | `/api/v1/auth/refresh`                           | Cookie HttpOnly                   | Renovar access token                      |
+| POST   | `/api/v1/auth/esqueci-senha`                     | Público                           | Solicitar recuperação sem enumerar contas |
+| POST   | `/api/v1/auth/redefinir-senha`                   | Público                           | Consumir token e redefinir senha          |
+| GET    | `/api/v1/setores`                                | Tenant autenticado                | Listar setores visíveis                   |
+| POST   | `/api/v1/setores`                                | Admin/gestor tenant               | Criar setor                               |
+| GET    | `/api/v1/setores/{setorId}`                      | Tenant autenticado                | Detalhar setor visível                    |
+| PUT    | `/api/v1/setores/{setorId}`                      | Admin/gestor tenant               | Atualizar setor                           |
+| DELETE | `/api/v1/setores/{setorId}`                      | Admin/gestor tenant               | Excluir setor logicamente                 |
+| GET    | `/api/v1/setores/{setorId}/atendentes-elegiveis` | Admin/gestor tenant               | Listar atendentes vinculados ativos       |
+| PUT    | `/api/v1/usuarios/{usuarioId}/setores`           | Admin/gestor tenant               | Substituir vínculos N:N                   |
+| POST   | `/api/v1/auth/logout`                            | Cookie HttpOnly                   | Encerrar sessão de tenant                 |
+| POST   | `/api/v1/interno/auth/login`                     | Público                           | Iniciar sessão do superadministrador      |
+| POST   | `/api/v1/interno/auth/2fa/configurar`            | `estadoToken`                     | Obter QR code da primeira configuração    |
+| POST   | `/api/v1/interno/auth/2fa/verificar`             | `estadoToken`                     | Confirmar TOTP e receber JWT interno      |
+| GET    | `/api/v1/interno/saude`                          | JWT interno                       | Validar a sessão administrativa           |
+| GET    | `/api/v1/interno/tenants`                        | JWT interno                       | Lista administrativa paginada             |
+| POST   | `/api/v1/interno/tenants`                        | JWT interno                       | Provisionar tenant idempotentemente       |
+| GET    | `/api/v1/interno/tenants/{tenantId}`             | JWT interno                       | Detalhar tenant                           |
+| PATCH  | `/api/v1/interno/tenants/{tenantId}/status`      | JWT interno                       | Suspender, reativar ou cancelar           |
+| PATCH  | `/api/v1/interno/tenants/{tenantId}/plano`       | JWT interno                       | Alterar plano manualmente                 |
+| GET    | `/api/v1/fluxos`                                 | JWT tenant                        | Listar fluxos                             |
+| POST   | `/api/v1/fluxos`                                 | JWT tenant                        | Criar rascunho                            |
+| GET    | `/api/v1/fluxos/{fluxoId}`                       | JWT tenant                        | Abrir editor                              |
+| PUT    | `/api/v1/fluxos/{fluxoId}`                       | JWT tenant                        | Salvar rascunho                           |
+| DELETE | `/api/v1/fluxos/{fluxoId}`                       | JWT tenant                        | Excluir logicamente                       |
+| POST   | `/api/v1/fluxos/{fluxoId}/publicar`              | JWT tenant                        | Publicar versão imutável                  |
+| POST   | `/api/v1/fluxos/{fluxoId}/simular`               | JWT tenant                        | Simular conversa sem WhatsApp             |
+| GET    | `/api/v1/empresa`                                | JWT tenant                        | Consultar cadastro empresarial            |
+| PUT    | `/api/v1/empresa`                                | Admin do tenant                   | Atualizar cadastro empresarial            |
+| GET    | `/api/v1/empresa/consultar-cep/{cep}`            | JWT tenant                        | Sugerir endereço pelo CEP                 |
+| GET    | `/api/v1/contas-whatsapp`                        | Admin do tenant                   | Listar contas WhatsApp                    |
+| POST   | `/api/v1/contas-whatsapp`                        | Admin do tenant                   | Cadastrar conta WhatsApp                  |
+| GET    | `/api/v1/contas-whatsapp/{contaId}`              | Admin do tenant                   | Detalhar conta WhatsApp                   |
+| PUT    | `/api/v1/contas-whatsapp/{contaId}`              | Admin do tenant                   | Atualizar conta WhatsApp                  |
+| PATCH  | `/api/v1/contas-whatsapp/{contaId}/token`        | Admin do tenant                   | Rotacionar token                          |
+| PATCH  | `/api/v1/contas-whatsapp/{contaId}/status`       | Admin do tenant                   | Ativar ou desativar conta                 |
+| POST   | `/api/v1/contas-whatsapp/{contaId}/testar`       | Admin do tenant                   | Testar credencial na Meta                 |
+| GET    | `/api/v1/usuarios`                               | Admin ou gestor                   | Listar usuários                           |
+| POST   | `/api/v1/usuarios`                               | Admin ou gestor                   | Cadastrar usuário                         |
+| GET    | `/api/v1/usuarios/{usuarioId}`                   | Admin ou gestor                   | Detalhar usuário                          |
+| PUT    | `/api/v1/usuarios/{usuarioId}`                   | Admin ou gestor                   | Editar usuário                            |
+| PATCH  | `/api/v1/usuarios/{usuarioId}/status`            | Admin ou gestor                   | Ativar ou desativar usuário               |
+| DELETE | `/api/v1/usuarios/{usuarioId}`                   | Admin ou gestor                   | Excluir usuário                           |
+| GET    | `/api/v1/webhook/whatsapp`                       | Token de verificação Meta         | Confirmar cadastro do webhook             |
+| POST   | `/api/v1/webhook/whatsapp`                       | Assinatura HMAC Meta              | Receber e enfileirar eventos              |
 
 ## Infraestrutura e documentação
 

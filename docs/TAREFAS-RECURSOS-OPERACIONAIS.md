@@ -84,8 +84,8 @@ tarefa.
 | 12. Catálogo geográfico e empresa    | `feat/cadastro-empresa-geografia`    | 00             | Concluída |
 | 13. Configuração WhatsApp por tenant | `feat/configuracao-whatsapp-tenant`  | 00 e 12        | Concluída |
 | 14. Usuários e RBAC                  | `feat/usuarios-permissoes`           | 00             | Concluída |
-| 15. Recuperação de senha             | `feat/recuperacao-senha`             | 14             | Pendente  |
-| 16. Setores e vínculos de atendentes | `feat/setores-atendentes`            | 14             | Pendente  |
+| 15. Recuperação de senha             | `feat/recuperacao-senha`             | 14             | Concluída |
+| 16. Setores e vínculos de atendentes | `feat/setores-atendentes`            | 14             | Concluída |
 | 17. Perfil do usuário autenticado    | `feat/perfil-usuario-logado`         | 14             | Pendente  |
 | 18. Histórico de conversas           | `feat/historico-conversas`           | 13 e 16        | Pendente  |
 | 19. Direcionamento e claim           | `feat/direcionamento-atendimento`    | 16 e 18        | Pendente  |
@@ -302,39 +302,39 @@ Branch: `feat/recuperacao-senha`
 
 ---
 
-## Etapa 16 — Setores e vínculos de atendentes
+## Etapa 16 — Setores e vínculos de atendentes — Concluída
 
 Branch: `feat/setores-atendentes`
 
-- [ ] Substituir `Atendente.setor_id` por relação N:N.
-- [ ] Criar tabela de vínculo com ID inteiro e timestamps.
-- [ ] Garantir unicidade atendente-setor.
-- [ ] Criar índices para filas por setor e setores do atendente.
-- [ ] Criar migration tenant preservando vínculos existentes.
-- [ ] Criar CRUD de setores com soft delete.
-- [ ] Impedir exclusão lógica de setor usado por fluxo publicado.
-- [ ] Definir comportamento para setor com conversa ativa.
-- [ ] Criar listagem de atendentes elegíveis.
-- [ ] Criar endpoint para substituir vínculos de setores atomicamente.
-- [ ] Validar que todos os setores pertencem ao tenant atual.
-- [ ] Restringir gestão a admin/gestor conforme RBAC.
-- [ ] Criar `GET /api/v1/setores`.
-- [ ] Criar `POST /api/v1/setores`.
-- [ ] Criar `GET /api/v1/setores/{setorId}`.
-- [ ] Criar `PUT /api/v1/setores/{setorId}`.
-- [ ] Criar `DELETE /api/v1/setores/{setorId}`.
-- [ ] Criar `PUT /api/v1/usuarios/{usuarioId}/setores`.
-- [ ] Documentar telas, seletores e estados vazios.
-- [ ] Testar acesso de atendente a um, vários e nenhum setor.
-- [ ] Atualizar Swagger e Markdown.
+- [x] Substituir `Atendente.setor_id` por relação N:N.
+- [x] Criar tabela de vínculo com ID inteiro e timestamps.
+- [x] Garantir unicidade atendente-setor.
+- [x] Criar índices para filas por setor e setores do atendente.
+- [x] Criar migration tenant preservando vínculos existentes.
+- [x] Criar CRUD de setores com soft delete.
+- [x] Impedir exclusão lógica de setor usado por fluxo publicado.
+- [x] Definir comportamento para setor com conversa ativa.
+- [x] Criar listagem de atendentes elegíveis.
+- [x] Criar endpoint para substituir vínculos de setores atomicamente.
+- [x] Validar que todos os setores pertencem ao tenant atual.
+- [x] Restringir gestão a admin/gestor conforme RBAC.
+- [x] Criar `GET /api/v1/setores`.
+- [x] Criar `POST /api/v1/setores`.
+- [x] Criar `GET /api/v1/setores/{setorId}`.
+- [x] Criar `PUT /api/v1/setores/{setorId}`.
+- [x] Criar `DELETE /api/v1/setores/{setorId}`.
+- [x] Criar `PUT /api/v1/usuarios/{usuarioId}/setores`.
+- [x] Documentar telas, seletores e estados vazios.
+- [x] Testar acesso de atendente a um, vários e nenhum setor.
+- [x] Atualizar Swagger e Markdown.
 
 ### Saída
 
-- [ ] Relação N:N preserva dados existentes.
-- [ ] Atendente comum só enxerga setores vinculados.
-- [ ] Nós publicados não ficam com setor inexistente.
-- [ ] Testes, cobertura, lint, typecheck e build aprovados.
-- [ ] Branch pronta para integração.
+- [x] Relação N:N preserva dados existentes.
+- [x] Atendente comum só enxerga setores vinculados.
+- [x] Nós publicados não ficam com setor inexistente.
+- [x] Testes, cobertura, lint, typecheck e build aprovados.
+- [x] Branch pronta para integração.
 
 ---
 

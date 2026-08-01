@@ -12,6 +12,14 @@ import {
 import { loginInternoSchema } from '../dtos/login-interno.dto.js';
 import { loginSchema } from '../dtos/login.dto.js';
 import { esqueciSenhaSchema, redefinirSenhaSchema } from '../dtos/recuperacao-senha.dto.js';
+import {
+  atualizarSetorSchema,
+  criarSetorSchema,
+  listarSetoresSchema,
+  setorParametroSchema,
+  substituirSetoresUsuarioSchema,
+  usuarioSetoresParametroSchema,
+} from '../dtos/setor.dto.js';
 import { atualizarEmpresaSchema, consultarCepSchema } from '../dtos/empresa.dto.js';
 import {
   alterarStatusContaWhatsappSchema,
@@ -233,6 +241,29 @@ const paginaUsuariosTenantSchema = z.object({
   skip: z.number().int().nonnegative(),
   take: z.number().int().positive(),
 });
+const setorSchema = z.object({
+  public_id: z.uuid(),
+  nome: z.string(),
+  descricao: z.string().nullable(),
+  ativo: z.boolean(),
+  created_at: z.iso.datetime(),
+  updated_at: z.iso.datetime(),
+});
+const paginaSetoresSchema = z.object({
+  dados: z.array(setorSchema),
+  total: z.number().int(),
+  skip: z.number().int(),
+  take: z.number().int(),
+});
+const atendenteElegivelSchema = z.object({
+  public_id: z.uuid(),
+  nome: z.string(),
+  email: z.email(),
+  usuario: z.object({
+    public_id: z.uuid(),
+    papel: z.enum(['ADMIN_TENANT', 'GESTOR', 'ATENDENTE']),
+  }),
+});
 
 function criarRegistro(): OpenAPIRegistry {
   const registro = new OpenAPIRegistry();
@@ -245,6 +276,123 @@ function criarRegistro(): OpenAPIRegistry {
   });
   registro.register('ErroResposta', erroSchema);
   registro.register('PaginacaoResposta', paginacaoSchema);
+
+  registro.registerPath({
+    method: 'get',
+    path: '/api/v1/setores',
+    tags: ['Setores'],
+    summary: 'Lista setores visíveis ao usuário',
+    security: [{ bearerAuth: [] }],
+    request: { query: listarSetoresSchema },
+    responses: {
+      200: {
+        description: 'Lista paginada.',
+        content: { 'application/json': { schema: paginaSetoresSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'post',
+    path: '/api/v1/setores',
+    tags: ['Setores'],
+    summary: 'Cria setor',
+    security: [{ bearerAuth: [] }],
+    request: {
+      body: { required: true, content: { 'application/json': { schema: criarSetorSchema } } },
+    },
+    responses: {
+      201: {
+        description: 'Setor criado.',
+        content: { 'application/json': { schema: setorSchema } },
+      },
+      403: {
+        description: 'Sem permissão.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'get',
+    path: '/api/v1/setores/{setorId}',
+    tags: ['Setores'],
+    summary: 'Detalha setor visível',
+    security: [{ bearerAuth: [] }],
+    request: { params: setorParametroSchema },
+    responses: {
+      200: { description: 'Setor.', content: { 'application/json': { schema: setorSchema } } },
+      404: {
+        description: 'Não encontrado.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'put',
+    path: '/api/v1/setores/{setorId}',
+    tags: ['Setores'],
+    summary: 'Atualiza setor',
+    security: [{ bearerAuth: [] }],
+    request: {
+      params: setorParametroSchema,
+      body: { required: true, content: { 'application/json': { schema: atualizarSetorSchema } } },
+    },
+    responses: {
+      200: {
+        description: 'Setor atualizado.',
+        content: { 'application/json': { schema: setorSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'delete',
+    path: '/api/v1/setores/{setorId}',
+    tags: ['Setores'],
+    summary: 'Exclui setor logicamente',
+    security: [{ bearerAuth: [] }],
+    request: { params: setorParametroSchema },
+    responses: {
+      204: { description: 'Excluído.' },
+      409: {
+        description: 'Usado por fluxo publicado ou conversa ativa.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'get',
+    path: '/api/v1/setores/{setorId}/atendentes-elegiveis',
+    tags: ['Setores'],
+    summary: 'Lista atendentes ativos vinculados',
+    security: [{ bearerAuth: [] }],
+    request: { params: setorParametroSchema },
+    responses: {
+      200: {
+        description: 'Atendentes elegíveis.',
+        content: { 'application/json': { schema: z.array(atendenteElegivelSchema) } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'put',
+    path: '/api/v1/usuarios/{usuarioId}/setores',
+    tags: ['Usuários', 'Setores'],
+    summary: 'Substitui vínculos de setores atomicamente',
+    security: [{ bearerAuth: [] }],
+    request: {
+      params: usuarioSetoresParametroSchema,
+      body: {
+        required: true,
+        content: { 'application/json': { schema: substituirSetoresUsuarioSchema } },
+      },
+    },
+    responses: {
+      200: { description: 'Vínculos substituídos.' },
+      422: {
+        description: 'Setor inexistente ou inativo.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
 
   registro.registerPath({
     method: 'post',
