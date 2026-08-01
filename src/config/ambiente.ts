@@ -22,6 +22,8 @@ const ambienteSchema = z
     JWT_TENANT_EXPIRACAO_SEGUNDOS: z.coerce.number().int().positive().default(900),
     REFRESH_TOKEN_EXPIRACAO_DIAS: z.coerce.number().int().positive().max(90).default(30),
     TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE: z.string().regex(/^[a-fA-F0-9]{64}$/),
+    WHATSAPP_CREDENCIAIS_CRIPTOGRAFIA_CHAVE: z.string().regex(/^[a-fA-F0-9]{64}$/),
+    WHATSAPP_GRAPH_API_URL: z.url().default('https://graph.facebook.com'),
     TENANT_CLIENTES_CACHE_MAXIMO: z.coerce.number().int().positive().max(100).default(20),
     POSTGRES_ADMIN_URL: z.url().startsWith('postgresql://').optional(),
     REDIS_URL: z.url().refine((valor) => /^rediss?:\/\//.test(valor), {

@@ -51,19 +51,52 @@ enum TipoMensagem {
   @@map("tipo_mensagem")
 }
 
-model ContaWhatsapp {
-  id              Int      @id @default(autoincrement())
-  public_id       String   @unique @default(uuid()) @db.Uuid
-  nome            String   @db.VarChar(120)
-  phone_number_id String   @unique @db.VarChar(100)
-  token_encrypted String
-  ativo           Boolean  @default(true)
-  created_at      DateTime @default(now()) @db.Timestamptz(3)
-  updated_at      DateTime @updatedAt @db.Timestamptz(3)
-  conversas       Conversa[]
+enum StatusContaWhatsapp {
+  PENDENTE
+  VALIDADA
+  INVALIDA
 
-  @@index([ativo, nome])
+  @@map("status_conta_whatsapp")
+}
+
+model ContaWhatsapp {
+  id                   Int                  @id @default(autoincrement())
+  public_id            String               @unique @default(uuid()) @db.Uuid
+  nome                 String               @db.VarChar(120)
+  phone_number_id      String               @unique @db.VarChar(100)
+  waba_id              String               @db.VarChar(100)
+  numero_exibicao      String?              @db.VarChar(40)
+  versao_graph_api     String               @default("v23.0") @db.VarChar(20)
+  token_encrypted      String
+  status               StatusContaWhatsapp @default(PENDENTE)
+  ultima_validacao_at  DateTime?            @db.Timestamptz(3)
+  ultimo_erro_codigo   String?              @db.VarChar(80)
+  ultimo_erro_mensagem String?              @db.VarChar(500)
+  ativo                Boolean              @default(true)
+  deletado_at          DateTime?            @db.Timestamptz(3)
+  created_at           DateTime             @default(now()) @db.Timestamptz(3)
+  updated_at           DateTime             @updatedAt @db.Timestamptz(3)
+  conversas            Conversa[]
+  auditorias           AuditoriaWhatsapp[]
+
+  @@index([ativo, deletado_at, nome])
+  @@index([status, updated_at])
   @@map("contas_whatsapp")
+}
+
+model AuditoriaWhatsapp {
+  id                Int              @id @default(autoincrement())
+  conta_whatsapp_id Int?
+  conta_public_id   String           @db.Uuid
+  autor_usuario_id  String           @db.Uuid
+  acao              String           @db.VarChar(80)
+  detalhes          Json?
+  created_at        DateTime         @default(now()) @db.Timestamptz(3)
+  conta_whatsapp    ContaWhatsapp?   @relation(fields: [conta_whatsapp_id], references: [id], onDelete: SetNull)
+
+  @@index([conta_public_id, created_at])
+  @@index([autor_usuario_id, created_at])
+  @@map("auditorias_whatsapp")
 }
 
 model Fluxo {

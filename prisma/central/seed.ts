@@ -18,16 +18,19 @@ const planos = [
   {
     nome: 'Free',
     limite_conversas_mes: 200,
+    limite_contas_whatsapp: 1,
     preco_centavos: 0,
   },
   {
     nome: 'Starter',
     limite_conversas_mes: 2_000,
+    limite_contas_whatsapp: 1,
     preco_centavos: 9_900,
   },
   {
     nome: 'Pro',
     limite_conversas_mes: 10_000,
+    limite_contas_whatsapp: 3,
     preco_centavos: 29_900,
   },
 ] as const;
@@ -39,6 +42,7 @@ async function executar(): Promise<void> {
       create: plano,
       update: {
         limite_conversas_mes: plano.limite_conversas_mes,
+        limite_contas_whatsapp: plano.limite_contas_whatsapp,
         preco_centavos: plano.preco_centavos,
         ativo: true,
       },

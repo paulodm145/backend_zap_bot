@@ -15,6 +15,7 @@ import { TenantsInternosController } from './controllers/tenants-internos.contro
 import type { WebhookWhatsappController } from './controllers/webhook-whatsapp.controller.js';
 import { FluxoController } from './controllers/fluxo.controller.js';
 import { EmpresaController } from './controllers/empresa.controller.js';
+import { ContaWhatsappController } from './controllers/conta-whatsapp.controller.js';
 import { obterGerenciadorConexoesTenant } from './database/gerenciador-conexoes-tenant.js';
 import { obterPrismaCentral } from './database/prisma-central.js';
 import type { PrismaClient } from './generated/prisma/client.js';
@@ -35,6 +36,7 @@ import { criarRotasSaude } from './rotas/saude.rotas.js';
 import { criarRotasWebhookWhatsapp } from './rotas/webhook-whatsapp.rotas.js';
 import { criarRotasFluxos } from './rotas/fluxo.rotas.js';
 import { criarRotasEmpresa } from './rotas/empresa.rotas.js';
+import { criarRotasContasWhatsapp } from './rotas/conta-whatsapp.rotas.js';
 import { AutenticacaoInternaService } from './services/autenticacao-interna.service.js';
 import { AutenticacaoService } from './services/autenticacao.service.js';
 import { AdministracaoTenantsService } from './services/administracao-tenants.service.js';
@@ -49,6 +51,8 @@ import { CriptografiaService } from './services/criptografia.service.js';
 import { ProvisionadorBancoTenantService } from './services/provisionador-banco-tenant.service.js';
 import { ProvisionamentoTenantService } from './services/provisionamento-tenant.service.js';
 import { BrasilApiService } from './services/brasil-api.service.js';
+import { WhatsappGraphApiService } from './services/whatsapp-graph-api.service.js';
+import { RoteamentoWhatsappRepository } from './repositories/roteamento-whatsapp.repository.js';
 
 interface OpcoesAplicacao {
   verificadoresProntidao?: VerificadorDependencia[];
@@ -180,6 +184,22 @@ export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
           ambiente.BRASIL_API_TIMEOUT_MS,
           ambiente.BRASIL_API_TENTATIVAS,
         ),
+      ),
+    ),
+  );
+  aplicacao.use(
+    '/api/v1/contas-whatsapp',
+    criarAutenticacaoMiddleware(tokenTenant),
+    criarResolucaoTenantMiddleware(
+      tenantsRepository,
+      criptografiaConexaoTenant,
+      obterGerenciadorConexoesTenant(),
+    ),
+    criarRotasContasWhatsapp(
+      new ContaWhatsappController(
+        new RoteamentoWhatsappRepository(prismaCentral),
+        new CriptografiaService(ambiente.WHATSAPP_CREDENCIAIS_CRIPTOGRAFIA_CHAVE),
+        new WhatsappGraphApiService(ambiente.WHATSAPP_GRAPH_API_URL),
       ),
     ),
   );

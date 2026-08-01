@@ -58,6 +58,13 @@ dependem do cookie HttpOnly. Uma implementação sugerida do cliente HTTP está 
 | GET    | `/api/v1/empresa`                           | JWT tenant                        | Consultar cadastro empresarial            |
 | PUT    | `/api/v1/empresa`                           | Admin do tenant                   | Atualizar cadastro empresarial            |
 | GET    | `/api/v1/empresa/consultar-cep/{cep}`       | JWT tenant                        | Sugerir endereço pelo CEP                 |
+| GET    | `/api/v1/contas-whatsapp`                   | Admin do tenant                   | Listar contas WhatsApp                    |
+| POST   | `/api/v1/contas-whatsapp`                   | Admin do tenant                   | Cadastrar conta WhatsApp                  |
+| GET    | `/api/v1/contas-whatsapp/{contaId}`         | Admin do tenant                   | Detalhar conta WhatsApp                   |
+| PUT    | `/api/v1/contas-whatsapp/{contaId}`         | Admin do tenant                   | Atualizar conta WhatsApp                  |
+| PATCH  | `/api/v1/contas-whatsapp/{contaId}/token`   | Admin do tenant                   | Rotacionar token                          |
+| PATCH  | `/api/v1/contas-whatsapp/{contaId}/status`  | Admin do tenant                   | Ativar ou desativar conta                 |
+| POST   | `/api/v1/contas-whatsapp/{contaId}/testar`  | Admin do tenant                   | Testar credencial na Meta                 |
 | GET    | `/api/v1/webhook/whatsapp`                  | Token de verificação Meta         | Confirmar cadastro do webhook             |
 | POST   | `/api/v1/webhook/whatsapp`                  | Assinatura HMAC Meta              | Receber e enfileirar eventos              |
 

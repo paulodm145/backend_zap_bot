@@ -14,9 +14,13 @@ descreverIntegracao('isolamento físico e cache LRU dos tenants', () => {
 
   beforeAll(async () => {
     const clienteA = await gerenciador.obter(1, urlA ?? '');
+    await clienteA.auditoriaWhatsapp.deleteMany();
+    await clienteA.contaWhatsapp.deleteMany();
     await clienteA.contato.deleteMany();
     await clienteA.empresa.deleteMany();
     const clienteB = await gerenciador.obter(2, urlB ?? '');
+    await clienteB.auditoriaWhatsapp.deleteMany();
+    await clienteB.contaWhatsapp.deleteMany();
     await clienteB.contato.deleteMany();
     await clienteB.empresa.deleteMany();
   });
@@ -56,5 +60,20 @@ descreverIntegracao('isolamento físico e cache LRU dos tenants', () => {
 
     expect(await empresaA.buscar()).toMatchObject({ nome_fantasia: 'Empresa exclusiva A' });
     expect(await empresaB.buscar()).toBeNull();
+  });
+
+  it('mantém credenciais WhatsApp exclusivamente no banco do tenant', async () => {
+    const clienteA = await gerenciador.obter(1, urlA ?? '');
+    const clienteB = await gerenciador.obter(2, urlB ?? '');
+    await clienteA.contaWhatsapp.create({
+      data: {
+        nome: 'Conta A',
+        phone_number_id: '551100000001',
+        waba_id: '991100000001',
+        token_encrypted: 'somente-banco-a',
+      },
+    });
+    expect(await clienteA.contaWhatsapp.count()).toBe(1);
+    expect(await clienteB.contaWhatsapp.count()).toBe(0);
   });
 });

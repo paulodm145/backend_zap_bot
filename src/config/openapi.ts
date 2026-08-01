@@ -13,6 +13,14 @@ import { loginInternoSchema } from '../dtos/login-interno.dto.js';
 import { loginSchema } from '../dtos/login.dto.js';
 import { atualizarEmpresaSchema, consultarCepSchema } from '../dtos/empresa.dto.js';
 import {
+  alterarStatusContaWhatsappSchema,
+  atualizarContaWhatsappSchema,
+  contaWhatsappIdSchema,
+  criarContaWhatsappSchema,
+  listarContasWhatsappSchema,
+  rotacionarTokenWhatsappSchema,
+} from '../dtos/conta-whatsapp.dto.js';
+import {
   alterarPlanoTenantSchema,
   alterarStatusTenantSchema,
   listarTenantsSchema,
@@ -180,6 +188,27 @@ const enderecoCepSchema = z.object({
   logradouro: z.string().nullable().optional(),
   municipioCodigoIbge: z.string().nullable().optional(),
 });
+const contaWhatsappSchema = z.object({
+  public_id: z.uuid(),
+  nome: z.string(),
+  phone_number_id: z.string(),
+  waba_id: z.string(),
+  numero_exibicao: z.string().nullable(),
+  versao_graph_api: z.string(),
+  status: z.enum(['PENDENTE', 'VALIDADA', 'INVALIDA']),
+  ultima_validacao_at: z.iso.datetime().nullable(),
+  ultimo_erro_codigo: z.string().nullable(),
+  ultimo_erro_mensagem: z.string().nullable(),
+  ativo: z.boolean(),
+  created_at: z.iso.datetime(),
+  updated_at: z.iso.datetime(),
+});
+const paginaContasWhatsappSchema = z.object({
+  dados: z.array(contaWhatsappSchema),
+  total: z.number().int().nonnegative(),
+  skip: z.number().int().nonnegative(),
+  take: z.number().int().positive(),
+});
 
 function criarRegistro(): OpenAPIRegistry {
   const registro = new OpenAPIRegistry();
@@ -192,6 +221,144 @@ function criarRegistro(): OpenAPIRegistry {
   });
   registro.register('ErroResposta', erroSchema);
   registro.register('PaginacaoResposta', paginacaoSchema);
+
+  registro.registerPath({
+    method: 'get',
+    path: '/api/v1/contas-whatsapp',
+    tags: ['Contas WhatsApp'],
+    summary: 'Lista as contas WhatsApp do tenant',
+    security: [{ bearerAuth: [] }],
+    request: { query: listarContasWhatsappSchema },
+    responses: {
+      200: {
+        description: 'Lista paginada sem credenciais.',
+        content: { 'application/json': { schema: paginaContasWhatsappSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'post',
+    path: '/api/v1/contas-whatsapp',
+    tags: ['Contas WhatsApp'],
+    summary: 'Cadastra uma conta e sincroniza seu roteamento central',
+    security: [{ bearerAuth: [] }],
+    request: {
+      body: {
+        required: true,
+        content: { 'application/json': { schema: criarContaWhatsappSchema } },
+      },
+    },
+    responses: {
+      201: {
+        description: 'Conta cadastrada sem retornar o token.',
+        content: { 'application/json': { schema: contaWhatsappSchema } },
+      },
+      409: {
+        description: 'Número vinculado a outro tenant.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+      422: {
+        description: 'Limite do plano ou dados inválidos.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'get',
+    path: '/api/v1/contas-whatsapp/{contaId}',
+    tags: ['Contas WhatsApp'],
+    summary: 'Detalha uma conta sem expor a credencial',
+    security: [{ bearerAuth: [] }],
+    request: { params: contaWhatsappIdSchema },
+    responses: {
+      200: {
+        description: 'Conta encontrada.',
+        content: { 'application/json': { schema: contaWhatsappSchema } },
+      },
+      404: {
+        description: 'Conta não encontrada.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'put',
+    path: '/api/v1/contas-whatsapp/{contaId}',
+    tags: ['Contas WhatsApp'],
+    summary: 'Atualiza metadados e roteamento da conta',
+    security: [{ bearerAuth: [] }],
+    request: {
+      params: contaWhatsappIdSchema,
+      body: {
+        required: true,
+        content: { 'application/json': { schema: atualizarContaWhatsappSchema } },
+      },
+    },
+    responses: {
+      200: {
+        description: 'Conta atualizada.',
+        content: { 'application/json': { schema: contaWhatsappSchema } },
+      },
+      409: {
+        description: 'Número vinculado a outro tenant.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'patch',
+    path: '/api/v1/contas-whatsapp/{contaId}/token',
+    tags: ['Contas WhatsApp'],
+    summary: 'Rotaciona a credencial criptografada',
+    security: [{ bearerAuth: [] }],
+    request: {
+      params: contaWhatsappIdSchema,
+      body: {
+        required: true,
+        content: { 'application/json': { schema: rotacionarTokenWhatsappSchema } },
+      },
+    },
+    responses: {
+      200: {
+        description: 'Token substituído; o valor nunca é retornado.',
+        content: { 'application/json': { schema: contaWhatsappSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'patch',
+    path: '/api/v1/contas-whatsapp/{contaId}/status',
+    tags: ['Contas WhatsApp'],
+    summary: 'Ativa ou desativa a conta',
+    security: [{ bearerAuth: [] }],
+    request: {
+      params: contaWhatsappIdSchema,
+      body: {
+        required: true,
+        content: { 'application/json': { schema: alterarStatusContaWhatsappSchema } },
+      },
+    },
+    responses: {
+      200: {
+        description: 'Status operacional alterado.',
+        content: { 'application/json': { schema: contaWhatsappSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'post',
+    path: '/api/v1/contas-whatsapp/{contaId}/testar',
+    tags: ['Contas WhatsApp'],
+    summary: 'Testa a credencial diretamente na Graph API',
+    security: [{ bearerAuth: [] }],
+    request: { params: contaWhatsappIdSchema },
+    responses: {
+      200: {
+        description: 'Resultado persistido sem dados secretos.',
+        content: { 'application/json': { schema: contaWhatsappSchema } },
+      },
+    },
+  });
 
   registro.registerPath({
     method: 'get',

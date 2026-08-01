@@ -102,7 +102,8 @@ model Plano {
   id                   Int          @id @default(autoincrement())
   public_id            String       @unique @default(uuid()) @db.Uuid
   nome                 String       @unique @db.VarChar(80)
-  limite_conversas_mes Int
+  limite_conversas_mes  Int
+  limite_contas_whatsapp Int              @default(1)
   preco_centavos       Int
   ativo                Boolean      @default(true)
   created_at           DateTime     @default(now()) @db.Timestamptz(3)

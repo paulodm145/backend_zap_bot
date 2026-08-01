@@ -13,6 +13,9 @@ process.env.JWT_TENANT_EXPIRACAO_SEGUNDOS = '900';
 process.env.REFRESH_TOKEN_EXPIRACAO_DIAS = '30';
 process.env.TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE =
   'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789';
+process.env.WHATSAPP_CREDENCIAIS_CRIPTOGRAFIA_CHAVE =
+  '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+process.env.WHATSAPP_GRAPH_API_URL = 'https://graph.facebook.com';
 process.env.TENANT_CLIENTES_CACHE_MAXIMO = '20';
 process.env.POSTGRES_ADMIN_URL = 'postgresql://postgres:postgres@127.0.0.1:5432/postgres';
 process.env.REDIS_URL = 'redis://127.0.0.1:6379';

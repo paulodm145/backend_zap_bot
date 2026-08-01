@@ -82,7 +82,7 @@ tarefa.
 | ------------------------------------ | ------------------------------------ | -------------- | --------- |
 | 00. Planejamento e decisões          | `docs/backlog-recursos-operacionais` | Estrutura base | Concluída |
 | 12. Catálogo geográfico e empresa    | `feat/cadastro-empresa-geografia`    | 00             | Concluída |
-| 13. Configuração WhatsApp por tenant | `feat/configuracao-whatsapp-tenant`  | 00 e 12        | Pendente  |
+| 13. Configuração WhatsApp por tenant | `feat/configuracao-whatsapp-tenant`  | 00 e 12        | Concluída |
 | 14. Usuários e RBAC                  | `feat/usuarios-permissoes`           | 00             | Pendente  |
 | 15. Recuperação de senha             | `feat/recuperacao-senha`             | 14             | Pendente  |
 | 16. Setores e vínculos de atendentes | `feat/setores-atendentes`            | 14             | Pendente  |
@@ -174,41 +174,41 @@ Branch: `feat/cadastro-empresa-geografia`
 
 Branch: `feat/configuracao-whatsapp-tenant`
 
-- [ ] Definir limite de contas por plano.
-- [ ] Evoluir `ContaWhatsapp` com WABA ID e número de exibição.
-- [ ] Adicionar versão configurável da Graph API.
-- [ ] Adicionar status de configuração e data da última validação.
-- [ ] Adicionar campos de erro sem expor o token.
-- [ ] Adicionar soft delete.
-- [ ] Manter token criptografado no banco tenant.
-- [ ] Usar chave criptográfica específica de credenciais tenant.
-- [ ] Criar migration tenant.
-- [ ] Criar listagem de contas sem retornar segredo.
-- [ ] Criar detalhe sem retornar segredo.
-- [ ] Criar cadastro e atualização de conta.
-- [ ] Criar rotação de token.
-- [ ] Criar teste de credenciais contra a Graph API.
-- [ ] Criar ativação e desativação.
-- [ ] Sincronizar `phone_number_id -> tenant` no banco central.
-- [ ] Tornar sincronização central idempotente.
-- [ ] Compensar falha entre banco tenant e central.
-- [ ] Impedir que dois tenants usem o mesmo `phone_number_id`.
-- [ ] Validar webhook com a conta correta do tenant.
-- [ ] Selecionar conta de saída por conversa.
-- [ ] Nunca registrar token em log, erro, auditoria ou response.
-- [ ] Criar auditoria de mudanças sem dados secretos.
-- [ ] Documentar tela de onboarding manual do WhatsApp.
-- [ ] Documentar renovação e diagnóstico de token.
-- [ ] Atualizar Swagger e Markdown.
-- [ ] Testar isolamento entre duas contas de tenants diferentes.
+- [x] Definir limite de contas por plano.
+- [x] Evoluir `ContaWhatsapp` com WABA ID e número de exibição.
+- [x] Adicionar versão configurável da Graph API.
+- [x] Adicionar status de configuração e data da última validação.
+- [x] Adicionar campos de erro sem expor o token.
+- [x] Adicionar soft delete.
+- [x] Manter token criptografado no banco tenant.
+- [x] Usar chave criptográfica específica de credenciais tenant.
+- [x] Criar migration tenant.
+- [x] Criar listagem de contas sem retornar segredo.
+- [x] Criar detalhe sem retornar segredo.
+- [x] Criar cadastro e atualização de conta.
+- [x] Criar rotação de token.
+- [x] Criar teste de credenciais contra a Graph API.
+- [x] Criar ativação e desativação.
+- [x] Sincronizar `phone_number_id -> tenant` no banco central.
+- [x] Tornar sincronização central idempotente.
+- [x] Compensar falha entre banco tenant e central.
+- [x] Impedir que dois tenants usem o mesmo `phone_number_id`.
+- [x] Validar webhook com a conta correta do tenant.
+- [x] Selecionar conta de saída por conversa.
+- [x] Nunca registrar token em log, erro, auditoria ou response.
+- [x] Criar auditoria de mudanças sem dados secretos.
+- [x] Documentar tela de onboarding manual do WhatsApp.
+- [x] Documentar renovação e diagnóstico de token.
+- [x] Atualizar Swagger e Markdown.
+- [x] Testar isolamento entre duas contas de tenants diferentes.
 
 ### Saída
 
-- [ ] Cada tenant administra somente suas contas.
-- [ ] Webhook resolve tenant pelo índice técnico central.
-- [ ] Credenciais permanecem exclusivamente no banco tenant.
-- [ ] Testes, cobertura, lint, typecheck e build aprovados.
-- [ ] Branch pronta para integração.
+- [x] Cada tenant administra somente suas contas.
+- [x] Webhook resolve tenant pelo índice técnico central.
+- [x] Credenciais permanecem exclusivamente no banco tenant.
+- [x] Testes, cobertura, lint, typecheck e build aprovados.
+- [x] Branch pronta para integração.
 
 ---
 

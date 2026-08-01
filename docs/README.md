@@ -41,6 +41,7 @@ Documentos funcionais disponíveis:
 - [Webhook do WhatsApp](eventos/webhook-whatsapp.md)
 - [Fluxos e editor visual](api/fluxos.md)
 - [Cadastro da empresa](api/empresa.md)
+- [Contas WhatsApp do tenant](api/contas-whatsapp.md)
 - [Schema JSON dos fluxos](schemas/fluxo-json.md)
 - [Contribuição e checks de qualidade](CONTRIBUICAO.md)
 - [Tarefas dos recursos operacionais](TAREFAS-RECURSOS-OPERACIONAIS.md)
