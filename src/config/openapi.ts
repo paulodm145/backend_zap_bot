@@ -11,6 +11,7 @@ import {
 } from '../dtos/fluxo.dto.js';
 import { loginInternoSchema } from '../dtos/login-interno.dto.js';
 import { loginSchema } from '../dtos/login.dto.js';
+import { esqueciSenhaSchema, redefinirSenhaSchema } from '../dtos/recuperacao-senha.dto.js';
 import { atualizarEmpresaSchema, consultarCepSchema } from '../dtos/empresa.dto.js';
 import {
   alterarStatusContaWhatsappSchema,
@@ -244,6 +245,39 @@ function criarRegistro(): OpenAPIRegistry {
   });
   registro.register('ErroResposta', erroSchema);
   registro.register('PaginacaoResposta', paginacaoSchema);
+
+  registro.registerPath({
+    method: 'post',
+    path: '/api/v1/auth/esqueci-senha',
+    tags: ['Autenticação'],
+    summary: 'Solicita recuperação com resposta neutra',
+    request: {
+      body: { required: true, content: { 'application/json': { schema: esqueciSenhaSchema } } },
+    },
+    responses: {
+      202: { description: 'Solicitação aceita, exista ou não o e-mail.' },
+      429: {
+        description: 'Limite por IP e identidade excedido.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'post',
+    path: '/api/v1/auth/redefinir-senha',
+    tags: ['Autenticação'],
+    summary: 'Redefine a senha com token de uso único',
+    request: {
+      body: { required: true, content: { 'application/json': { schema: redefinirSenhaSchema } } },
+    },
+    responses: {
+      204: { description: 'Senha redefinida e sessões revogadas.' },
+      422: {
+        description: 'Token inválido, expirado ou consumido.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
 
   registro.registerPath({
     method: 'get',

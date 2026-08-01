@@ -55,11 +55,28 @@ model Usuario {
   refresh_tokens         RefreshToken[]     @relation("UsuarioRefreshTokens")
   refresh_tokens_revoked RefreshToken[]     @relation("UsuarioRevogadorRefreshTokens")
   auditorias             AuditoriaInterna[]
+  tokens_recuperacao     TokenRecuperacaoSenha[]
 
   @@index([tenant_id])
   @@index([papel, ativo])
   @@index([deletado_at])
   @@map("users")
+}
+
+model TokenRecuperacaoSenha {
+  id          Int       @id @default(autoincrement())
+  usuario_id  Int
+  token_hash  String    @unique @db.VarChar(64)
+  expira_at   DateTime  @db.Timestamptz(3)
+  consumido_at DateTime? @db.Timestamptz(3)
+  tentativas  Int       @default(0)
+  created_at  DateTime  @default(now()) @db.Timestamptz(3)
+  updated_at  DateTime  @updatedAt @db.Timestamptz(3)
+  usuario     Usuario   @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+
+  @@index([usuario_id, consumido_at])
+  @@index([expira_at])
+  @@map("tokens_recuperacao_senha")
 }
 
 model Tenant {

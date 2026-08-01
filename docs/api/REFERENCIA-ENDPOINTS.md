@@ -38,6 +38,8 @@ dependem do cookie HttpOnly. Uma implementação sugerida do cliente HTTP está 
 | GET    | `/api/v1/openapi.json`                      | Público em dev; Basic em produção | Geração de cliente e consulta do contrato |
 | POST   | `/api/v1/auth/login`                        | Público                           | Iniciar sessão de tenant                  |
 | POST   | `/api/v1/auth/refresh`                      | Cookie HttpOnly                   | Renovar access token                      |
+| POST   | `/api/v1/auth/esqueci-senha`                | Público                           | Solicitar recuperação sem enumerar contas |
+| POST   | `/api/v1/auth/redefinir-senha`              | Público                           | Consumir token e redefinir senha          |
 | POST   | `/api/v1/auth/logout`                       | Cookie HttpOnly                   | Encerrar sessão de tenant                 |
 | POST   | `/api/v1/interno/auth/login`                | Público                           | Iniciar sessão do superadministrador      |
 | POST   | `/api/v1/interno/auth/2fa/configurar`       | `estadoToken`                     | Obter QR code da primeira configuração    |

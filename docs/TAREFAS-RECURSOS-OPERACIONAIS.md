@@ -266,39 +266,39 @@ Branch: `feat/usuarios-permissoes`
 
 ---
 
-## Etapa 15 — Recuperação e alteração de senha
+## Etapa 15 — Recuperação e alteração de senha — Concluída
 
 Branch: `feat/recuperacao-senha`
 
-- [ ] Definir provedor de e-mail e remetente por ambiente.
-- [ ] Criar interface de envio de e-mail substituível em testes.
-- [ ] Criar modo local que não envia e-mail real.
-- [ ] Criar tabela central de tokens de recuperação.
-- [ ] Armazenar somente hash do token.
-- [ ] Adicionar expiração, consumo, tentativas e timestamps.
-- [ ] Indexar hash, usuário e expiração.
-- [ ] Criar migration central.
-- [ ] Criar token criptograficamente seguro.
-- [ ] Invalidar tokens anteriores ao criar um novo.
-- [ ] Implementar resposta neutra contra enumeração de e-mails.
-- [ ] Aplicar rate limit por IP e identidade normalizada.
-- [ ] Criar `POST /api/v1/auth/esqueci-senha`.
-- [ ] Criar `POST /api/v1/auth/redefinir-senha`.
-- [ ] Validar política de nova senha.
-- [ ] Impedir reutilização de token consumido.
-- [ ] Revogar todas as sessões após redefinição.
-- [ ] Registrar auditoria sem gravar token ou senha.
-- [ ] Documentar telas de solicitação, sucesso, expirado e inválido.
-- [ ] Testar expiração, replay, concorrência e enumeração.
-- [ ] Atualizar Swagger e Markdown.
+- [x] Definir provedor de e-mail e remetente por ambiente.
+- [x] Criar interface de envio de e-mail substituível em testes.
+- [x] Criar modo local que não envia e-mail real.
+- [x] Criar tabela central de tokens de recuperação.
+- [x] Armazenar somente hash do token.
+- [x] Adicionar expiração, consumo, tentativas e timestamps.
+- [x] Indexar hash, usuário e expiração.
+- [x] Criar migration central.
+- [x] Criar token criptograficamente seguro.
+- [x] Invalidar tokens anteriores ao criar um novo.
+- [x] Implementar resposta neutra contra enumeração de e-mails.
+- [x] Aplicar rate limit por IP e identidade normalizada.
+- [x] Criar `POST /api/v1/auth/esqueci-senha`.
+- [x] Criar `POST /api/v1/auth/redefinir-senha`.
+- [x] Validar política de nova senha.
+- [x] Impedir reutilização de token consumido.
+- [x] Revogar todas as sessões após redefinição.
+- [x] Registrar auditoria sem gravar token ou senha.
+- [x] Documentar telas de solicitação, sucesso, expirado e inválido.
+- [x] Testar expiração, replay, concorrência e enumeração.
+- [x] Atualizar Swagger e Markdown.
 
 ### Saída
 
-- [ ] Token nunca aparece em logs nem no banco em texto puro.
-- [ ] Respostas não revelam se o e-mail existe.
-- [ ] Sessões antigas deixam de funcionar após redefinição.
-- [ ] Testes, cobertura, lint, typecheck e build aprovados.
-- [ ] Branch pronta para integração.
+- [x] Token nunca aparece em logs nem no banco em texto puro.
+- [x] Respostas não revelam se o e-mail existe.
+- [x] Sessões antigas deixam de funcionar após redefinição.
+- [x] Testes, cobertura, lint, typecheck e build aprovados.
+- [x] Branch pronta para integração.
 
 ---
 

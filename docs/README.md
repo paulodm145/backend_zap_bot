@@ -32,6 +32,7 @@ documentos vazios antecipadamente.
 Documentos funcionais disponíveis:
 
 - [Autenticação](api/autenticacao.md)
+- [Recuperação de senha](api/recuperacao-senha.md)
 - [Referência de todos os endpoints](api/REFERENCIA-ENDPOINTS.md)
 - [Cliente HTTP do frontend](api/CLIENTE-FRONTEND.md)
 - [Admin interno](api/admin-interno.md)

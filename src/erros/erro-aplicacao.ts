@@ -28,6 +28,12 @@ export class RefreshTokenInvalidoError extends ErroAplicacao {
   }
 }
 
+export class TokenRecuperacaoInvalidoError extends ErroAplicacao {
+  public constructor() {
+    super('TOKEN_RECUPERACAO_INVALIDO', 'Token inválido ou expirado', 422);
+  }
+}
+
 export class AcessoNegadoError extends ErroAplicacao {
   public constructor(mensagem = 'Acesso negado') {
     super('ACESSO_NEGADO', mensagem, 403);

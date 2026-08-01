@@ -84,6 +84,11 @@ Variáveis disponíveis no scaffold atual:
 | `HTTP_SHUTDOWN_TIMEOUT_MS`                | Limite do encerramento gracioso                  |
 | `SWAGGER_USUARIO`                         | Usuário do Swagger em produção                   |
 | `SWAGGER_SENHA`                           | Senha do Swagger em produção                     |
+| `EMAIL_PROVEDOR`                          | `local` para suprimir ou `resend` para enviar    |
+| `EMAIL_REMETENTE`                         | Remetente dos e-mails transacionais              |
+| `RESEND_API_KEY`                          | Chave obrigatória com provedor Resend            |
+| `FRONTEND_URL`                            | Base dos links enviados ao frontend              |
+| `RECUPERACAO_SENHA_EXPIRACAO_MINUTOS`     | Validade do token de recuperação                 |
 
 A aplicação valida as variáveis com Zod durante a inicialização e falha
 imediatamente quando uma configuração obrigatória é inválida.

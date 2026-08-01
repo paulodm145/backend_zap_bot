@@ -9,6 +9,7 @@ import { ambiente } from './config/ambiente.js';
 import { logger } from './config/logger.js';
 import { gerarDocumentoOpenApi } from './config/openapi.js';
 import { AutenticacaoController } from './controllers/autenticacao.controller.js';
+import { RecuperacaoSenhaController } from './controllers/recuperacao-senha.controller.js';
 import { AutenticacaoInternaController } from './controllers/autenticacao-interna.controller.js';
 import { ProntidaoController } from './controllers/prontidao.controller.js';
 import { TenantsInternosController } from './controllers/tenants-internos.controller.js';
@@ -27,6 +28,7 @@ import { tratarErro } from './middlewares/erro.middleware.js';
 import { criarAutenticacaoMiddleware } from './middlewares/autenticacao.middleware.js';
 import { criarResolucaoTenantMiddleware } from './middlewares/resolucao-tenant.middleware.js';
 import { RefreshTokenRepository } from './repositories/refresh-token.repository.js';
+import { RecuperacaoSenhaRepository } from './repositories/recuperacao-senha.repository.js';
 import { UsuarioInternoMemoriaRepository } from './repositories/memoria/usuario-interno-memoria.repository.js';
 import { UsuarioCentralRepository } from './repositories/usuario-central.repository.js';
 import { TenantCentralRepository } from './repositories/tenant-central.repository.js';
@@ -44,6 +46,8 @@ import { AutenticacaoService } from './services/autenticacao.service.js';
 import { AdministracaoTenantsService } from './services/administracao-tenants.service.js';
 import { EstadoAutenticacaoInternaService } from './services/estado-autenticacao-interna.service.js';
 import { HashSenhaService } from './services/hash-senha.service.js';
+import { EnviadorEmailLocal, EnviadorEmailResend } from './services/enviador-email.service.js';
+import { RecuperacaoSenhaService } from './services/recuperacao-senha.service.js';
 import { ProntidaoService } from './services/prontidao.service.js';
 import type { VerificadorDependencia } from './services/prontidao.service.js';
 import { TokenInternoService } from './services/token-interno.service.js';
@@ -97,6 +101,20 @@ export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
     ambiente.REFRESH_TOKEN_EXPIRACAO_DIAS,
   );
   const autenticacaoTenantController = new AutenticacaoController(autenticacaoTenant);
+  const enviadorEmail =
+    ambiente.EMAIL_PROVEDOR === 'resend'
+      ? new EnviadorEmailResend(ambiente.RESEND_API_KEY ?? '', ambiente.EMAIL_REMETENTE)
+      : new EnviadorEmailLocal();
+  const recuperacaoSenhaController = new RecuperacaoSenhaController(
+    new RecuperacaoSenhaService(
+      usuariosCentrais,
+      new RecuperacaoSenhaRepository(prismaCentral),
+      new HashSenhaService(),
+      enviadorEmail,
+      ambiente.FRONTEND_URL,
+      ambiente.RECUPERACAO_SENHA_EXPIRACAO_MINUTOS,
+    ),
+  );
   const tenantsRepository = new TenantCentralRepository(prismaCentral);
   const criptografiaConexaoTenant = new CriptografiaService(
     ambiente.TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE,
@@ -160,7 +178,10 @@ export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
     );
   }
   aplicacao.use(express.json({ limit: '1mb' }));
-  aplicacao.use('/api/v1/auth', criarRotasAutenticacao(autenticacaoTenantController));
+  aplicacao.use(
+    '/api/v1/auth',
+    criarRotasAutenticacao(autenticacaoTenantController, recuperacaoSenhaController),
+  );
   aplicacao.use(
     '/api/v1/fluxos',
     criarAutenticacaoMiddleware(tokenTenant),

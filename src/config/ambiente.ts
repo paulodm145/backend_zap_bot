@@ -52,6 +52,11 @@ const ambienteSchema = z
     BRASIL_API_URL: z.url().default('https://brasilapi.com.br/api'),
     BRASIL_API_TIMEOUT_MS: z.coerce.number().int().positive().default(10_000),
     BRASIL_API_TENTATIVAS: z.coerce.number().int().positive().max(5).default(3),
+    EMAIL_PROVEDOR: z.enum(['local', 'resend']).default('local'),
+    EMAIL_REMETENTE: z.email().default('nao-responda@localhost.test'),
+    RESEND_API_KEY: z.string().min(1).optional(),
+    FRONTEND_URL: z.url().default('http://localhost:3001'),
+    RECUPERACAO_SENHA_EXPIRACAO_MINUTOS: z.coerce.number().int().positive().max(60).default(30),
   })
   .superRefine((valor, contexto) => {
     if (valor.NODE_ENV !== 'production') {
@@ -79,6 +84,14 @@ const ambienteSchema = z
         code: 'custom',
         path: ['TOTP_INTERNO_OBRIGATORIO'],
         message: 'Deve permanecer habilitado em produção',
+      });
+    }
+
+    if (valor.EMAIL_PROVEDOR === 'resend' && !valor.RESEND_API_KEY) {
+      contexto.addIssue({
+        code: 'custom',
+        path: ['RESEND_API_KEY'],
+        message: 'Obrigatório quando EMAIL_PROVEDOR=resend',
       });
     }
   });
