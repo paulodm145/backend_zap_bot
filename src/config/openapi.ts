@@ -18,6 +18,12 @@ import {
   atualizarPerfilSchema,
 } from '../dtos/perfil.dto.js';
 import {
+  conversaParametroSchema,
+  listarContatosSchema,
+  listarConversasSchema,
+  listarMensagensSchema,
+} from '../dtos/historico.dto.js';
+import {
   atualizarSetorSchema,
   criarSetorSchema,
   listarSetoresSchema,
@@ -279,6 +285,43 @@ const perfilRespostaSchema = z.object({
   permissoes: z.array(z.string()),
   setores: z.array(z.object({ public_id: z.uuid(), nome: z.string() })),
 });
+const contatoHistoricoSchema = z.object({
+  public_id: z.uuid(),
+  nome: z.string().nullable(),
+  telefone: z.string(),
+  atributos: z.unknown().nullable(),
+  created_at: z.iso.datetime(),
+  updated_at: z.iso.datetime(),
+  _count: z.object({ conversas: z.number().int() }),
+});
+const conversaHistoricoSchema = z.object({
+  public_id: z.uuid(),
+  status: z.enum(['BOT', 'AGUARDANDO_ATENDENTE', 'COM_ATENDENTE', 'ENCERRADA']),
+  ultima_mensagem_at: z.iso.datetime().nullable(),
+  finalizada_at: z.iso.datetime().nullable(),
+  created_at: z.iso.datetime(),
+  updated_at: z.iso.datetime(),
+  contato: z.object({ public_id: z.uuid(), nome: z.string().nullable(), telefone: z.string() }),
+  setor: z.object({ public_id: z.uuid(), nome: z.string() }).nullable(),
+  atendente: z.object({ public_id: z.uuid(), nome: z.string() }).nullable(),
+  conta_whatsapp: z.object({
+    public_id: z.uuid(),
+    nome: z.string(),
+    numero_exibicao: z.string().nullable(),
+  }),
+  mensagens: z.array(z.unknown()),
+});
+const mensagemHistoricoSchema = z.object({
+  public_id: z.uuid(),
+  whatsapp_message_id: z.string().nullable(),
+  tipo: z.string(),
+  direcao: z.enum(['ENTRADA', 'SAIDA', 'INTERNA']),
+  autor: z.enum(['CONTATO', 'BOT', 'ATENDENTE', 'SISTEMA']),
+  status_entrega: z.enum(['RECEBIDA', 'PENDENTE', 'ENVIADA', 'ENTREGUE', 'LIDA', 'FALHA']),
+  conteudo: z.unknown(),
+  ocorreu_at: z.iso.datetime(),
+  created_at: z.iso.datetime(),
+});
 
 function criarRegistro(): OpenAPIRegistry {
   const registro = new OpenAPIRegistry();
@@ -291,6 +334,99 @@ function criarRegistro(): OpenAPIRegistry {
   });
   registro.register('ErroResposta', erroSchema);
   registro.register('PaginacaoResposta', paginacaoSchema);
+
+  registro.registerPath({
+    method: 'get',
+    path: '/api/v1/contatos',
+    tags: ['Histórico'],
+    summary: 'Lista contatos com paginação server-side',
+    security: [{ bearerAuth: [] }],
+    request: { query: listarContatosSchema },
+    responses: {
+      200: {
+        description: 'Contatos visíveis.',
+        content: {
+          'application/json': {
+            schema: z.object({
+              dados: z.array(contatoHistoricoSchema),
+              total: z.number().int(),
+              skip: z.number().int(),
+              take: z.number().int(),
+            }),
+          },
+        },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'get',
+    path: '/api/v1/conversas',
+    tags: ['Histórico'],
+    summary: 'Lista e filtra conversas visíveis',
+    security: [{ bearerAuth: [] }],
+    request: { query: listarConversasSchema },
+    responses: {
+      200: {
+        description: 'Conversas paginadas.',
+        content: {
+          'application/json': {
+            schema: z.object({
+              dados: z.array(conversaHistoricoSchema),
+              total: z.number().int(),
+              skip: z.number().int(),
+              take: z.number().int(),
+            }),
+          },
+        },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'get',
+    path: '/api/v1/conversas/{conversaId}',
+    tags: ['Histórico'],
+    summary: 'Detalha conversa e snapshot do fluxo',
+    security: [{ bearerAuth: [] }],
+    request: { params: conversaParametroSchema },
+    responses: {
+      200: {
+        description: 'Detalhe da conversa.',
+        content: {
+          'application/json': {
+            schema: conversaHistoricoSchema.extend({
+              estado_fluxo: z.unknown().nullable(),
+              janela_expira_at: z.iso.datetime().nullable(),
+            }),
+          },
+        },
+      },
+      404: {
+        description: 'Inexistente ou fora do escopo.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'get',
+    path: '/api/v1/conversas/{conversaId}/mensagens',
+    tags: ['Histórico'],
+    summary: 'Timeline reversa com cursor temporal estável',
+    security: [{ bearerAuth: [] }],
+    request: { params: conversaParametroSchema, query: listarMensagensSchema },
+    responses: {
+      200: {
+        description: 'Página cronológica e cursor para mensagens anteriores.',
+        content: {
+          'application/json': {
+            schema: z.object({
+              dados: z.array(mensagemHistoricoSchema),
+              proximoCursor: z.string().nullable(),
+            }),
+          },
+        },
+      },
+    },
+  });
 
   registro.registerPath({
     method: 'get',

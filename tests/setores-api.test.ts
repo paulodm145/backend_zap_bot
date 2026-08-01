@@ -157,7 +157,7 @@ descreverIntegracao('API de setores e vínculos', () => {
         conta_whatsapp_id: conta.id,
         contato_id: contato.id,
         setor_id: setor.id,
-        status: 'AGUARDANDO',
+        status: 'AGUARDANDO_ATENDENTE',
       },
     });
     await request(app()).delete(`/setores/${setorId}`).expect(409);

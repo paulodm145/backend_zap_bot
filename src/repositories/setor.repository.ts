@@ -111,7 +111,7 @@ export class SetorRepository {
 
   public contarConversasAtivas(publicId: string) {
     return this.prisma.conversa.count({
-      where: { setor: { public_id: publicId }, status: { not: 'FINALIZADA' } },
+      where: { setor: { public_id: publicId }, status: { not: 'ENCERRADA' } },
     });
   }
 

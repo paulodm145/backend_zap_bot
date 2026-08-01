@@ -87,7 +87,7 @@ tarefa.
 | 15. Recuperação de senha             | `feat/recuperacao-senha`             | 14             | Concluída |
 | 16. Setores e vínculos de atendentes | `feat/setores-atendentes`            | 14             | Concluída |
 | 17. Perfil do usuário autenticado    | `feat/perfil-usuario-logado`         | 14             | Concluída |
-| 18. Histórico de conversas           | `feat/historico-conversas`           | 13 e 16        | Pendente  |
+| 18. Histórico de conversas           | `feat/historico-conversas`           | 13 e 16        | Concluída |
 | 19. Direcionamento e claim           | `feat/direcionamento-atendimento`    | 16 e 18        | Pendente  |
 | 20. Mensagens e Cloud API            | `feat/mensagens-whatsapp`            | 13, 18 e 19    | Pendente  |
 | 21. Chat em tempo real               | `feat/chat-atendimento`              | 19 e 20        | Pendente  |
@@ -369,43 +369,43 @@ Branch: `feat/perfil-usuario-logado`
 
 ---
 
-## Etapa 18 — Histórico de contatos, conversas e mensagens
+## Etapa 18 — Histórico de contatos, conversas e mensagens — Concluída
 
 Branch: `feat/historico-conversas`
 
-- [ ] Alinhar enum para `BOT`, `AGUARDANDO_ATENDENTE`, `COM_ATENDENTE` e `ENCERRADA`.
-- [ ] Criar migration tenant preservando estados existentes.
-- [ ] Adicionar snapshot do estado do fluxo na conversa.
-- [ ] Adicionar direção e autor explícitos na mensagem.
-- [ ] Diferenciar contato, bot, atendente e sistema.
-- [ ] Adicionar status de entrega, leitura e falha.
-- [ ] Adicionar referência de resposta e mídia quando necessário.
-- [ ] Criar índices para fila, minhas conversas e histórico.
-- [ ] Garantir unicidade de mensagem WhatsApp para idempotência.
-- [ ] Persistir mensagens recebidas pelo worker.
-- [ ] Criar/atualizar contato por telefone normalizado.
-- [ ] Criar/retomar conversa conforme regra de janela.
-- [ ] Criar listagem paginada de contatos.
-- [ ] Criar listagem paginada de conversas.
-- [ ] Filtrar por status, setor, atendente, conta e busca.
-- [ ] Aplicar escopo de setores conforme permissão.
-- [ ] Criar detalhe da conversa.
-- [ ] Criar histórico paginado com cursor temporal estável.
-- [ ] Definir ordem e prevenção de mensagens duplicadas no frontend.
-- [ ] Criar `GET /api/v1/contatos`.
-- [ ] Criar `GET /api/v1/conversas`.
-- [ ] Criar `GET /api/v1/conversas/{conversaId}`.
-- [ ] Criar `GET /api/v1/conversas/{conversaId}/mensagens`.
-- [ ] Documentar lista, filtros, timeline e paginação reversa.
-- [ ] Atualizar Swagger e Markdown.
+- [x] Alinhar enum para `BOT`, `AGUARDANDO_ATENDENTE`, `COM_ATENDENTE` e `ENCERRADA`.
+- [x] Criar migration tenant preservando estados existentes.
+- [x] Adicionar snapshot do estado do fluxo na conversa.
+- [x] Adicionar direção e autor explícitos na mensagem.
+- [x] Diferenciar contato, bot, atendente e sistema.
+- [x] Adicionar status de entrega, leitura e falha.
+- [x] Adicionar referência de resposta e mídia quando necessário.
+- [x] Criar índices para fila, minhas conversas e histórico.
+- [x] Garantir unicidade de mensagem WhatsApp para idempotência.
+- [x] Persistir mensagens recebidas pelo worker.
+- [x] Criar/atualizar contato por telefone normalizado.
+- [x] Criar/retomar conversa conforme regra de janela.
+- [x] Criar listagem paginada de contatos.
+- [x] Criar listagem paginada de conversas.
+- [x] Filtrar por status, setor, atendente, conta e busca.
+- [x] Aplicar escopo de setores conforme permissão.
+- [x] Criar detalhe da conversa.
+- [x] Criar histórico paginado com cursor temporal estável.
+- [x] Definir ordem e prevenção de mensagens duplicadas no frontend.
+- [x] Criar `GET /api/v1/contatos`.
+- [x] Criar `GET /api/v1/conversas`.
+- [x] Criar `GET /api/v1/conversas/{conversaId}`.
+- [x] Criar `GET /api/v1/conversas/{conversaId}/mensagens`.
+- [x] Documentar lista, filtros, timeline e paginação reversa.
+- [x] Atualizar Swagger e Markdown.
 
 ### Saída
 
-- [ ] Histórico é persistente e ordenado deterministicamente.
-- [ ] Atendente não consulta conversa fora dos seus setores.
-- [ ] Reentrega de webhook não duplica contato, conversa ou mensagem.
-- [ ] Testes, cobertura, lint, typecheck e build aprovados.
-- [ ] Branch pronta para integração.
+- [x] Histórico é persistente e ordenado deterministicamente.
+- [x] Atendente não consulta conversa fora dos seus setores.
+- [x] Reentrega de webhook não duplica contato, conversa ou mensagem.
+- [x] Testes, cobertura, lint, typecheck e build aprovados.
+- [x] Branch pronta para integração.
 
 ---
 

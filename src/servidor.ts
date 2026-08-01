@@ -5,22 +5,43 @@ import { NOMES_FILAS } from './config/filas.js';
 import { criarConexaoRedis } from './config/redis.js';
 import { WebhookWhatsappController } from './controllers/webhook-whatsapp.controller.js';
 import { desconectarPrismaCentral, obterPrismaCentral } from './database/prisma-central.js';
-import { fecharConexoesTenant } from './database/gerenciador-conexoes-tenant.js';
+import {
+  fecharConexoesTenant,
+  obterGerenciadorConexoesTenant,
+} from './database/gerenciador-conexoes-tenant.js';
 import { criarFila } from './queues/fila.factory.js';
 import { RegistroRecursosMensageria } from './queues/registro-recursos-mensageria.js';
 import { IdempotenciaRedisRepository } from './repositories/idempotencia-redis.repository.js';
 import { RoteamentoWhatsappRepository } from './repositories/roteamento-whatsapp.repository.js';
+import { TenantCentralRepository } from './repositories/tenant-central.repository.js';
 import { EnfileiradorMensagemBullMqService } from './services/enfileirador-mensagem.service.js';
 import { VerificadorBancoCentralService } from './services/verificador-banco-central.service.js';
 import { VerificadorRedisService } from './services/verificador-redis.service.js';
 import { WebhookWhatsappService } from './services/webhook-whatsapp.service.js';
-import type { JobMensagemRecebida } from './types/jobs.js';
+import { CriptografiaService } from './services/criptografia.service.js';
+import { ProcessadorMensagemRecebidaService } from './services/processador-mensagem-recebida.service.js';
+import { jobMensagemRecebidaSchema, type JobMensagemRecebida } from './types/jobs.js';
+import { criarWorker } from './workers/worker.factory.js';
 
 const prismaCentral = obterPrismaCentral();
 const redis = criarConexaoRedis(ambiente.REDIS_URL, 'api');
 const recursosMensageria = new RegistroRecursosMensageria();
 const filaMensagens = recursosMensageria.registrar(
   criarFila<JobMensagemRecebida>(NOMES_FILAS.mensagensRecebidas, redis),
+);
+const processadorMensagens = new ProcessadorMensagemRecebidaService(
+  new TenantCentralRepository(prismaCentral),
+  new CriptografiaService(ambiente.TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE),
+  obterGerenciadorConexoesTenant(),
+);
+recursosMensageria.registrar(
+  criarWorker(
+    NOMES_FILAS.mensagensRecebidas,
+    jobMensagemRecebidaSchema,
+    async (job) => processadorMensagens.processar(job.data),
+    redis,
+    { concurrency: 10 },
+  ),
 );
 const webhookWhatsappController = new WebhookWhatsappController(
   new WebhookWhatsappService(

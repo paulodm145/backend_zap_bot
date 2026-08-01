@@ -129,6 +129,8 @@ ordem do JSON depois do cálculo invalida a assinatura.
 
 ## Erros
 
+O worker resolve a conexão física pelo `tenantId`, normaliza o telefone e persiste contato, conversa e mensagem idempotentemente. Ele inicia junto com `npm run dev`/`npm start` e encerra com a API.
+
 | Status | Código           | Ação                                               |
 | ------ | ---------------- | -------------------------------------------------- |
 | `403`  | `ACESSO_NEGADO`  | Verificar assinatura ou token de challenge         |

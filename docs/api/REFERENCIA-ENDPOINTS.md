@@ -51,6 +51,10 @@ dependem do cookie HttpOnly. Uma implementação sugerida do cliente HTTP está 
 | PUT    | `/api/v1/me`                                     | Tenant autenticado                | Alterar nome do próprio perfil            |
 | PUT    | `/api/v1/me/senha`                               | Tenant autenticado                | Alterar senha com reautenticação          |
 | PUT    | `/api/v1/me/email`                               | Tenant autenticado                | Alterar e-mail em fluxo separado          |
+| GET    | `/api/v1/contatos`                               | Tenant autenticado                | Listar contatos visíveis                  |
+| GET    | `/api/v1/conversas`                              | Tenant autenticado                | Listar e filtrar conversas                |
+| GET    | `/api/v1/conversas/{conversaId}`                 | Tenant autenticado                | Detalhar conversa                         |
+| GET    | `/api/v1/conversas/{conversaId}/mensagens`       | Tenant autenticado                | Timeline reversa com cursor estável       |
 | POST   | `/api/v1/auth/logout`                            | Cookie HttpOnly                   | Encerrar sessão de tenant                 |
 | POST   | `/api/v1/interno/auth/login`                     | Público                           | Iniciar sessão do superadministrador      |
 | POST   | `/api/v1/interno/auth/2fa/configurar`            | `estadoToken`                     | Obter QR code da primeira configuração    |

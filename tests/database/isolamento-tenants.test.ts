@@ -14,11 +14,15 @@ descreverIntegracao('isolamento físico e cache LRU dos tenants', () => {
 
   beforeAll(async () => {
     const clienteA = await gerenciador.obter(1, urlA ?? '');
+    await clienteA.mensagem.deleteMany();
+    await clienteA.conversa.deleteMany();
     await clienteA.auditoriaWhatsapp.deleteMany();
     await clienteA.contaWhatsapp.deleteMany();
     await clienteA.contato.deleteMany();
     await clienteA.empresa.deleteMany();
     const clienteB = await gerenciador.obter(2, urlB ?? '');
+    await clienteB.mensagem.deleteMany();
+    await clienteB.conversa.deleteMany();
     await clienteB.auditoriaWhatsapp.deleteMany();
     await clienteB.contaWhatsapp.deleteMany();
     await clienteB.contato.deleteMany();
