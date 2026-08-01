@@ -90,7 +90,7 @@ tarefa.
 | 18. Histórico de conversas           | `feat/historico-conversas`           | 13 e 16        | Concluída |
 | 19. Direcionamento e claim           | `feat/direcionamento-atendimento`    | 16 e 18        | Concluída |
 | 20. Mensagens e Cloud API            | `feat/mensagens-whatsapp`            | 13, 18 e 19    | Concluída |
-| 21. Chat em tempo real               | `feat/chat-atendimento`              | 19 e 20        | Pendente  |
+| 21. Chat em tempo real               | `feat/chat-atendimento`              | 19 e 20        | Concluída |
 
 ---
 
@@ -483,37 +483,37 @@ Branch: `feat/mensagens-whatsapp`
 
 Branch: `feat/chat-atendimento`
 
-- [ ] Adicionar Socket.io ao servidor HTTP existente.
-- [ ] Autenticar handshake com JWT tenant.
-- [ ] Resolver tenant sem aceitar subdomínio.
-- [ ] Criar rooms namespacadas por tenant, setor e conversa.
-- [ ] Autorizar entrada em room conforme RBAC e vínculo de setor.
-- [ ] Criar evento `conversa:nova_na_fila`.
-- [ ] Criar evento `conversa:assumida`.
-- [ ] Criar evento `conversa:atualizada`.
-- [ ] Criar evento `conversa:mensagem_recebida`.
-- [ ] Criar evento `conversa:mensagem_atualizada`.
-- [ ] Criar evento `atendente:presenca`.
-- [ ] Persistir mensagens antes de emitir evento.
-- [ ] Usar REST como fonte de recuperação após reconexão.
-- [ ] Implementar presença no Redis com TTL.
-- [ ] Tratar múltiplas abas e desconexão abrupta.
-- [ ] Definir paginação inicial e carregamento de mensagens antigas.
-- [ ] Documentar ordem, payload e reconexão de cada evento.
-- [ ] Criar `docs/eventos/websocket.md`.
-- [ ] Documentar composição da fila, painel e chat.
-- [ ] Testar isolamento de rooms entre tenants.
-- [ ] Testar autorização por setor.
-- [ ] Testar reconexão sem perda permanente de histórico.
-- [ ] Atualizar Swagger das rotas REST e Markdown.
+- [x] Adicionar Socket.io ao servidor HTTP existente.
+- [x] Autenticar handshake com JWT tenant.
+- [x] Resolver tenant sem aceitar subdomínio.
+- [x] Criar rooms namespacadas por tenant, setor e conversa.
+- [x] Autorizar entrada em room conforme RBAC e vínculo de setor.
+- [x] Criar evento `conversa:nova_na_fila`.
+- [x] Criar evento `conversa:assumida`.
+- [x] Criar evento `conversa:atualizada`.
+- [x] Criar evento `conversa:mensagem_recebida`.
+- [x] Criar evento `conversa:mensagem_atualizada`.
+- [x] Criar evento `atendente:presenca`.
+- [x] Persistir mensagens antes de emitir evento.
+- [x] Usar REST como fonte de recuperação após reconexão.
+- [x] Implementar presença no Redis com TTL.
+- [x] Tratar múltiplas abas e desconexão abrupta.
+- [x] Definir paginação inicial e carregamento de mensagens antigas.
+- [x] Documentar ordem, payload e reconexão de cada evento.
+- [x] Criar `docs/eventos/websocket.md`.
+- [x] Documentar composição da fila, painel e chat.
+- [x] Testar isolamento de rooms entre tenants.
+- [x] Testar autorização por setor.
+- [x] Testar reconexão sem perda permanente de histórico.
+- [x] Atualizar Swagger das rotas REST e Markdown.
 
 ### Saída
 
-- [ ] Evento de um tenant nunca chega a outro tenant.
-- [ ] Atualização em tempo real converge com a API REST.
-- [ ] Presença expira sem deixar usuário online indefinidamente.
-- [ ] Testes, cobertura, lint, typecheck e build aprovados.
-- [ ] Branch pronta para integração.
+- [x] Evento de um tenant nunca chega a outro tenant.
+- [x] Atualização em tempo real converge com a API REST.
+- [x] Presença expira sem deixar usuário online indefinidamente.
+- [x] Testes, cobertura, lint, typecheck e build aprovados.
+- [x] Branch pronta para integração.
 
 ## Backlog posterior
 

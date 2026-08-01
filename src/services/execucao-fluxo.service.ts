@@ -2,6 +2,7 @@ import { definicaoFluxoSchema, type EstadoConversaFluxo } from '../dtos/fluxo.dt
 import { NaoEncontradoError } from '../erros/erro-aplicacao.js';
 import type { EstadoFluxoRepository } from '../repositories/estado-fluxo-redis.repository.js';
 import type { MotorFluxoService } from './motor-fluxo.service.js';
+import { barramentoChat } from '../eventos/barramento-chat.js';
 
 interface LeitorVersaoFluxo {
   buscarVersaoPorPublicId(publicId: string): Promise<{
@@ -57,6 +58,11 @@ export class ExecucaoFluxoService {
           saida.setorId,
           resultado.estado,
         );
+        barramentoChat.publicar('conversa:nova_na_fila', {
+          tenantId: entrada.tenantId,
+          conversaId: entrada.conversaId,
+          setorId: saida.setorId,
+        });
       }
     }
     return resultado;

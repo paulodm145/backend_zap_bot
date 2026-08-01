@@ -1,6 +1,7 @@
 import type { EnviarMensagemAtendimentoEntrada } from '../dtos/mensagem-atendimento.dto.js';
 import { AcessoNegadoError, NaoEncontradoError, ValidacaoError } from '../erros/erro-aplicacao.js';
 import type { MensagemAtendimentoRepository } from '../repositories/mensagem-atendimento.repository.js';
+import { barramentoChat } from '../eventos/barramento-chat.js';
 
 export interface EnfileiradorMensagemSaida {
   adicionar(tenantId: string, mensagemPublicId: string): Promise<void>;
@@ -39,6 +40,14 @@ export class MensagemAtendimentoService {
       dados.correlationId,
     );
     if (!mensagem.duplicada) await this.enfileirador.adicionar(dados.tenantId, mensagem.public_id);
+    if (!mensagem.duplicada)
+      barramentoChat.publicar('conversa:mensagem_atualizada', {
+        tenantId: dados.tenantId,
+        conversaId: conversa.public_id,
+        ...(conversa.setor ? { setorId: conversa.setor.public_id } : {}),
+        mensagemId: mensagem.public_id,
+        dados: { status: mensagem.status_entrega },
+      });
     return mensagem;
   }
 }

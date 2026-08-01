@@ -44,6 +44,7 @@ Documentos funcionais disponíveis:
 - [Operação multi-tenant](multitenancy.md)
 - [Administração de tenants](api/tenants.md)
 - [Webhook do WhatsApp](eventos/webhook-whatsapp.md)
+- [Chat em tempo real e WebSocket](eventos/websocket.md)
 - [Fluxos e editor visual](api/fluxos.md)
 - [Cadastro da empresa](api/empresa.md)
 - [Contas WhatsApp do tenant](api/contas-whatsapp.md)

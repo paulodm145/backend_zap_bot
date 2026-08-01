@@ -4,6 +4,7 @@ import { HistoricoRepository } from '../repositories/historico.repository.js';
 import type { TenantCentralRepository } from '../repositories/tenant-central.repository.js';
 import type { JobMensagemRecebida } from '../types/jobs.js';
 import type { CriptografiaService } from './criptografia.service.js';
+import { barramentoChat } from '../eventos/barramento-chat.js';
 
 export class ProcessadorMensagemRecebidaService {
   public constructor(
@@ -21,6 +22,25 @@ export class ProcessadorMensagemRecebidaService {
       tenant.id,
       this.criptografia.descriptografar(tenant.string_conexao_encrypted),
     );
-    return new HistoricoRepository(prisma).persistirRecebida(job, ocorreuAt);
+    const resultado = await new HistoricoRepository(prisma).persistirRecebida(job, ocorreuAt);
+    if (resultado === 'CRIADA') {
+      const mensagem = await prisma.mensagem.findUnique({
+        where: { whatsapp_message_id: job.mensagemId },
+        select: {
+          public_id: true,
+          conversa: {
+            select: { public_id: true, setor: { select: { public_id: true } } },
+          },
+        },
+      });
+      if (mensagem)
+        barramentoChat.publicar('conversa:mensagem_recebida', {
+          tenantId: job.tenantId,
+          conversaId: mensagem.conversa.public_id,
+          mensagemId: mensagem.public_id,
+          ...(mensagem.conversa.setor ? { setorId: mensagem.conversa.setor.public_id } : {}),
+        });
+    }
+    return resultado;
   }
 }

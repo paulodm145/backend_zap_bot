@@ -14,6 +14,7 @@ export class MensagemAtendimentoRepository {
           status: true,
           atendente_id: true,
           janela_expira_at: true,
+          setor: { select: { public_id: true } },
           contato: { select: { telefone: true } },
           atendente: {
             select: {

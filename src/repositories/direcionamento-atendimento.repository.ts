@@ -26,6 +26,7 @@ export class DirecionamentoAtendimentoRepository {
         public_id: true,
         status: true,
         setor_id: true,
+        setor: { select: { public_id: true } },
         atendente_id: true,
         estado_fluxo: true,
       },

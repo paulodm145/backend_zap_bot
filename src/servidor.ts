@@ -1,4 +1,5 @@
 import { criarAplicacao } from './app.js';
+import { createServer } from 'node:http';
 import { ambiente } from './config/ambiente.js';
 import { logger } from './config/logger.js';
 import { NOMES_FILAS } from './config/filas.js';
@@ -36,6 +37,8 @@ import {
   type JobStatusWhatsapp,
 } from './types/jobs.js';
 import { criarWorker } from './workers/worker.factory.js';
+import { ChatGateway } from './websocket/chat.gateway.js';
+import { TokenTenantService } from './services/token-tenant.service.js';
 
 const prismaCentral = obterPrismaCentral();
 const redis = criarConexaoRedis(ambiente.REDIS_URL, 'api');
@@ -117,7 +120,19 @@ const aplicacao = criarAplicacao({
   enfileiradorMensagemSaida: new EnfileiradorMensagemSaidaBullMqService(filaMensagensSaida),
 });
 
-const servidor = aplicacao.listen(ambiente.PORTA, () => {
+const servidor = createServer(aplicacao);
+recursosMensageria.registrar(
+  new ChatGateway(
+    servidor,
+    redis,
+    new TokenTenantService(ambiente.JWT_TENANT_SECRET, ambiente.JWT_TENANT_EXPIRACAO_SEGUNDOS),
+    tenantsRepository,
+    new CriptografiaService(ambiente.TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE),
+    obterGerenciadorConexoesTenant(),
+    ambiente.ORIGENS_PERMITIDAS,
+  ),
+);
+servidor.listen(ambiente.PORTA, () => {
   logger.info({ porta: ambiente.PORTA }, 'API iniciada');
 });
 

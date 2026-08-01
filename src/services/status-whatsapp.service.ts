@@ -5,6 +5,7 @@ import type { TenantCentralRepository } from '../repositories/tenant-central.rep
 import type { JobStatusWhatsapp } from '../types/jobs.js';
 import type { CriptografiaService } from './criptografia.service.js';
 import type { EnfileiradorStatusWhatsapp } from './webhook-whatsapp.service.js';
+import { barramentoChat } from '../eventos/barramento-chat.js';
 
 export class EnfileiradorStatusWhatsappBullMqService implements EnfileiradorStatusWhatsapp {
   public constructor(private readonly fila: Queue<JobStatusWhatsapp>) {}
@@ -30,7 +31,12 @@ export class ProcessadorStatusWhatsappService {
     );
     const atual = await prisma.mensagem.findUnique({
       where: { whatsapp_message_id: job.mensagemId },
-      select: { id: true, status_entrega: true },
+      select: {
+        id: true,
+        public_id: true,
+        status_entrega: true,
+        conversa: { select: { public_id: true, setor: { select: { public_id: true } } } },
+      },
     });
     if (!atual) return 'IGNORADA';
     const destino = {
@@ -53,6 +59,13 @@ export class ProcessadorStatusWhatsappService {
             }
           : {}),
       },
+    });
+    barramentoChat.publicar('conversa:mensagem_atualizada', {
+      tenantId: job.tenantId,
+      conversaId: atual.conversa.public_id,
+      mensagemId: atual.public_id,
+      ...(atual.conversa.setor ? { setorId: atual.conversa.setor.public_id } : {}),
+      dados: { status: novo },
     });
     return 'ATUALIZADA';
   }

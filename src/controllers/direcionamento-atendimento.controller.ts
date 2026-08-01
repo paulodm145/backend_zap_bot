@@ -49,6 +49,7 @@ export class DirecionamentoAtendimentoController {
     return {
       usuarioCentralPublicId: requisicao.usuarioTenant.id,
       papel: requisicao.usuarioTenant.papel,
+      tenantId: requisicao.usuarioTenant.tenantId,
     };
   }
 

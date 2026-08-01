@@ -9,10 +9,12 @@ import {
   ValidacaoError,
 } from '../erros/erro-aplicacao.js';
 import type { DirecionamentoAtendimentoRepository } from '../repositories/direcionamento-atendimento.repository.js';
+import { barramentoChat } from '../eventos/barramento-chat.js';
 
 interface ContextoAtendimento {
   usuarioCentralPublicId: string;
   papel: 'ADMIN_TENANT' | 'GESTOR' | 'ATENDENTE';
+  tenantId: string;
 }
 
 export class DirecionamentoAtendimentoService {
@@ -36,6 +38,12 @@ export class DirecionamentoAtendimentoService {
       contexto.usuarioCentralPublicId,
     );
     if (!assumiu) throw new ConflitoError('Conversa já foi assumida ou não está mais na fila');
+    barramentoChat.publicar('conversa:assumida', {
+      tenantId: contexto.tenantId,
+      conversaId: conversa.public_id,
+      ...(conversa.setor ? { setorId: conversa.setor.public_id } : {}),
+      dados: { atendenteId: atendente.public_id },
+    });
     return { conversaId: conversa.public_id, status: 'COM_ATENDENTE', atendente };
   }
 
@@ -69,6 +77,12 @@ export class DirecionamentoAtendimentoService {
       destinoSetorId: setor.id,
       motivo: entrada.motivo,
     });
+    barramentoChat.publicar('conversa:atualizada', {
+      tenantId: contexto.tenantId,
+      conversaId: conversa.public_id,
+      setorId: setor.public_id,
+      dados: { status: destino ? 'COM_ATENDENTE' : 'AGUARDANDO_ATENDENTE' },
+    });
     return {
       conversaId: conversa.public_id,
       status: destino ? 'COM_ATENDENTE' : 'AGUARDANDO_ATENDENTE',
@@ -99,6 +113,12 @@ export class DirecionamentoAtendimentoService {
       ...(conversa.setor_id ? { origemSetorId: conversa.setor_id } : {}),
       ...(entrada.motivo ? { motivo: entrada.motivo } : {}),
       devolverAoBot: entrada.devolverAoBot,
+    });
+    barramentoChat.publicar('conversa:atualizada', {
+      tenantId: contexto.tenantId,
+      conversaId: conversa.public_id,
+      ...(conversa.setor ? { setorId: conversa.setor.public_id } : {}),
+      dados: { status: entrada.devolverAoBot ? 'BOT' : 'ENCERRADA' },
     });
     return {
       conversaId: conversa.public_id,
