@@ -21,6 +21,16 @@ interface RepositorioIdempotencia {
 export interface ResultadoWebhookWhatsapp {
   recebidas: number;
   duplicadas: number;
+  statusRecebidos?: number;
+}
+
+export interface EnfileiradorStatusWhatsapp {
+  adicionar(dados: {
+    tenantId: string;
+    mensagemId: string;
+    status: 'sent' | 'delivered' | 'read' | 'failed';
+    codigoErro?: string;
+  }): Promise<void>;
 }
 
 export class WebhookWhatsappService {
@@ -29,21 +39,33 @@ export class WebhookWhatsappService {
     private readonly idempotencia: RepositorioIdempotencia,
     private readonly enfileirador: EnfileiradorMensagem,
     private readonly expiracaoIdempotenciaSegundos: number,
+    private readonly statusWhatsapp?: EnfileiradorStatusWhatsapp,
   ) {}
 
   public async receber(entrada: WebhookWhatsappEntrada): Promise<ResultadoWebhookWhatsapp> {
     let recebidas = 0;
     let duplicadas = 0;
+    let statusRecebidos = 0;
 
     for (const item of entrada.entry) {
       for (const alteracao of item.changes) {
         const mensagens = alteracao.value.messages ?? [];
-        if (mensagens.length === 0) continue;
+        const statuses = alteracao.value.statuses ?? [];
+        if (mensagens.length === 0 && statuses.length === 0) continue;
 
         const phoneNumberId = alteracao.value.metadata.phone_number_id;
         const roteamento = await this.roteamentos.buscarTenantAtivo(phoneNumberId);
         if (roteamento?.tenant.status !== 'ATIVO' || roteamento.tenant.deletado_at !== null) {
           throw new NaoEncontradoError('Conta WhatsApp ativa não encontrada');
+        }
+        for (const status of statuses) {
+          await this.statusWhatsapp?.adicionar({
+            tenantId: roteamento.tenant.public_id,
+            mensagemId: status.id,
+            status: status.status,
+            ...(status.errors?.[0] ? { codigoErro: String(status.errors[0].code) } : {}),
+          });
+          statusRecebidos += 1;
         }
 
         for (const mensagem of mensagens) {
@@ -81,6 +103,10 @@ export class WebhookWhatsappService {
       }
     }
 
-    return { recebidas, duplicadas };
+    return {
+      recebidas,
+      duplicadas,
+      ...(statusRecebidos > 0 ? { statusRecebidos } : {}),
+    };
   }
 }

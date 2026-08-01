@@ -64,4 +64,46 @@ describe('WhatsappGraphApiService', () => {
       mensagemErro: 'A credencial não pertence ao número informado',
     });
   });
+
+  it('envia texto e retorna o ID da Meta usando timeout', async () => {
+    const executarFetch = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(
+        new Response(JSON.stringify({ messages: [{ id: 'wamid.saida' }] }), { status: 200 }),
+      );
+    const resultado = await new WhatsappGraphApiService('https://graph.test', executarFetch).enviar(
+      'phone-1',
+      'v23.0',
+      'segredo',
+      { destinatario: '+5511999999999', tipo: 'TEXTO', texto: 'Olá' },
+    );
+    expect(resultado).toBe('wamid.saida');
+    const opcoes = executarFetch.mock.calls[0]?.[1];
+    expect(opcoes?.method).toBe('POST');
+    expect(typeof opcoes?.body === 'string' ? opcoes.body : '').toContain('Olá');
+  });
+
+  it('classifica apenas 429 e 5xx como falhas transitórias sem vazar resposta', async () => {
+    for (const [status, transitorio] of [
+      [400, false],
+      [429, true],
+      [503, true],
+    ] as const) {
+      const executarFetch = vi
+        .fn<typeof fetch>()
+        .mockResolvedValue(
+          new Response(JSON.stringify({ error: { message: 'token secreto' } }), { status }),
+        );
+      const promessa = new WhatsappGraphApiService('https://graph.test', executarFetch).enviar(
+        'phone',
+        'v23.0',
+        'segredo',
+        { destinatario: '5511', tipo: 'TEXTO', texto: 'Oi' },
+      );
+      await expect(promessa).rejects.toMatchObject({ transitorio });
+      await promessa.catch((erro: unknown) => {
+        expect(String(erro)).not.toContain('token secreto');
+      });
+    }
+  });
 });

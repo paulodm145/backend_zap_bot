@@ -25,6 +25,16 @@ const valorWebhookWhatsappSchema = z.object({
     phone_number_id: z.string().min(1),
   }),
   messages: z.array(mensagemTextoWhatsappSchema).optional(),
+  statuses: z
+    .array(
+      z.object({
+        id: z.string().min(1),
+        status: z.enum(['sent', 'delivered', 'read', 'failed']),
+        timestamp: z.string().regex(/^\d+$/),
+        errors: z.array(z.object({ code: z.number().int() })).optional(),
+      }),
+    )
+    .optional(),
 });
 
 export const webhookWhatsappSchema = z

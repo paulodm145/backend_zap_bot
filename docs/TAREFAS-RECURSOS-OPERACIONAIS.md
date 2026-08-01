@@ -89,7 +89,7 @@ tarefa.
 | 17. Perfil do usuário autenticado    | `feat/perfil-usuario-logado`         | 14             | Concluída |
 | 18. Histórico de conversas           | `feat/historico-conversas`           | 13 e 16        | Concluída |
 | 19. Direcionamento e claim           | `feat/direcionamento-atendimento`    | 16 e 18        | Concluída |
-| 20. Mensagens e Cloud API            | `feat/mensagens-whatsapp`            | 13, 18 e 19    | Pendente  |
+| 20. Mensagens e Cloud API            | `feat/mensagens-whatsapp`            | 13, 18 e 19    | Concluída |
 | 21. Chat em tempo real               | `feat/chat-atendimento`              | 19 e 20        | Pendente  |
 
 ---
@@ -445,37 +445,37 @@ Branch: `feat/direcionamento-atendimento`
 
 ---
 
-## Etapa 20 — Mensagens de atendimento e WhatsApp Cloud API
+## Etapa 20 — Mensagens de atendimento e WhatsApp Cloud API — Concluída
 
 Branch: `feat/mensagens-whatsapp`
 
-- [ ] Criar cliente HTTP da Graph API com timeout.
-- [ ] Selecionar token e versão da conta do tenant.
-- [ ] Criar contrato interno de mensagem de saída.
-- [ ] Enfileirar envio sem bloquear a API.
-- [ ] Persistir mensagem antes do envio com status pendente.
-- [ ] Atualizar status com resposta da Meta.
-- [ ] Processar webhooks de enviada, entregue, lida e falha.
-- [ ] Garantir idempotência de envio e status.
-- [ ] Implementar retry somente para falhas transitórias.
-- [ ] Não repetir falhas permanentes de template/janela.
-- [ ] Respeitar janela de atendimento do WhatsApp.
-- [ ] Bloquear envio manual sem atendente responsável.
-- [ ] Criar `POST /api/v1/conversas/{conversaId}/mensagens`.
-- [ ] Validar texto e tipos de mídia suportados no MVP.
-- [ ] Nunca expor token da conta em erros.
-- [ ] Registrar correlation ID e IDs da Meta.
-- [ ] Criar fake da Graph API para testes.
-- [ ] Documentar estados pendente, enviado, entregue, lido e falho.
-- [ ] Atualizar Swagger e Markdown.
+- [x] Criar cliente HTTP da Graph API com timeout.
+- [x] Selecionar token e versão da conta do tenant.
+- [x] Criar contrato interno de mensagem de saída.
+- [x] Enfileirar envio sem bloquear a API.
+- [x] Persistir mensagem antes do envio com status pendente.
+- [x] Atualizar status com resposta da Meta.
+- [x] Processar webhooks de enviada, entregue, lida e falha.
+- [x] Garantir idempotência de envio e status.
+- [x] Implementar retry somente para falhas transitórias.
+- [x] Não repetir falhas permanentes de template/janela.
+- [x] Respeitar janela de atendimento do WhatsApp.
+- [x] Bloquear envio manual sem atendente responsável.
+- [x] Criar `POST /api/v1/conversas/{conversaId}/mensagens`.
+- [x] Validar texto e tipos de mídia suportados no MVP.
+- [x] Nunca expor token da conta em erros.
+- [x] Registrar correlation ID e IDs da Meta.
+- [x] Criar fake da Graph API para testes.
+- [x] Documentar estados pendente, enviado, entregue, lido e falho.
+- [x] Atualizar Swagger e Markdown.
 
 ### Saída
 
-- [ ] Conta correta é usada para cada tenant/conversa.
-- [ ] Retry não duplica mensagem no WhatsApp.
-- [ ] Histórico reflete estados recebidos da Meta.
-- [ ] Testes, cobertura, lint, typecheck e build aprovados.
-- [ ] Branch pronta para integração.
+- [x] Conta correta é usada para cada tenant/conversa.
+- [x] Retry não duplica mensagem no WhatsApp.
+- [x] Histórico reflete estados recebidos da Meta.
+- [x] Testes, cobertura, lint, typecheck e build aprovados.
+- [x] Branch pronta para integração.
 
 ---
 

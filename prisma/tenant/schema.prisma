@@ -334,6 +334,8 @@ model Mensagem {
   resposta_mensagem_id Int?
   autor_atendente_id Int?
   whatsapp_message_id String?     @unique @db.VarChar(150)
+  chave_idempotencia  String?     @unique @db.VarChar(100)
+  correlation_id      String?     @db.VarChar(100)
   tipo               TipoMensagem
   direcao            DirecaoMensagem
   autor              AutorMensagem
@@ -357,6 +359,7 @@ model Mensagem {
   @@index([conversa_id, ocorreu_at, id])
   @@index([autor_atendente_id, ocorreu_at])
   @@index([status_entrega, updated_at])
+  @@index([correlation_id])
   @@index([ocorreu_at, id])
   @@map("mensagens")
 }

@@ -55,6 +55,7 @@ dependem do cookie HttpOnly. Uma implementação sugerida do cliente HTTP está 
 | GET    | `/api/v1/conversas`                              | Tenant autenticado                | Listar e filtrar conversas                |
 | GET    | `/api/v1/conversas/{conversaId}`                 | Tenant autenticado                | Detalhar conversa                         |
 | GET    | `/api/v1/conversas/{conversaId}/mensagens`       | Tenant autenticado                | Timeline reversa com cursor estável       |
+| POST   | `/api/v1/conversas/{conversaId}/mensagens`       | Atendente responsável             | Persistir e enfileirar mensagem manual    |
 | POST   | `/api/v1/conversas/{conversaId}/assumir`         | Tenant autenticado                | Claim atômico de item da fila             |
 | POST   | `/api/v1/conversas/{conversaId}/reatribuir`      | Admin/gestor tenant               | Transferir com motivo e auditoria         |
 | POST   | `/api/v1/conversas/{conversaId}/encerrar`        | Tenant autenticado                | Encerrar ou devolver ao bot               |

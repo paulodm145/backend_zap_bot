@@ -20,7 +20,21 @@ import { VerificadorRedisService } from './services/verificador-redis.service.js
 import { WebhookWhatsappService } from './services/webhook-whatsapp.service.js';
 import { CriptografiaService } from './services/criptografia.service.js';
 import { ProcessadorMensagemRecebidaService } from './services/processador-mensagem-recebida.service.js';
-import { jobMensagemRecebidaSchema, type JobMensagemRecebida } from './types/jobs.js';
+import { ProcessadorMensagemSaidaService } from './services/processador-mensagem-saida.service.js';
+import { EnfileiradorMensagemSaidaBullMqService } from './services/enfileirador-mensagem-saida.service.js';
+import { WhatsappGraphApiService } from './services/whatsapp-graph-api.service.js';
+import {
+  EnfileiradorStatusWhatsappBullMqService,
+  ProcessadorStatusWhatsappService,
+} from './services/status-whatsapp.service.js';
+import {
+  jobMensagemRecebidaSchema,
+  jobMensagemSaidaSchema,
+  type JobMensagemRecebida,
+  type JobMensagemSaida,
+  jobStatusWhatsappSchema,
+  type JobStatusWhatsapp,
+} from './types/jobs.js';
 import { criarWorker } from './workers/worker.factory.js';
 
 const prismaCentral = obterPrismaCentral();
@@ -29,8 +43,27 @@ const recursosMensageria = new RegistroRecursosMensageria();
 const filaMensagens = recursosMensageria.registrar(
   criarFila<JobMensagemRecebida>(NOMES_FILAS.mensagensRecebidas, redis),
 );
+const filaMensagensSaida = recursosMensageria.registrar(
+  criarFila<JobMensagemSaida>(NOMES_FILAS.mensagensWhatsapp, redis),
+);
+const filaStatusWhatsapp = recursosMensageria.registrar(
+  criarFila<JobStatusWhatsapp>(NOMES_FILAS.statusWhatsapp, redis),
+);
+const tenantsRepository = new TenantCentralRepository(prismaCentral);
 const processadorMensagens = new ProcessadorMensagemRecebidaService(
-  new TenantCentralRepository(prismaCentral),
+  tenantsRepository,
+  new CriptografiaService(ambiente.TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE),
+  obterGerenciadorConexoesTenant(),
+);
+const processadorMensagensSaida = new ProcessadorMensagemSaidaService(
+  tenantsRepository,
+  new CriptografiaService(ambiente.TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE),
+  new CriptografiaService(ambiente.WHATSAPP_CREDENCIAIS_CRIPTOGRAFIA_CHAVE),
+  obterGerenciadorConexoesTenant(),
+  new WhatsappGraphApiService(ambiente.WHATSAPP_GRAPH_API_URL),
+);
+const processadorStatusWhatsapp = new ProcessadorStatusWhatsappService(
+  tenantsRepository,
   new CriptografiaService(ambiente.TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE),
   obterGerenciadorConexoesTenant(),
 );
@@ -43,12 +76,31 @@ recursosMensageria.registrar(
     { concurrency: 10 },
   ),
 );
+recursosMensageria.registrar(
+  criarWorker(
+    NOMES_FILAS.statusWhatsapp,
+    jobStatusWhatsappSchema,
+    async (job) => processadorStatusWhatsapp.processar(job.data),
+    redis,
+    { concurrency: 10 },
+  ),
+);
+recursosMensageria.registrar(
+  criarWorker(
+    NOMES_FILAS.mensagensWhatsapp,
+    jobMensagemSaidaSchema,
+    async (job) => processadorMensagensSaida.processar(job.data),
+    redis,
+    { concurrency: 10 },
+  ),
+);
 const webhookWhatsappController = new WebhookWhatsappController(
   new WebhookWhatsappService(
     new RoteamentoWhatsappRepository(prismaCentral),
     new IdempotenciaRedisRepository(redis),
     new EnfileiradorMensagemBullMqService(filaMensagens),
     ambiente.WEBHOOK_IDEMPOTENCIA_SEGUNDOS,
+    new EnfileiradorStatusWhatsappBullMqService(filaStatusWhatsapp),
   ),
   ambiente.WEBHOOK_WHATSAPP_VERIFY_TOKEN,
 );
@@ -62,6 +114,7 @@ const aplicacao = criarAplicacao({
     controller: webhookWhatsappController,
     appSecret: ambiente.WEBHOOK_WHATSAPP_APP_SECRET,
   },
+  enfileiradorMensagemSaida: new EnfileiradorMensagemSaidaBullMqService(filaMensagensSaida),
 });
 
 const servidor = aplicacao.listen(ambiente.PORTA, () => {

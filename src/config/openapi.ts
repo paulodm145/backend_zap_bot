@@ -27,6 +27,7 @@ import {
   encerrarConversaSchema,
   reatribuirConversaSchema,
 } from '../dtos/direcionamento-atendimento.dto.js';
+import { enviarMensagemAtendimentoSchema } from '../dtos/mensagem-atendimento.dto.js';
 import {
   atualizarSetorSchema,
   criarSetorSchema,
@@ -493,6 +494,32 @@ function criarRegistro(): OpenAPIRegistry {
       },
       422: {
         description: 'Snapshot ausente ao devolver ao bot.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'post',
+    path: '/api/v1/conversas/{conversaId}/mensagens',
+    tags: ['Atendimento'],
+    summary: 'Persiste e enfileira uma mensagem manual para o WhatsApp',
+    security: [{ bearerAuth: [] }],
+    request: {
+      params: conversaParametroSchema,
+      body: {
+        required: true,
+        content: { 'application/json': { schema: enviarMensagemAtendimentoSchema } },
+      },
+    },
+    responses: {
+      202: { description: 'Mensagem persistida como PENDENTE e enfileirada.' },
+      200: { description: 'A mesma chave idempotente já havia sido persistida.' },
+      403: {
+        description: 'Usuário não é o atendente responsável.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+      422: {
+        description: 'Janela expirada, conta indisponível ou payload inválido.',
         content: { 'application/json': { schema: erroSchema } },
       },
     },

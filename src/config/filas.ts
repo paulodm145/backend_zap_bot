@@ -3,6 +3,7 @@ import type { JobsOptions } from 'bullmq';
 export const NOMES_FILAS = {
   mensagensRecebidas: 'mensagens-recebidas',
   mensagensWhatsapp: 'mensagens-whatsapp',
+  statusWhatsapp: 'status-whatsapp',
   integracoesExternas: 'integracoes-externas',
 } as const;
 

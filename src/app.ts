@@ -22,6 +22,8 @@ import { SetorController } from './controllers/setor.controller.js';
 import { PerfilController } from './controllers/perfil.controller.js';
 import { HistoricoController } from './controllers/historico.controller.js';
 import { DirecionamentoAtendimentoController } from './controllers/direcionamento-atendimento.controller.js';
+import { MensagemAtendimentoController } from './controllers/mensagem-atendimento.controller.js';
+import type { EnfileiradorMensagemSaida } from './services/mensagem-atendimento.service.js';
 import { obterGerenciadorConexoesTenant } from './database/gerenciador-conexoes-tenant.js';
 import { obterPrismaCentral } from './database/prisma-central.js';
 import type { PrismaClient } from './generated/prisma/client.js';
@@ -74,6 +76,7 @@ interface OpcoesAplicacao {
     controller: WebhookWhatsappController;
     appSecret: string;
   };
+  enfileiradorMensagemSaida?: EnfileiradorMensagemSaida;
 }
 
 export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
@@ -251,7 +254,13 @@ export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
       criptografiaConexaoTenant,
       obterGerenciadorConexoesTenant(),
     ),
-    criarRotasConversas(new HistoricoController(), new DirecionamentoAtendimentoController()),
+    criarRotasConversas(
+      new HistoricoController(),
+      new DirecionamentoAtendimentoController(),
+      opcoes.enfileiradorMensagemSaida
+        ? new MensagemAtendimentoController(opcoes.enfileiradorMensagemSaida)
+        : undefined,
+    ),
   );
   aplicacao.use(
     '/api/v1/me',

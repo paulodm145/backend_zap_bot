@@ -164,4 +164,40 @@ describe('webhook do WhatsApp', () => {
     expect(jobs).toHaveLength(2);
     expect(jobs[0]?.chave).not.toBe(jobs[1]?.chave);
   });
+
+  it('enfileira atualizações de entrega sem criar mensagem recebida', async () => {
+    const statusEnfileirados: unknown[] = [];
+    const servico = new WebhookWhatsappService(roteamentos, idempotencia, enfileirador, 60, {
+      adicionar: (dados) => {
+        statusEnfileirados.push(dados);
+        return Promise.resolve();
+      },
+    });
+    const entrada: WebhookWhatsappEntrada = {
+      object: 'whatsapp_business_account',
+      entry: [
+        {
+          id: 'waba',
+          changes: [
+            {
+              field: 'messages',
+              value: {
+                messaging_product: 'whatsapp',
+                metadata: { phone_number_id: 'numero-tenant-a' },
+                statuses: [{ id: 'wamid.saida', status: 'delivered', timestamp: '1785360000' }],
+              },
+            },
+          ],
+        },
+      ],
+    };
+    await expect(servico.receber(entrada)).resolves.toEqual({
+      recebidas: 0,
+      duplicadas: 0,
+      statusRecebidos: 1,
+    });
+    expect(statusEnfileirados).toEqual([
+      expect.objectContaining({ mensagemId: 'wamid.saida', status: 'delivered' }),
+    ]);
+  });
 });

@@ -36,6 +36,7 @@ Documentos funcionais disponíveis:
 - [Setores e vínculos de atendentes](api/setores.md)
 - [Perfil do usuário autenticado](api/perfil.md)
 - [Histórico de contatos e conversas](api/historico-conversas.md)
+- [Mensagens de atendimento e WhatsApp](api/mensagens-whatsapp.md)
 - [Referência de todos os endpoints](api/REFERENCIA-ENDPOINTS.md)
 - [Cliente HTTP do frontend](api/CLIENTE-FRONTEND.md)
 - [Admin interno](api/admin-interno.md)

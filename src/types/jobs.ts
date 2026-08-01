@@ -15,3 +15,14 @@ export const jobMensagemRecebidaSchema = jobComTenantSchema.extend({
 
 export type JobComTenant = z.infer<typeof jobComTenantSchema>;
 export type JobMensagemRecebida = z.infer<typeof jobMensagemRecebidaSchema>;
+
+export const jobMensagemSaidaSchema = jobComTenantSchema.extend({
+  mensagemPublicId: z.uuid(),
+});
+export type JobMensagemSaida = z.infer<typeof jobMensagemSaidaSchema>;
+export const jobStatusWhatsappSchema = jobComTenantSchema.extend({
+  mensagemId: z.string().min(1),
+  status: z.enum(['sent', 'delivered', 'read', 'failed']),
+  codigoErro: z.string().optional(),
+});
+export type JobStatusWhatsapp = z.infer<typeof jobStatusWhatsappSchema>;
