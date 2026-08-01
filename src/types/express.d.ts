@@ -14,7 +14,7 @@ declare global {
         id: string;
         email: string;
         tenantId: string;
-        papel: 'ADMIN_TENANT' | 'USUARIO';
+        papel: 'ADMIN_TENANT' | 'GESTOR' | 'ATENDENTE';
       };
       contextoTenant?: {
         id: number;

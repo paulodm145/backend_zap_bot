@@ -205,6 +205,7 @@ descreverIntegracao('administração interna de tenants', () => {
         tentativas += 1;
         return tentativas === 1 ? Promise.reject(new Error('Falha simulada')) : Promise.resolve();
       },
+      criarPerfilAdministrador: () => Promise.resolve(),
     };
     const servico = new ProvisionamentoTenantService(
       new TenantCentralRepository(prisma),
@@ -247,6 +248,7 @@ descreverIntegracao('administração interna de tenants', () => {
       {
         criarSeAusente: () => Promise.reject(new Error('Não deveria criar banco')),
         aplicarMigrations: () => Promise.resolve(),
+        criarPerfilAdministrador: () => Promise.resolve(),
       },
     );
     await expect(

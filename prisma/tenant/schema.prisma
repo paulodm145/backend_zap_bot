@@ -7,6 +7,46 @@ datasource db {
   provider = "postgresql"
 }
 
+enum PapelUsuarioTenant {
+  ADMIN_TENANT
+  GESTOR
+  ATENDENTE
+
+  @@map("papel_usuario_tenant")
+}
+
+model UsuarioTenant {
+  id                        Int                  @id @default(autoincrement())
+  public_id                 String               @unique @default(uuid()) @db.Uuid
+  usuario_central_public_id String               @unique @db.Uuid
+  nome                      String               @db.VarChar(150)
+  nome_normalizado          String               @db.VarChar(150)
+  email                     String               @unique @db.VarChar(254)
+  papel                     PapelUsuarioTenant
+  ativo                     Boolean              @default(true)
+  deletado_at               DateTime?            @db.Timestamptz(3)
+  created_at                DateTime              @default(now()) @db.Timestamptz(3)
+  updated_at                DateTime              @updatedAt @db.Timestamptz(3)
+
+  @@index([papel, ativo])
+  @@index([ativo, nome_normalizado])
+  @@index([deletado_at])
+  @@map("usuarios_tenant")
+}
+
+model AuditoriaUsuarioTenant {
+  id                     Int      @id @default(autoincrement())
+  usuario_public_id      String   @db.Uuid
+  autor_usuario_public_id String  @db.Uuid
+  acao                   String   @db.VarChar(80)
+  detalhes               Json?
+  created_at             DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([usuario_public_id, created_at])
+  @@index([autor_usuario_public_id, created_at])
+  @@map("auditorias_usuarios_tenant")
+}
+
 model Empresa {
   id                    Int      @id @default(autoincrement())
   public_id             String   @unique @default(uuid()) @db.Uuid

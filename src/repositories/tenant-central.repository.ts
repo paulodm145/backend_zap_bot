@@ -56,6 +56,18 @@ export class TenantCentralRepository {
     });
   }
 
+  public buscarAdministrador(tenantId: number) {
+    return this.prisma.usuario.findFirst({
+      where: {
+        tenant_id: tenantId,
+        papel: 'ADMIN_TENANT',
+        ativo: true,
+        deletado_at: null,
+      },
+      orderBy: { created_at: 'asc' },
+    });
+  }
+
   public async listar(entrada: ListarTenantsEntrada) {
     const where: Prisma.TenantWhereInput = {
       deletado_at: null,

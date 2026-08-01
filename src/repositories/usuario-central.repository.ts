@@ -93,6 +93,60 @@ export class UsuarioCentralRepository implements UsuarioInternoRepository {
     });
   }
 
+  public buscarRegistroPorEmail(email: string) {
+    return this.prisma.usuario.findUnique({ where: { email }, include: { tenant: true } });
+  }
+
+  public buscarRegistroPorPublicId(publicId: string) {
+    return this.prisma.usuario.findFirst({
+      where: { public_id: publicId, deletado_at: null },
+    });
+  }
+
+  public atualizarOperacional(
+    publicId: string,
+    entrada: { nome?: string; email?: string; papel?: PapelUsuario },
+  ) {
+    return this.prisma.usuario.update({
+      where: { public_id: publicId },
+      data: entrada,
+    });
+  }
+
+  public async alterarAtivoERevogar(publicId: string, ativo: boolean) {
+    return this.prisma.$transaction(async (transacao) => {
+      const usuario = await transacao.usuario.update({
+        where: { public_id: publicId },
+        data: { ativo },
+      });
+      if (!ativo) {
+        await transacao.refreshToken.updateMany({
+          where: { usuario_id: usuario.id, revogado_at: null },
+          data: { revogado_at: new Date(), motivo_revogacao: 'USUARIO_DESATIVADO' },
+        });
+      }
+      return usuario;
+    });
+  }
+
+  public async excluirERevogar(publicId: string) {
+    return this.prisma.$transaction(async (transacao) => {
+      const usuario = await transacao.usuario.update({
+        where: { public_id: publicId },
+        data: { ativo: false, deletado_at: new Date() },
+      });
+      await transacao.refreshToken.updateMany({
+        where: { usuario_id: usuario.id, revogado_at: null },
+        data: { revogado_at: new Date(), motivo_revogacao: 'USUARIO_EXCLUIDO' },
+      });
+      return usuario;
+    });
+  }
+
+  public excluirCompensacao(publicId: string) {
+    return this.prisma.usuario.delete({ where: { public_id: publicId } });
+  }
+
   private mapearInterno(usuario: {
     id: number;
     public_id: string;

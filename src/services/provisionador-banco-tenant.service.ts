@@ -1,10 +1,18 @@
 import { spawn } from 'node:child_process';
 
 import { Client } from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
+
+import { PrismaClient } from '../generated/prisma-tenant/client.js';
+import { normalizarTextoBusca } from '../helpers/texto.helper.js';
 
 export interface ProvisionadorBancoTenant {
   criarSeAusente(nomeBanco: string): Promise<string>;
   aplicarMigrations(stringConexao: string): Promise<void>;
+  criarPerfilAdministrador(
+    stringConexao: string,
+    administrador: { publicId: string; nome: string; email: string },
+  ): Promise<void>;
 }
 
 export class ProvisionadorBancoTenantService implements ProvisionadorBancoTenant {
@@ -56,5 +64,34 @@ export class ProvisionadorBancoTenantService implements ProvisionadorBancoTenant
         rejeitar(new Error(erro.trim() || `Migration falhou com código ${String(codigo)}`));
       });
     });
+  }
+
+  public async criarPerfilAdministrador(
+    stringConexao: string,
+    administrador: { publicId: string; nome: string; email: string },
+  ): Promise<void> {
+    const prisma = new PrismaClient({ adapter: new PrismaPg(stringConexao) });
+    try {
+      await prisma.usuarioTenant.upsert({
+        where: { usuario_central_public_id: administrador.publicId },
+        create: {
+          usuario_central_public_id: administrador.publicId,
+          nome: administrador.nome,
+          nome_normalizado: normalizarTextoBusca(administrador.nome),
+          email: administrador.email,
+          papel: 'ADMIN_TENANT',
+        },
+        update: {
+          nome: administrador.nome,
+          nome_normalizado: normalizarTextoBusca(administrador.nome),
+          email: administrador.email,
+          papel: 'ADMIN_TENANT',
+          ativo: true,
+          deletado_at: null,
+        },
+      });
+    } finally {
+      await prisma.$disconnect();
+    }
   }
 }

@@ -61,7 +61,7 @@ export class AutenticacaoService {
         publicId: usuario.public_id,
         tenantPublicId: usuario.tenant.public_id,
         email: usuario.email,
-        papel: usuario.papel === 'ADMIN_TENANT' ? 'ADMIN_TENANT' : 'USUARIO',
+        papel: this.mapearPapel(usuario.papel),
       }),
       refreshToken,
       usuario: {
@@ -117,7 +117,7 @@ export class AutenticacaoService {
         publicId: usuario.public_id,
         tenantPublicId: usuario.tenant.public_id,
         email: usuario.email,
-        papel: usuario.papel === 'ADMIN_TENANT' ? 'ADMIN_TENANT' : 'USUARIO',
+        papel: this.mapearPapel(usuario.papel),
       }),
       refreshToken: novoRefreshToken,
     };
@@ -146,5 +146,10 @@ export class AutenticacaoService {
       ...(contexto.ip ? { ip: contexto.ip } : {}),
       ...(contexto.userAgent ? { user_agent: contexto.userAgent.slice(0, 500) } : {}),
     };
+  }
+
+  private mapearPapel(papel: string): 'ADMIN_TENANT' | 'GESTOR' | 'ATENDENTE' {
+    if (papel === 'ADMIN_TENANT' || papel === 'GESTOR') return papel;
+    return 'ATENDENTE';
   }
 }

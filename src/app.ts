@@ -16,6 +16,7 @@ import type { WebhookWhatsappController } from './controllers/webhook-whatsapp.c
 import { FluxoController } from './controllers/fluxo.controller.js';
 import { EmpresaController } from './controllers/empresa.controller.js';
 import { ContaWhatsappController } from './controllers/conta-whatsapp.controller.js';
+import { UsuarioTenantController } from './controllers/usuario-tenant.controller.js';
 import { obterGerenciadorConexoesTenant } from './database/gerenciador-conexoes-tenant.js';
 import { obterPrismaCentral } from './database/prisma-central.js';
 import type { PrismaClient } from './generated/prisma/client.js';
@@ -37,6 +38,7 @@ import { criarRotasWebhookWhatsapp } from './rotas/webhook-whatsapp.rotas.js';
 import { criarRotasFluxos } from './rotas/fluxo.rotas.js';
 import { criarRotasEmpresa } from './rotas/empresa.rotas.js';
 import { criarRotasContasWhatsapp } from './rotas/conta-whatsapp.rotas.js';
+import { criarRotasUsuariosTenant } from './rotas/usuario-tenant.rotas.js';
 import { AutenticacaoInternaService } from './services/autenticacao-interna.service.js';
 import { AutenticacaoService } from './services/autenticacao.service.js';
 import { AdministracaoTenantsService } from './services/administracao-tenants.service.js';
@@ -202,6 +204,16 @@ export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
         new WhatsappGraphApiService(ambiente.WHATSAPP_GRAPH_API_URL),
       ),
     ),
+  );
+  aplicacao.use(
+    '/api/v1/usuarios',
+    criarAutenticacaoMiddleware(tokenTenant),
+    criarResolucaoTenantMiddleware(
+      tenantsRepository,
+      criptografiaConexaoTenant,
+      obterGerenciadorConexoesTenant(),
+    ),
+    criarRotasUsuariosTenant(new UsuarioTenantController(usuariosCentrais, new HashSenhaService())),
   );
   aplicacao.use(
     '/api/v1/interno/auth',

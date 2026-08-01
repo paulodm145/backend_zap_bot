@@ -10,7 +10,8 @@ datasource db {
 enum PapelUsuario {
   SUPER_ADMIN
   ADMIN_TENANT
-  USUARIO
+  GESTOR
+  ATENDENTE
 
   @@map("papel_usuario")
 }

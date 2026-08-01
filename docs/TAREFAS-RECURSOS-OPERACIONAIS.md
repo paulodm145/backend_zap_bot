@@ -83,7 +83,7 @@ tarefa.
 | 00. Planejamento e decisões          | `docs/backlog-recursos-operacionais` | Estrutura base | Concluída |
 | 12. Catálogo geográfico e empresa    | `feat/cadastro-empresa-geografia`    | 00             | Concluída |
 | 13. Configuração WhatsApp por tenant | `feat/configuracao-whatsapp-tenant`  | 00 e 12        | Concluída |
-| 14. Usuários e RBAC                  | `feat/usuarios-permissoes`           | 00             | Pendente  |
+| 14. Usuários e RBAC                  | `feat/usuarios-permissoes`           | 00             | Concluída |
 | 15. Recuperação de senha             | `feat/recuperacao-senha`             | 14             | Pendente  |
 | 16. Setores e vínculos de atendentes | `feat/setores-atendentes`            | 14             | Pendente  |
 | 17. Perfil do usuário autenticado    | `feat/perfil-usuario-logado`         | 14             | Pendente  |
@@ -218,51 +218,51 @@ Branch: `feat/usuarios-permissoes`
 
 ### Modelo e autorização
 
-- [ ] Confirmar matriz de permissões de `ADMIN_TENANT`.
-- [ ] Confirmar matriz de permissões de `GESTOR`.
-- [ ] Confirmar matriz de permissões de `ATENDENTE`.
-- [ ] Criar enum central de papéis necessário.
-- [ ] Criar perfil operacional de usuário no banco tenant.
-- [ ] Vincular perfil tenant ao `public_id` do usuário central.
-- [ ] Adicionar soft delete e timestamps.
-- [ ] Criar índices de e-mail, papel, ativo e busca.
-- [ ] Criar migrations central e tenant separadas.
-- [ ] Criar middleware declarativo de permissão.
-- [ ] Negar por padrão permissões desconhecidas.
-- [ ] Retornar `403 ACESSO_NEGADO` de forma padronizada.
-- [ ] Testar matriz completa por papel.
+- [x] Confirmar matriz de permissões de `ADMIN_TENANT`.
+- [x] Confirmar matriz de permissões de `GESTOR`.
+- [x] Confirmar matriz de permissões de `ATENDENTE`.
+- [x] Criar enum central de papéis necessário.
+- [x] Criar perfil operacional de usuário no banco tenant.
+- [x] Vincular perfil tenant ao `public_id` do usuário central.
+- [x] Adicionar soft delete e timestamps.
+- [x] Criar índices de e-mail, papel, ativo e busca.
+- [x] Criar migrations central e tenant separadas.
+- [x] Criar middleware declarativo de permissão.
+- [x] Negar por padrão permissões desconhecidas.
+- [x] Retornar `403 ACESSO_NEGADO` de forma padronizada.
+- [x] Testar matriz completa por papel.
 
 ### CRUD de usuários
 
-- [ ] Criar schema Zod de cadastro.
-- [ ] Criar schema Zod de atualização administrativa.
-- [ ] Criar listagem paginada com `busca`, papel e status.
-- [ ] Criar detalhe por `public_id`.
-- [ ] Criar usuário central e perfil tenant idempotentemente.
-- [ ] Definir compensação se a escrita em um dos bancos falhar.
-- [ ] Impedir e-mail duplicado globalmente.
-- [ ] Normalizar e-mail antes de consultar e salvar.
-- [ ] Permitir ativar e desativar usuário.
-- [ ] Revogar refresh tokens ao desativar.
-- [ ] Impedir que admin remova o próprio último acesso administrativo.
-- [ ] Implementar soft delete.
-- [ ] Criar auditoria das alterações.
-- [ ] Nunca retornar `senha_hash`.
-- [ ] Criar `GET /api/v1/usuarios`.
-- [ ] Criar `POST /api/v1/usuarios`.
-- [ ] Criar `GET /api/v1/usuarios/{usuarioId}`.
-- [ ] Criar `PUT /api/v1/usuarios/{usuarioId}`.
-- [ ] Criar `PATCH /api/v1/usuarios/{usuarioId}/status`.
-- [ ] Criar `DELETE /api/v1/usuarios/{usuarioId}`.
-- [ ] Atualizar Swagger e documentação de telas.
+- [x] Criar schema Zod de cadastro.
+- [x] Criar schema Zod de atualização administrativa.
+- [x] Criar listagem paginada com `busca`, papel e status.
+- [x] Criar detalhe por `public_id`.
+- [x] Criar usuário central e perfil tenant idempotentemente.
+- [x] Definir compensação se a escrita em um dos bancos falhar.
+- [x] Impedir e-mail duplicado globalmente.
+- [x] Normalizar e-mail antes de consultar e salvar.
+- [x] Permitir ativar e desativar usuário.
+- [x] Revogar refresh tokens ao desativar.
+- [x] Impedir que admin remova o próprio último acesso administrativo.
+- [x] Implementar soft delete.
+- [x] Criar auditoria das alterações.
+- [x] Nunca retornar `senha_hash`.
+- [x] Criar `GET /api/v1/usuarios`.
+- [x] Criar `POST /api/v1/usuarios`.
+- [x] Criar `GET /api/v1/usuarios/{usuarioId}`.
+- [x] Criar `PUT /api/v1/usuarios/{usuarioId}`.
+- [x] Criar `PATCH /api/v1/usuarios/{usuarioId}/status`.
+- [x] Criar `DELETE /api/v1/usuarios/{usuarioId}`.
+- [x] Atualizar Swagger e documentação de telas.
 
 ### Saída
 
-- [ ] Usuários não acessam outro tenant.
-- [ ] Backend aplica permissões independentemente do frontend.
-- [ ] Falhas entre bancos são recuperáveis e auditáveis.
-- [ ] Testes, cobertura, lint, typecheck e build aprovados.
-- [ ] Branch pronta para integração.
+- [x] Usuários não acessam outro tenant.
+- [x] Backend aplica permissões independentemente do frontend.
+- [x] Falhas entre bancos são recuperáveis e auditáveis.
+- [x] Testes, cobertura, lint, typecheck e build aprovados.
+- [x] Branch pronta para integração.
 
 ---
 

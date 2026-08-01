@@ -21,6 +21,13 @@ import {
   rotacionarTokenWhatsappSchema,
 } from '../dtos/conta-whatsapp.dto.js';
 import {
+  alterarStatusUsuarioTenantSchema,
+  atualizarUsuarioTenantSchema,
+  criarUsuarioTenantSchema,
+  listarUsuariosTenantSchema,
+  usuarioTenantIdSchema,
+} from '../dtos/usuario-tenant.dto.js';
+import {
   alterarPlanoTenantSchema,
   alterarStatusTenantSchema,
   listarTenantsSchema,
@@ -209,6 +216,22 @@ const paginaContasWhatsappSchema = z.object({
   skip: z.number().int().nonnegative(),
   take: z.number().int().positive(),
 });
+const usuarioTenantSchema = z.object({
+  public_id: z.uuid(),
+  usuario_central_public_id: z.uuid(),
+  nome: z.string(),
+  email: z.email(),
+  papel: z.enum(['ADMIN_TENANT', 'GESTOR', 'ATENDENTE']),
+  ativo: z.boolean(),
+  created_at: z.iso.datetime(),
+  updated_at: z.iso.datetime(),
+});
+const paginaUsuariosTenantSchema = z.object({
+  dados: z.array(usuarioTenantSchema),
+  total: z.number().int().nonnegative(),
+  skip: z.number().int().nonnegative(),
+  take: z.number().int().positive(),
+});
 
 function criarRegistro(): OpenAPIRegistry {
   const registro = new OpenAPIRegistry();
@@ -221,6 +244,125 @@ function criarRegistro(): OpenAPIRegistry {
   });
   registro.register('ErroResposta', erroSchema);
   registro.register('PaginacaoResposta', paginacaoSchema);
+
+  registro.registerPath({
+    method: 'get',
+    path: '/api/v1/usuarios',
+    tags: ['Usuários'],
+    summary: 'Lista usuários do tenant',
+    security: [{ bearerAuth: [] }],
+    request: { query: listarUsuariosTenantSchema },
+    responses: {
+      200: {
+        description: 'Lista paginada.',
+        content: { 'application/json': { schema: paginaUsuariosTenantSchema } },
+      },
+      403: {
+        description: 'Sem permissão.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'post',
+    path: '/api/v1/usuarios',
+    tags: ['Usuários'],
+    summary: 'Cadastra identidade central e perfil tenant',
+    security: [{ bearerAuth: [] }],
+    request: {
+      body: {
+        required: true,
+        content: { 'application/json': { schema: criarUsuarioTenantSchema } },
+      },
+    },
+    responses: {
+      201: {
+        description: 'Usuário criado sem senha no response.',
+        content: { 'application/json': { schema: usuarioTenantSchema } },
+      },
+      409: {
+        description: 'E-mail global duplicado.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'get',
+    path: '/api/v1/usuarios/{usuarioId}',
+    tags: ['Usuários'],
+    summary: 'Detalha usuário do tenant',
+    security: [{ bearerAuth: [] }],
+    request: { params: usuarioTenantIdSchema },
+    responses: {
+      200: {
+        description: 'Usuário encontrado.',
+        content: { 'application/json': { schema: usuarioTenantSchema } },
+      },
+      404: {
+        description: 'Usuário não encontrado.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'put',
+    path: '/api/v1/usuarios/{usuarioId}',
+    tags: ['Usuários'],
+    summary: 'Atualiza usuário e papel',
+    security: [{ bearerAuth: [] }],
+    request: {
+      params: usuarioTenantIdSchema,
+      body: {
+        required: true,
+        content: { 'application/json': { schema: atualizarUsuarioTenantSchema } },
+      },
+    },
+    responses: {
+      200: {
+        description: 'Usuário atualizado.',
+        content: { 'application/json': { schema: usuarioTenantSchema } },
+      },
+      422: {
+        description: 'Último admin ou escopo de gestor.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'patch',
+    path: '/api/v1/usuarios/{usuarioId}/status',
+    tags: ['Usuários'],
+    summary: 'Ativa ou desativa e revoga sessões',
+    security: [{ bearerAuth: [] }],
+    request: {
+      params: usuarioTenantIdSchema,
+      body: {
+        required: true,
+        content: { 'application/json': { schema: alterarStatusUsuarioTenantSchema } },
+      },
+    },
+    responses: {
+      200: {
+        description: 'Status alterado.',
+        content: { 'application/json': { schema: usuarioTenantSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'delete',
+    path: '/api/v1/usuarios/{usuarioId}',
+    tags: ['Usuários'],
+    summary: 'Exclui logicamente e revoga sessões',
+    security: [{ bearerAuth: [] }],
+    request: { params: usuarioTenantIdSchema },
+    responses: {
+      204: { description: 'Usuário excluído.' },
+      422: {
+        description: 'Último administrador ativo.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
 
   registro.registerPath({
     method: 'get',

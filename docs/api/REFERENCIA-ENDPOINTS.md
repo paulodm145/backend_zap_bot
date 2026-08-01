@@ -65,6 +65,12 @@ dependem do cookie HttpOnly. Uma implementação sugerida do cliente HTTP está 
 | PATCH  | `/api/v1/contas-whatsapp/{contaId}/token`   | Admin do tenant                   | Rotacionar token                          |
 | PATCH  | `/api/v1/contas-whatsapp/{contaId}/status`  | Admin do tenant                   | Ativar ou desativar conta                 |
 | POST   | `/api/v1/contas-whatsapp/{contaId}/testar`  | Admin do tenant                   | Testar credencial na Meta                 |
+| GET    | `/api/v1/usuarios`                          | Admin ou gestor                   | Listar usuários                           |
+| POST   | `/api/v1/usuarios`                          | Admin ou gestor                   | Cadastrar usuário                         |
+| GET    | `/api/v1/usuarios/{usuarioId}`              | Admin ou gestor                   | Detalhar usuário                          |
+| PUT    | `/api/v1/usuarios/{usuarioId}`              | Admin ou gestor                   | Editar usuário                            |
+| PATCH  | `/api/v1/usuarios/{usuarioId}/status`       | Admin ou gestor                   | Ativar ou desativar usuário               |
+| DELETE | `/api/v1/usuarios/{usuarioId}`              | Admin ou gestor                   | Excluir usuário                           |
 | GET    | `/api/v1/webhook/whatsapp`                  | Token de verificação Meta         | Confirmar cadastro do webhook             |
 | POST   | `/api/v1/webhook/whatsapp`                  | Assinatura HMAC Meta              | Receber e enfileirar eventos              |
 

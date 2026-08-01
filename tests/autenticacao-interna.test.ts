@@ -33,7 +33,7 @@ descreverIntegracao('autenticação interna com TOTP', () => {
     await prisma.$disconnect();
   });
 
-  async function criarUsuario(papel: 'SUPER_ADMIN' | 'USUARIO' = 'SUPER_ADMIN', ativo = true) {
+  async function criarUsuario(papel: 'SUPER_ADMIN' | 'ATENDENTE' = 'SUPER_ADMIN', ativo = true) {
     return prisma.usuario.create({
       data: {
         nome: 'Admin Interno',
@@ -92,7 +92,7 @@ descreverIntegracao('autenticação interna com TOTP', () => {
   });
 
   it.each([
-    ['papel incorreto', 'USUARIO', true],
+    ['papel incorreto', 'ATENDENTE', true],
     ['usuário inativo', 'SUPER_ADMIN', false],
   ] as const)('recusa %s', async (_cenario, papel, ativo) => {
     await criarUsuario(papel, ativo);

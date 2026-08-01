@@ -42,6 +42,7 @@ Documentos funcionais disponíveis:
 - [Fluxos e editor visual](api/fluxos.md)
 - [Cadastro da empresa](api/empresa.md)
 - [Contas WhatsApp do tenant](api/contas-whatsapp.md)
+- [Usuários e permissões](api/usuarios.md)
 - [Schema JSON dos fluxos](schemas/fluxo-json.md)
 - [Contribuição e checks de qualidade](CONTRIBUICAO.md)
 - [Tarefas dos recursos operacionais](TAREFAS-RECURSOS-OPERACIONAIS.md)

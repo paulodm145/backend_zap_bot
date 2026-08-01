@@ -51,6 +51,13 @@ export class ProvisionamentoTenantService {
       });
 
       await this.banco.aplicarMigrations(stringConexao);
+      const administrador = await this.tenants.buscarAdministrador(tenant.id);
+      if (!administrador) throw new Error('Administrador central do tenant não encontrado');
+      await this.banco.criarPerfilAdministrador(stringConexao, {
+        publicId: administrador.public_id,
+        nome: administrador.nome,
+        email: administrador.email,
+      });
       tenant = await this.tenants.atualizarProvisionamento(tenant.id, {
         etapa: 'MIGRATIONS_APLICADAS',
         erro: null,

@@ -28,7 +28,7 @@ describe('middleware de autenticação do tenant', () => {
       publicId: '72f810fd-7355-4653-9ca7-d8b46f75450e',
       tenantPublicId: 'c480f80d-15f4-490a-9304-091da5f77e31',
       email: 'usuario@empresa.com',
-      papel: 'USUARIO',
+      papel: 'ATENDENTE',
     });
     const resposta = await request(criarApp())
       .get('/protegida')
@@ -38,7 +38,7 @@ describe('middleware de autenticação do tenant', () => {
       id: '72f810fd-7355-4653-9ca7-d8b46f75450e',
       tenantId: 'c480f80d-15f4-490a-9304-091da5f77e31',
       email: 'usuario@empresa.com',
-      papel: 'USUARIO',
+      papel: 'ATENDENTE',
     });
   });
 

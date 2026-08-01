@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { exigirAdminTenant } from '../../src/middlewares/autorizacao-tenant.middleware.js';
 import { tratarErro } from '../../src/middlewares/erro.middleware.js';
 
-const criarApp = (papel: 'ADMIN_TENANT' | 'USUARIO') => {
+const criarApp = (papel: 'ADMIN_TENANT' | 'GESTOR' | 'ATENDENTE') => {
   const app = express();
   app.use((requisicao, _resposta, proximo) => {
     requisicao.usuarioTenant = { id: 'id', email: 'a@b.com', tenantId: 'tenant', papel };
@@ -24,7 +24,7 @@ describe('autorização do tenant', () => {
   });
 
   it('nega usuário comum', async () => {
-    const resposta = await request(criarApp('USUARIO')).put('/empresa').expect(403);
+    const resposta = await request(criarApp('ATENDENTE')).put('/empresa').expect(403);
     expect(resposta.body).toMatchObject({ erro: { codigo: 'ACESSO_NEGADO' } });
   });
 });
