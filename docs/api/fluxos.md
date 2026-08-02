@@ -81,6 +81,10 @@ O `PUT` altera somente `fluxos.definicao`, que é o rascunho. Registros de
 `fluxo_versoes` nunca são alterados. Depois de salvar, invalide o cache da lista
 e do detalhe.
 
+O `POST /api/v1/fluxos` responde `201` com o rascunho criado. Use o
+`public_id` retornado para navegar ao editor. O `GET /api/v1/fluxos/:fluxoId`
+acrescenta `versoes`, contendo a última versão publicada quando ela existir.
+
 Validações estruturais do Zod retornam `422 VALIDACAO`. A especificação
 completa dos nós está em [Schema JSON dos fluxos](../schemas/fluxo-json.md).
 
@@ -124,6 +128,18 @@ do fluxo. Códigos possíveis:
 - `SETOR_INVALIDO`.
 
 Publicar novamente sem alterações retorna `409 CONFLITO`.
+
+A resposta `201` da publicação é uma `VersaoFluxoResposta` (`public_id`,
+`versao`, `definicao` e `created_at`), e não o detalhe completo do fluxo.
+Invalide ou consulte novamente o detalhe após publicar.
+
+## Tipos de nó disponíveis
+
+O contrato atual aceita e o motor executa somente `mensagem`,
+`captura_resposta`, `condicao` e `direcionar_setor`. Os tipos `ia` e
+`integracao_http` permanecem temporariamente indisponíveis; o editor deve
+ocultá-los até que validação, execução e segurança dessas integrações sejam
+implementadas no backend e publicadas no OpenAPI.
 
 ## Simulador
 

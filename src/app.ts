@@ -156,6 +156,12 @@ export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
       }),
     }),
   );
+  aplicacao.use(
+    cors({
+      origin: ambiente.ORIGENS_PERMITIDAS,
+      credentials: true,
+    }),
+  );
   aplicacao.get(
     '/api/v1/openapi.json',
     protegerDocumentacao,
@@ -172,12 +178,6 @@ export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
     swaggerUi.setup(documentoOpenApi),
   );
   aplicacao.use(helmet());
-  aplicacao.use(
-    cors({
-      origin: ambiente.ORIGENS_PERMITIDAS,
-      credentials: true,
-    }),
-  );
   if (opcoes.webhookWhatsapp) {
     aplicacao.use(
       '/api/v1/webhook/whatsapp',
