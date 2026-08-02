@@ -14,7 +14,7 @@ Branch: `feat/email-recuperacao-fila`
 - [x] Atualizar a documentação funcional de recuperação de senha.
 - [x] Testar enfileiramento, renderização e entrega SMTP.
 - [x] Executar formatação, lint, typecheck, build e cobertura.
-- [ ] Commitar e publicar a branch.
+- [x] Commitar e publicar a branch.
 
 ## Saída
 
