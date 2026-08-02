@@ -1,9 +1,11 @@
 import { logger } from '../config/logger.js';
+import nodemailer, { type Transporter } from 'nodemailer';
 
 export interface MensagemEmail {
   destinatario: string;
   assunto: string;
   texto: string;
+  html?: string;
 }
 
 export interface EnviadorEmail {
@@ -35,8 +37,44 @@ export class EnviadorEmailResend implements EnviadorEmail {
         to: [mensagem.destinatario],
         subject: mensagem.assunto,
         text: mensagem.texto,
+        html: mensagem.html,
       }),
     });
     if (!resposta.ok) throw new Error('Falha ao enviar e-mail de recuperação');
+  }
+}
+
+export class EnviadorEmailSmtp implements EnviadorEmail {
+  private readonly transporte: Transporter;
+
+  public constructor(configuracao: {
+    host: string;
+    porta: number;
+    seguro: boolean;
+    usuario?: string;
+    senha?: string;
+    remetente: string;
+  }) {
+    this.remetente = configuracao.remetente;
+    this.transporte = nodemailer.createTransport({
+      host: configuracao.host,
+      port: configuracao.porta,
+      secure: configuracao.seguro,
+      ...(configuracao.usuario && configuracao.senha
+        ? { auth: { user: configuracao.usuario, pass: configuracao.senha } }
+        : {}),
+    });
+  }
+
+  private readonly remetente: string;
+
+  public async enviar(mensagem: MensagemEmail): Promise<void> {
+    await this.transporte.sendMail({
+      from: this.remetente,
+      to: mensagem.destinatario,
+      subject: mensagem.assunto,
+      text: mensagem.texto,
+      html: mensagem.html,
+    });
   }
 }

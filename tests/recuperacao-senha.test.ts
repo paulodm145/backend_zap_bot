@@ -8,16 +8,17 @@ import { criarAplicacao } from '../src/app.js';
 import { PrismaClient } from '../src/generated/prisma/client.js';
 import { RecuperacaoSenhaRepository } from '../src/repositories/recuperacao-senha.repository.js';
 import { UsuarioCentralRepository } from '../src/repositories/usuario-central.repository.js';
-import type { EnviadorEmail, MensagemEmail } from '../src/services/enviador-email.service.js';
+import type { EnfileiradorEmail } from '../src/services/enfileirador-email.service.js';
+import type { JobEmail } from '../src/types/jobs.js';
 import { HashSenhaService } from '../src/services/hash-senha.service.js';
 import { RecuperacaoSenhaService } from '../src/services/recuperacao-senha.service.js';
 
 const url = process.env.TEST_DATABASE_URL;
 const descreverIntegracao = url ? describe : describe.skip;
 
-class EmailMemoria implements EnviadorEmail {
-  public mensagens: MensagemEmail[] = [];
-  public enviar(mensagem: MensagemEmail): Promise<void> {
+class EmailMemoria implements EnfileiradorEmail {
+  public mensagens: JobEmail[] = [];
+  public adicionar(mensagem: JobEmail): Promise<void> {
     this.mensagens.push(mensagem);
     return Promise.resolve();
   }
@@ -60,8 +61,8 @@ descreverIntegracao('recuperação de senha', () => {
   afterAll(async () => prisma.$disconnect());
 
   function tokenEnviado(): string {
-    const texto = emails.mensagens[0]?.texto ?? '';
-    return new URL(texto.replace('Acesse ', '')).searchParams.get('token') ?? '';
+    const url = emails.mensagens[0]?.dados.urlRedefinicao ?? '';
+    return new URL(url).searchParams.get('token') ?? '';
   }
 
   it('responde de forma neutra e persiste somente o hash', async () => {
@@ -71,6 +72,11 @@ descreverIntegracao('recuperação de senha', () => {
     const token = tokenEnviado();
     const registro = await prisma.tokenRecuperacaoSenha.findFirstOrThrow();
     expect(token).not.toBe('');
+    expect(emails.mensagens[0]).toMatchObject({
+      tipo: 'RECUPERACAO_SENHA',
+      destinatario: 'pessoa@tenant.com',
+      dados: { nome: 'Pessoa', expiracaoMinutos: 30 },
+    });
     expect(registro.token_hash).not.toContain(token);
   });
 
@@ -117,11 +123,16 @@ descreverIntegracao('recuperação de senha', () => {
   });
 
   it('expõe os contratos HTTP públicos', async () => {
-    const aplicacao = criarAplicacao({ prismaCentral: prisma });
+    const aplicacao = criarAplicacao({ prismaCentral: prisma, enfileiradorEmail: emails });
     await request(aplicacao)
       .post('/api/v1/auth/esqueci-senha')
       .send({ email: 'inexistente@tenant.com' })
       .expect(202);
+    await request(aplicacao)
+      .post('/api/v1/auth/esqueci-senha')
+      .send({ email: 'pessoa@tenant.com' })
+      .expect(202);
+    expect(emails.mensagens).toHaveLength(1);
     await request(aplicacao)
       .post('/api/v1/auth/redefinir-senha')
       .send({ token: 'token-desconhecido-com-tamanho-suficiente', novaSenha: 'SenhaNovaSegura123' })

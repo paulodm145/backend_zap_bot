@@ -52,8 +52,16 @@ const ambienteSchema = z
     BRASIL_API_URL: z.url().default('https://brasilapi.com.br/api'),
     BRASIL_API_TIMEOUT_MS: z.coerce.number().int().positive().default(10_000),
     BRASIL_API_TENTATIVAS: z.coerce.number().int().positive().max(5).default(3),
-    EMAIL_PROVEDOR: z.enum(['local', 'resend']).default('local'),
+    EMAIL_PROVEDOR: z.enum(['local', 'smtp', 'resend']).default('local'),
     EMAIL_REMETENTE: z.email().default('nao-responda@localhost.test'),
+    SMTP_HOST: z.string().min(1).default('127.0.0.1'),
+    SMTP_PORTA: z.coerce.number().int().positive().max(65_535).default(1025),
+    SMTP_SEGURO: z
+      .enum(['true', 'false'])
+      .default('false')
+      .transform((valor) => valor === 'true'),
+    SMTP_USUARIO: z.string().min(1).optional(),
+    SMTP_SENHA: z.string().min(1).optional(),
     RESEND_API_KEY: z.string().min(1).optional(),
     FRONTEND_URL: z.url().default('http://localhost:3001'),
     RECUPERACAO_SENHA_EXPIRACAO_MINUTOS: z.coerce.number().int().positive().max(60).default(30),
@@ -92,6 +100,13 @@ const ambienteSchema = z
         code: 'custom',
         path: ['RESEND_API_KEY'],
         message: 'Obrigatório quando EMAIL_PROVEDOR=resend',
+      });
+    }
+    if (Boolean(valor.SMTP_USUARIO) !== Boolean(valor.SMTP_SENHA)) {
+      contexto.addIssue({
+        code: 'custom',
+        path: ['SMTP_USUARIO'],
+        message: 'SMTP_USUARIO e SMTP_SENHA devem ser informados juntos',
       });
     }
   });

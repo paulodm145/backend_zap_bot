@@ -84,8 +84,12 @@ Variáveis disponíveis no scaffold atual:
 | `HTTP_SHUTDOWN_TIMEOUT_MS`                | Limite do encerramento gracioso                  |
 | `SWAGGER_USUARIO`                         | Usuário do Swagger em produção                   |
 | `SWAGGER_SENHA`                           | Senha do Swagger em produção                     |
-| `EMAIL_PROVEDOR`                          | `local` para suprimir ou `resend` para enviar    |
+| `EMAIL_PROVEDOR`                          | `smtp`, `resend` ou `local` para suprimir        |
 | `EMAIL_REMETENTE`                         | Remetente dos e-mails transacionais              |
+| `SMTP_HOST`                               | Host SMTP; MailHog local usa `127.0.0.1`         |
+| `SMTP_PORTA`                              | Porta SMTP; MailHog usa `1025`                   |
+| `SMTP_SEGURO`                             | Ativa TLS implícito no transporte SMTP           |
+| `SMTP_USUARIO` / `SMTP_SENHA`             | Credenciais SMTP opcionais, sempre em conjunto   |
 | `RESEND_API_KEY`                          | Chave obrigatória com provedor Resend            |
 | `FRONTEND_URL`                            | Base dos links enviados ao frontend              |
 | `RECUPERACAO_SENHA_EXPIRACAO_MINUTOS`     | Validade do token de recuperação                 |
@@ -113,6 +117,21 @@ dependências:
 pg_isready -h 127.0.0.1 -p 5432 -U postgres
 redis-cli -u redis://127.0.0.1:6379 ping
 ```
+
+Para usar o MailHog já instalado na máquina, confirme que o SMTP está ouvindo
+na porta `1025` e configure:
+
+```dotenv
+EMAIL_PROVEDOR=smtp
+EMAIL_REMETENTE=nao-responda@localhost.test
+SMTP_HOST=127.0.0.1
+SMTP_PORTA=1025
+SMTP_SEGURO=false
+```
+
+Depois de iniciar a API, abra `http://127.0.0.1:8025` para acompanhar as
+mensagens. O Redis precisa estar ativo porque a requisição apenas cria o job;
+o worker da aplicação faz a entrega SMTP.
 
 Crie os bancos somente quando eles ainda não existirem:
 
@@ -165,6 +184,7 @@ servidor em modo watch, pressione `Ctrl+C`.
 4. Substituir o token no botão **Authorize** do Swagger.
 5. Criar, publicar e simular um fluxo.
 6. Testar refresh/logout com um cliente que preserve cookies.
+7. Solicitar recuperação de senha e conferir o link no MailHog.
 
 O token interno e o token de tenant têm escopos diferentes. Como o Swagger usa
 um único campo Bearer, substitua o valor ao trocar de área. Para autenticação
@@ -203,6 +223,23 @@ GET http://localhost:3000/api/v1/openapi.json
 ```
 
 As duas rotas exigem autenticação Basic em produção.
+
+### Teste manual da recuperação por e-mail
+
+Com Redis, MailHog e API em execução, solicite o e-mail usando um usuário de
+tenant já cadastrado:
+
+```bash
+curl -i -X POST http://localhost:3000/api/v1/auth/esqueci-senha \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"admin@tenant.local"}'
+```
+
+A API responde `202` antes da entrega. Abra `http://127.0.0.1:8025`, selecione
+a mensagem “Recuperação de senha” e use o link enviado. Em falha SMTP, BullMQ
+repete o job até cinco vezes com backoff exponencial; jobs definitivamente
+falhos ficam retidos por no máximo uma hora para diagnóstico, sem registrar o
+token nos logs. Jobs concluídos são removidos imediatamente do Redis.
 
 ## Ambiente local com containers
 

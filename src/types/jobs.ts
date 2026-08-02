@@ -26,3 +26,16 @@ export const jobStatusWhatsappSchema = jobComTenantSchema.extend({
   codigoErro: z.string().optional(),
 });
 export type JobStatusWhatsapp = z.infer<typeof jobStatusWhatsappSchema>;
+
+export const jobEmailSchema = z.discriminatedUnion('tipo', [
+  jobComTenantSchema.extend({
+    tipo: z.literal('RECUPERACAO_SENHA'),
+    destinatario: z.email(),
+    dados: z.object({
+      nome: z.string().min(1),
+      urlRedefinicao: z.url(),
+      expiracaoMinutos: z.number().int().positive(),
+    }),
+  }),
+]);
+export type JobEmail = z.infer<typeof jobEmailSchema>;

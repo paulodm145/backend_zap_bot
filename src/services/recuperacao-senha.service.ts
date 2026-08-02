@@ -5,7 +5,7 @@ import { TokenRecuperacaoInvalidoError } from '../erros/erro-aplicacao.js';
 import { normalizarEmail } from '../helpers/email.helper.js';
 import type { RecuperacaoSenhaRepository } from '../repositories/recuperacao-senha.repository.js';
 import type { UsuarioCentralRepository } from '../repositories/usuario-central.repository.js';
-import type { EnviadorEmail } from './enviador-email.service.js';
+import type { EnfileiradorEmail } from './enfileirador-email.service.js';
 import type { HashSenhaService } from './hash-senha.service.js';
 
 export class RecuperacaoSenhaService {
@@ -13,24 +13,29 @@ export class RecuperacaoSenhaService {
     private readonly usuarios: UsuarioCentralRepository,
     private readonly recuperacoes: RecuperacaoSenhaRepository,
     private readonly senhas: HashSenhaService,
-    private readonly emails: EnviadorEmail,
+    private readonly emails: EnfileiradorEmail,
     private readonly frontendUrl: string,
     private readonly expiracaoMinutos: number,
   ) {}
 
   public async solicitar(entrada: EsqueciSenhaEntrada): Promise<void> {
     const usuario = await this.usuarios.buscarTenantPorEmail(normalizarEmail(entrada.email));
-    if (!usuario) return;
+    if (!usuario?.tenant) return;
     const token = randomBytes(48).toString('base64url');
     await this.recuperacoes.substituir(
       usuario.id,
       this.hash(token),
       new Date(Date.now() + this.expiracaoMinutos * 60_000),
     );
-    await this.emails.enviar({
+    await this.emails.adicionar({
+      tenantId: usuario.tenant.public_id,
+      tipo: 'RECUPERACAO_SENHA',
       destinatario: usuario.email,
-      assunto: 'Recuperação de senha',
-      texto: `Acesse ${this.frontendUrl}/redefinir-senha?token=${encodeURIComponent(token)}`,
+      dados: {
+        nome: usuario.nome,
+        urlRedefinicao: `${this.frontendUrl}/redefinir-senha?token=${encodeURIComponent(token)}`,
+        expiracaoMinutos: this.expiracaoMinutos,
+      },
     });
   }
 

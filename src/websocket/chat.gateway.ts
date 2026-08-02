@@ -2,6 +2,7 @@ import { createAdapter } from '@socket.io/redis-adapter';
 import type { Server as HttpServer } from 'node:http';
 import type { Redis } from 'ioredis';
 import { Server, type Socket } from 'socket.io';
+import { logger } from '../config/logger.js';
 import type { GerenciadorConexoesTenant } from '../database/gerenciador-conexoes-tenant.js';
 import {
   EVENTOS_CHAT,
@@ -26,6 +27,8 @@ export class ChatGateway {
   private readonly publicadores = new Map<NomeEventoChat, (evento: EventoChat) => void>();
   private readonly pub: Redis;
   private readonly sub: Redis;
+  private readonly tarefasRedis = new Set<Promise<void>>();
+  private fechando = false;
 
   public constructor(
     servidor: HttpServer,
@@ -65,8 +68,10 @@ export class ChatGateway {
   }
 
   public async close(): Promise<void> {
+    this.fechando = true;
     for (const [nome, publicador] of this.publicadores) barramentoChat.off(nome, publicador);
     await this.io.close();
+    await Promise.all(this.tarefasRedis);
     await Promise.all([this.pub.quit(), this.sub.quit()]);
   }
 
@@ -121,13 +126,15 @@ export class ChatGateway {
     });
     for (const setor of setores)
       await socket.join(this.roomSetor(identidade.tenantId, setor.public_id));
-    const atualizarPresenca = () => void this.atualizarPresenca(socket, identidade);
+    const atualizarPresenca = () => {
+      this.acompanharRedis(this.atualizarPresenca(socket, identidade), 'atualizar presença');
+    };
     atualizarPresenca();
     const intervalo = setInterval(atualizarPresenca, 30_000);
     intervalo.unref();
     socket.on('disconnect', () => {
       clearInterval(intervalo);
-      void this.registrarDesconexao(identidade, socket.id);
+      this.acompanharRedis(this.registrarDesconexao(identidade, socket.id), 'registrar desconexão');
     });
   }
 
@@ -218,5 +225,16 @@ export class ChatGateway {
   }
   private chavePresenca(identidade: IdentidadeSocket, socketId: string) {
     return `tenant:${identidade.tenantId}:presenca:${identidade.usuarioId}:${socketId}`;
+  }
+
+  private acompanharRedis(tarefa: Promise<void>, operacao: string): void {
+    const acompanhada: Promise<void> = tarefa
+      .catch((erro: unknown) => {
+        if (!this.fechando) logger.warn({ erro, operacao }, 'Falha em tarefa Redis do WebSocket');
+      })
+      .finally(() => {
+        this.tarefasRedis.delete(acompanhada);
+      });
+    this.tarefasRedis.add(acompanhada);
   }
 }

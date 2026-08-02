@@ -52,6 +52,7 @@ Documentos funcionais disponíveis:
 - [Schema JSON dos fluxos](schemas/fluxo-json.md)
 - [Contribuição e checks de qualidade](CONTRIBUICAO.md)
 - [Tarefas dos recursos operacionais](TAREFAS-RECURSOS-OPERACIONAIS.md)
+- [Tarefas de e-mail transacional](TAREFAS-EMAIL-TRANSACIONAL.md)
 
 ## Swagger e Markdown
 

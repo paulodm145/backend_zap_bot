@@ -350,6 +350,21 @@ Se a instrução afetar 0 linhas, outro atendente já assumiu — o painel receb
 - Alertas simples (e-mail ou notificação no painel) quando um tenant ultrapassa X% do limite do plano.
 - Logs de aplicação centralizados (mínimo: arquivos rotacionados via PM2/logrotate no MVP; evoluir para serviço externo tipo Better Stack/Axiom se necessário).
 
+### 10.1 E-mails transacionais
+
+E-mails são efeitos assíncronos. A API persiste primeiro a regra de domínio e
+publica um job tipado na fila BullMQ `emails-transacionais`; não aguarda SMTP
+ou API externa. O job contém `tenantId`, tipo do template, destinatário e
+variáveis validadas com Zod. Um worker renderiza versões texto/HTML e chama o
+provedor configurado (`smtp`, `resend` ou `local`). Falhas usam retry com
+backoff exponencial e não alteram a resposta neutra da recuperação de senha.
+Jobs concluídos são removidos imediatamente; falhas ficam retidas por no
+máximo uma hora, reduzindo a permanência do link sensível no Redis.
+
+MailHog é o provedor SMTP de desenvolvimento. Novos e-mails transacionais
+devem adicionar um tipo discriminado ao contrato do job e um template, sem
+acoplar controllers ou regras de domínio ao transporte escolhido.
+
 ## 11. Estratégia de deploy
 
 - Repositório único (monorepo) com `apps/api`, `apps/worker` (ou pastas dentro do mesmo backend), `apps/frontend` (Next.js na Vercel).

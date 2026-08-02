@@ -725,7 +725,9 @@ function criarRegistro(): OpenAPIRegistry {
       body: { required: true, content: { 'application/json': { schema: esqueciSenhaSchema } } },
     },
     responses: {
-      202: { description: 'Solicitação aceita, exista ou não o e-mail.' },
+      202: {
+        description: 'Solicitação aceita e e-mail enfileirado, exista ou não o endereço.',
+      },
       429: {
         description: 'Limite por IP e identidade excedido.',
         content: { 'application/json': { schema: erroSchema } },

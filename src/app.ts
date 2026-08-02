@@ -55,7 +55,10 @@ import { AutenticacaoService } from './services/autenticacao.service.js';
 import { AdministracaoTenantsService } from './services/administracao-tenants.service.js';
 import { EstadoAutenticacaoInternaService } from './services/estado-autenticacao-interna.service.js';
 import { HashSenhaService } from './services/hash-senha.service.js';
-import { EnviadorEmailLocal, EnviadorEmailResend } from './services/enviador-email.service.js';
+import {
+  EnfileiradorEmailLocal,
+  type EnfileiradorEmail,
+} from './services/enfileirador-email.service.js';
 import { RecuperacaoSenhaService } from './services/recuperacao-senha.service.js';
 import { ProntidaoService } from './services/prontidao.service.js';
 import type { VerificadorDependencia } from './services/prontidao.service.js';
@@ -77,6 +80,7 @@ interface OpcoesAplicacao {
     appSecret: string;
   };
   enfileiradorMensagemSaida?: EnfileiradorMensagemSaida;
+  enfileiradorEmail?: EnfileiradorEmail;
 }
 
 export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
@@ -111,16 +115,12 @@ export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
     ambiente.REFRESH_TOKEN_EXPIRACAO_DIAS,
   );
   const autenticacaoTenantController = new AutenticacaoController(autenticacaoTenant);
-  const enviadorEmail =
-    ambiente.EMAIL_PROVEDOR === 'resend'
-      ? new EnviadorEmailResend(ambiente.RESEND_API_KEY ?? '', ambiente.EMAIL_REMETENTE)
-      : new EnviadorEmailLocal();
   const recuperacaoSenhaController = new RecuperacaoSenhaController(
     new RecuperacaoSenhaService(
       usuariosCentrais,
       new RecuperacaoSenhaRepository(prismaCentral),
       new HashSenhaService(),
-      enviadorEmail,
+      opcoes.enfileiradorEmail ?? new EnfileiradorEmailLocal(),
       ambiente.FRONTEND_URL,
       ambiente.RECUPERACAO_SENHA_EXPIRACAO_MINUTOS,
     ),

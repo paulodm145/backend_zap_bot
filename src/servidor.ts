@@ -2,7 +2,7 @@ import { criarAplicacao } from './app.js';
 import { createServer } from 'node:http';
 import { ambiente } from './config/ambiente.js';
 import { logger } from './config/logger.js';
-import { NOMES_FILAS } from './config/filas.js';
+import { NOMES_FILAS, OPCOES_EMAIL_JOB } from './config/filas.js';
 import { criarConexaoRedis } from './config/redis.js';
 import { WebhookWhatsappController } from './controllers/webhook-whatsapp.controller.js';
 import { desconectarPrismaCentral, obterPrismaCentral } from './database/prisma-central.js';
@@ -23,6 +23,10 @@ import { CriptografiaService } from './services/criptografia.service.js';
 import { ProcessadorMensagemRecebidaService } from './services/processador-mensagem-recebida.service.js';
 import { ProcessadorMensagemSaidaService } from './services/processador-mensagem-saida.service.js';
 import { EnfileiradorMensagemSaidaBullMqService } from './services/enfileirador-mensagem-saida.service.js';
+import { EnfileiradorEmailBullMqService } from './services/enfileirador-email.service.js';
+import { criarEnviadorEmail } from './services/fabrica-enviador-email.service.js';
+import { ProcessadorEmailService } from './services/processador-email.service.js';
+import { TemplateEmailService } from './services/template-email.service.js';
 import { WhatsappGraphApiService } from './services/whatsapp-graph-api.service.js';
 import {
   EnfileiradorStatusWhatsappBullMqService,
@@ -35,6 +39,8 @@ import {
   type JobMensagemSaida,
   jobStatusWhatsappSchema,
   type JobStatusWhatsapp,
+  jobEmailSchema,
+  type JobEmail,
 } from './types/jobs.js';
 import { criarWorker } from './workers/worker.factory.js';
 import { ChatGateway } from './websocket/chat.gateway.js';
@@ -51,6 +57,11 @@ const filaMensagensSaida = recursosMensageria.registrar(
 );
 const filaStatusWhatsapp = recursosMensageria.registrar(
   criarFila<JobStatusWhatsapp>(NOMES_FILAS.statusWhatsapp, redis),
+);
+const filaEmails = recursosMensageria.registrar(
+  criarFila<JobEmail>(NOMES_FILAS.emailsTransacionais, redis, {
+    defaultJobOptions: OPCOES_EMAIL_JOB,
+  }),
 );
 const tenantsRepository = new TenantCentralRepository(prismaCentral);
 const processadorMensagens = new ProcessadorMensagemRecebidaService(
@@ -69,6 +80,19 @@ const processadorStatusWhatsapp = new ProcessadorStatusWhatsappService(
   tenantsRepository,
   new CriptografiaService(ambiente.TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE),
   obterGerenciadorConexoesTenant(),
+);
+const processadorEmail = new ProcessadorEmailService(
+  new TemplateEmailService(),
+  criarEnviadorEmail(ambiente),
+);
+recursosMensageria.registrar(
+  criarWorker(
+    NOMES_FILAS.emailsTransacionais,
+    jobEmailSchema,
+    async (job) => processadorEmail.processar(job.data),
+    redis,
+    { concurrency: 5 },
+  ),
 );
 recursosMensageria.registrar(
   criarWorker(
@@ -118,6 +142,7 @@ const aplicacao = criarAplicacao({
     appSecret: ambiente.WEBHOOK_WHATSAPP_APP_SECRET,
   },
   enfileiradorMensagemSaida: new EnfileiradorMensagemSaidaBullMqService(filaMensagensSaida),
+  enfileiradorEmail: new EnfileiradorEmailBullMqService(filaEmails),
 });
 
 const servidor = createServer(aplicacao);

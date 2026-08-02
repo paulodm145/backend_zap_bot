@@ -2,7 +2,7 @@ import '../configurar-ambiente.js';
 
 import { describe, expect, it } from 'vitest';
 
-import { NOMES_FILAS, OPCOES_PADRAO_JOB } from '../../src/config/filas.js';
+import { NOMES_FILAS, OPCOES_EMAIL_JOB, OPCOES_PADRAO_JOB } from '../../src/config/filas.js';
 import { criarFila } from '../../src/queues/fila.factory.js';
 import type { JobMensagemRecebida } from '../../src/types/jobs.js';
 
@@ -20,6 +20,11 @@ describe('factory de filas', () => {
       removeOnFail: { age: 2_592_000, count: 5_000 },
     });
     expect(OPCOES_PADRAO_JOB.attempts).toBe(5);
+    expect(OPCOES_EMAIL_JOB).toMatchObject({
+      attempts: 5,
+      removeOnComplete: true,
+      removeOnFail: { age: 3_600, count: 1_000 },
+    });
     await fila.close();
   });
 });
