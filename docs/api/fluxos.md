@@ -21,6 +21,7 @@ tenant é resolvido pelo e-mail e pelo `tenantId` do JWT.
 
 | Método   | Rota                               | Finalidade               |
 | -------- | ---------------------------------- | ------------------------ |
+| `GET`    | `/api/v1/fluxos/blocos`            | Configura paleta/editor  |
 | `GET`    | `/api/v1/fluxos`                   | Lista paginada           |
 | `POST`   | `/api/v1/fluxos`                   | Cria rascunho            |
 | `GET`    | `/api/v1/fluxos/:fluxoId`          | Abre editor/detalhe      |
@@ -57,6 +58,11 @@ Paginação segue `{ dados, total, skip, take }`. A tela deve preservar `busca` 
 `estado` ao trocar de página.
 
 ## Editor e salvamento
+
+Antes de montar o editor, consulte `GET /api/v1/fluxos/blocos`. O endpoint
+informa os tipos suportados, campos, validações, conexões e fontes de opções.
+Consulte [Catálogo de blocos](blocos-fluxo.md) para implementar a paleta e os
+formulários sem duplicar o contrato no frontend.
 
 Criação e atualização usam:
 
