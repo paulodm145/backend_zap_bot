@@ -7,15 +7,18 @@ import type {
   ProvisionarTenantEntrada,
 } from '../dtos/tenant-interno.dto.js';
 import { NaoEncontradoError, NaoAutenticadoError } from '../erros/erro-aplicacao.js';
+import { limparCookieRefresh } from '../helpers/cookie-autenticacao.helper.js';
 import type { TenantCentralRepository } from '../repositories/tenant-central.repository.js';
 import type { AdministracaoTenantsService } from '../services/administracao-tenants.service.js';
 import type { ProvisionamentoTenantService } from '../services/provisionamento-tenant.service.js';
+import type { ImpersonacaoTenantService } from '../services/impersonacao-tenant.service.js';
 
 export class TenantsInternosController {
   public constructor(
     private readonly tenants: TenantCentralRepository,
     private readonly administracao: AdministracaoTenantsService,
     private readonly provisionamento: ProvisionamentoTenantService,
+    private readonly impersonacao: ImpersonacaoTenantService,
   ) {}
 
   public listar = async (requisicao: Request, resposta: Response): Promise<void> => {
@@ -58,6 +61,16 @@ export class TenantsInternosController {
     resposta
       .status(202)
       .json(await this.provisionamento.provisionar(requisicao.body as ProvisionarTenantEntrada));
+  };
+
+  public impersonar = async (requisicao: Request, resposta: Response): Promise<void> => {
+    const contexto = this.contexto(requisicao);
+    const resultado = await this.impersonacao.conectar(this.tenantId(requisicao), {
+      operadorPublicId: contexto.autorPublicId,
+      ...(contexto.ip ? { ip: contexto.ip } : {}),
+    });
+    limparCookieRefresh(resposta);
+    resposta.status(200).json(resultado);
   };
 
   private contexto(requisicao: Request): { autorPublicId: string; ip?: string } {

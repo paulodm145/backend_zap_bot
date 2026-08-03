@@ -15,6 +15,10 @@ declare global {
         email: string;
         tenantId: string;
         papel: 'ADMIN_TENANT' | 'GESTOR' | 'ATENDENTE';
+        impersonacao?: {
+          operadorPublicId: string;
+          sessaoPublicId: string;
+        };
       };
       contextoTenant?: {
         id: number;

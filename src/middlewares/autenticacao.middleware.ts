@@ -17,6 +17,7 @@ export function criarAutenticacaoMiddleware(tokens: TokenTenantService): Request
         email: payload.email,
         tenantId: payload.tenantId,
         papel: payload.papel,
+        ...(payload.impersonacao ? { impersonacao: payload.impersonacao } : {}),
       };
       proximo();
     } catch (erro) {

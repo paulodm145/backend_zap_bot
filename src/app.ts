@@ -68,6 +68,7 @@ import { TotpService } from './services/totp.service.js';
 import { CriptografiaService } from './services/criptografia.service.js';
 import { ProvisionadorBancoTenantService } from './services/provisionador-banco-tenant.service.js';
 import { ProvisionamentoTenantService } from './services/provisionamento-tenant.service.js';
+import { ImpersonacaoTenantService } from './services/impersonacao-tenant.service.js';
 import { BrasilApiService } from './services/brasil-api.service.js';
 import { WhatsappGraphApiService } from './services/whatsapp-graph-api.service.js';
 import { RoteamentoWhatsappRepository } from './repositories/roteamento-whatsapp.repository.js';
@@ -140,6 +141,7 @@ export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
         ambiente.POSTGRES_ADMIN_URL ?? 'postgresql://configuracao:ausente@localhost:5432/postgres',
       ),
     ),
+    new ImpersonacaoTenantService(tenantsRepository, tokenTenant),
   );
   const prontidaoController = new ProntidaoController(
     new ProntidaoService(opcoes.verificadoresProntidao ?? []),
