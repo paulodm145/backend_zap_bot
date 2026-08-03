@@ -42,6 +42,15 @@ export class GerenciadorConexoesTenantLru implements GerenciadorConexoesTenant {
     logger.info({ quantidade: clientes.length }, 'Clientes de tenant encerrados');
   }
 
+  public async fechar(tenantId: number): Promise<void> {
+    const abertura = this.aberturas.get(tenantId);
+    if (abertura) await abertura;
+    const cliente = this.clientes.get(tenantId);
+    this.clientes.delete(tenantId);
+    if (cliente) await cliente.$disconnect();
+    logger.info({ tenantId, clienteAtivo: Boolean(cliente) }, 'Cliente de tenant encerrado');
+  }
+
   private async abrir(tenantId: number, stringConexao: string): Promise<PrismaClient> {
     if (this.clientes.size >= this.limite) {
       const tenantMaisAntigo = this.clientes.keys().next().value;

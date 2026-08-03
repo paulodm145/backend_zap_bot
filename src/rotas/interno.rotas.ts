@@ -4,6 +4,7 @@ import type { TenantsInternosController } from '../controllers/tenants-internos.
 import {
   alterarPlanoTenantSchema,
   alterarStatusTenantSchema,
+  excluirTenantDefinitivamenteSchema,
   listarTenantsSchema,
   provisionarTenantSchema,
   tenantPublicIdSchema,
@@ -51,6 +52,12 @@ export function criarRotasInternas(
     '/tenants/:tenantId/impersonar',
     validar(tenantPublicIdSchema, 'params'),
     tratarAsync(tenants.impersonar),
+  );
+  rotas.delete(
+    '/tenants/:tenantId',
+    validar(tenantPublicIdSchema, 'params'),
+    validar(excluirTenantDefinitivamenteSchema),
+    tratarAsync(tenants.excluirDefinitivamente),
   );
 
   return rotas;

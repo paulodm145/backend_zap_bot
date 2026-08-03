@@ -5,6 +5,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 
 import { PrismaClient } from '../generated/prisma-tenant/client.js';
 import { normalizarTextoBusca } from '../helpers/texto.helper.js';
+import { validarNomeBancoTenant } from '../helpers/banco-tenant.helper.js';
 
 export interface ProvisionadorBancoTenant {
   criarSeAusente(nomeBanco: string): Promise<string>;
@@ -15,13 +16,15 @@ export interface ProvisionadorBancoTenant {
   ): Promise<void>;
 }
 
+export interface ExclusorBancoTenant {
+  excluirDefinitivamente(nomeBanco: string): Promise<void>;
+}
+
 export class ProvisionadorBancoTenantService implements ProvisionadorBancoTenant {
   public constructor(private readonly postgresAdminUrl: string) {}
 
   public async criarSeAusente(nomeBanco: string): Promise<string> {
-    if (!/^zapbot_tenant_[a-f0-9]{12}$/.test(nomeBanco)) {
-      throw new Error('Nome de banco do tenant inválido');
-    }
+    validarNomeBancoTenant(nomeBanco);
     const cliente = new Client({ connectionString: this.postgresAdminUrl });
     await cliente.connect();
     try {
@@ -38,6 +41,17 @@ export class ProvisionadorBancoTenantService implements ProvisionadorBancoTenant
     const url = new URL(this.postgresAdminUrl);
     url.pathname = `/${nomeBanco}`;
     return url.toString();
+  }
+
+  public async excluirDefinitivamente(nomeBanco: string): Promise<void> {
+    const nomeValidado = validarNomeBancoTenant(nomeBanco);
+    const cliente = new Client({ connectionString: this.postgresAdminUrl });
+    await cliente.connect();
+    try {
+      await cliente.query(`DROP DATABASE IF EXISTS "${nomeValidado}" WITH (FORCE)`);
+    } finally {
+      await cliente.end();
+    }
   }
 
   public aplicarMigrations(stringConexao: string): Promise<void> {

@@ -120,6 +120,101 @@ export class TenantCentralRepository {
     });
   }
 
+  public async prepararExclusaoDefinitiva(tenantPublicId: string): Promise<boolean> {
+    return this.prisma.$transaction(async (transacao) => {
+      const tenant = await transacao.tenant.findFirst({
+        where: {
+          public_id: tenantPublicId,
+          status: { in: ['SUSPENSO', 'CANCELADO'] },
+          deletado_at: null,
+        },
+        select: { id: true },
+      });
+      if (!tenant) return false;
+      await transacao.tenant.update({
+        where: { id: tenant.id },
+        data: { status: 'CANCELADO' },
+      });
+      await transacao.refreshToken.updateMany({
+        where: { usuario: { tenant_id: tenant.id }, revogado_at: null },
+        data: { revogado_at: new Date(), motivo_revogacao: 'EXCLUSAO_DEFINITIVA_TENANT' },
+      });
+      return true;
+    });
+  }
+
+  public async concluirExclusaoDefinitiva(entrada: {
+    tenantPublicId: string;
+    tenantNome: string;
+    nomeBanco: string;
+    motivo: string;
+    autorPublicId: string;
+    ip?: string;
+  }): Promise<boolean> {
+    return this.prisma.$transaction(async (transacao) => {
+      const tenant = await transacao.tenant.findUnique({
+        where: { public_id: entrada.tenantPublicId },
+        select: { id: true },
+      });
+      if (!tenant) return false;
+      const autor = await transacao.usuario.findFirstOrThrow({
+        where: {
+          public_id: entrada.autorPublicId,
+          papel: 'SUPER_ADMIN',
+          ativo: true,
+          deletado_at: null,
+        },
+        select: { id: true },
+      });
+      await transacao.assinatura.deleteMany({ where: { tenant_id: tenant.id } });
+      await transacao.usuario.deleteMany({ where: { tenant_id: tenant.id } });
+      await transacao.tenant.delete({ where: { id: tenant.id } });
+      await transacao.auditoriaInterna.create({
+        data: {
+          autor_usuario_id: autor.id,
+          acao: 'EXCLUIR_TENANT_DEFINITIVAMENTE',
+          entidade: 'Tenant',
+          entidade_public_id: entrada.tenantPublicId,
+          detalhes: {
+            tenantNome: entrada.tenantNome,
+            nomeBanco: entrada.nomeBanco,
+            motivo: entrada.motivo,
+          },
+          ...(entrada.ip ? { ip: entrada.ip } : {}),
+        },
+      });
+      return true;
+    });
+  }
+
+  public async registrarFalhaExclusaoDefinitiva(entrada: {
+    tenantPublicId: string;
+    motivo: string;
+    autorPublicId: string;
+    erro: string;
+    ip?: string;
+  }): Promise<void> {
+    const autor = await this.prisma.usuario.findFirst({
+      where: {
+        public_id: entrada.autorPublicId,
+        papel: 'SUPER_ADMIN',
+        ativo: true,
+        deletado_at: null,
+      },
+      select: { id: true },
+    });
+    await this.prisma.auditoriaInterna.create({
+      data: {
+        autor_usuario_id: autor?.id ?? null,
+        acao: 'FALHA_EXCLUSAO_DEFINITIVA_TENANT',
+        entidade: 'Tenant',
+        entidade_public_id: entrada.tenantPublicId,
+        detalhes: { motivo: entrada.motivo, erro: entrada.erro.slice(0, 500) },
+        ...(entrada.ip ? { ip: entrada.ip } : {}),
+      },
+    });
+  }
+
   public async listar(entrada: ListarTenantsEntrada) {
     const where: Prisma.TenantWhereInput = {
       deletado_at: null,

@@ -838,6 +838,7 @@ Ambiente separado do painel de cada tenant — acesso restrito à equipe operado
 | POST | `/interno/tenants` | Aciona o `TenantProvisioningService` (criação manual — fase 1) |
 | PATCH | `/interno/tenants/:id/status` | Suspende/reativa um tenant |
 | PATCH | `/interno/tenants/:id/plano` | Altera plano manualmente |
+| DELETE | `/interno/tenants/:id` | Exclui definitivamente o banco físico e registros centrais após reautenticação |
 | GET | `/interno/tenants/:id/uso` | Consumo agregado (IA, mensageria) do tenant, lido de `usage_logs` no banco daquele tenant |
 | GET | `/interno/metricas` | Visão geral: nº de tenants ativos, consumo agregado de infraestrutura |
 
@@ -881,6 +882,34 @@ Restrições obrigatórias:
   de contexto e nunca tenta renovar a sessão impersonada;
 - encerrar a impersonação consiste em descartar o token temporário e retornar
   à sessão interna, sem criar ou revogar credenciais do usuário assumido.
+
+### 18.5 Bloqueio e exclusão definitiva
+
+`SUSPENSO` é o bloqueio reversível: preserva todos os dados e impede resolução
+de conexão para novas requisições. Exclusão definitiva é uma exceção explícita
+à política geral de retenção e somente pode ocorrer para tenant `SUSPENSO` ou
+`CANCELADO`.
+
+O endpoint destrutivo exige JWT interno, senha atual do `SUPER_ADMIN`,
+`confirmar: true`, nome exato do tenant e motivo. A sequência é:
+
+1. reautenticar o operador e validar confirmação;
+2. tornar o tenant `CANCELADO` e revogar suas sessões em transação central;
+3. encerrar o cliente/pool mantido pela aplicação;
+4. validar o nome físico contra o padrão interno e executar
+   `DROP DATABASE ... WITH (FORCE)`;
+5. após o drop, excluir assinaturas, usuários e tenant em transação central;
+6. preservar auditoria com operador, UUID do tenant, nome, banco, motivo, IP e
+   timestamp.
+
+Se o drop falhar, nenhum usuário, assinatura ou tenant é removido do banco
+central; o tenant permanece cancelado e a falha é auditada para permitir nova
+tentativa. A API não aceita nome de banco ou conexão no request.
+
+Até a implementação da rotina futura de backup externo no S3, essa operação
+não possui recuperação. Quando o backup for desenvolvido, ele deverá ser uma
+etapa verificável anterior ao drop, com retenção, criptografia e teste de
+restauração documentados.
 
 ---
 

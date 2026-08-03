@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import type {
   AlterarPlanoTenantEntrada,
   AlterarStatusTenantEntrada,
+  ExcluirTenantDefinitivamenteEntrada,
   ListarTenantsEntrada,
   ProvisionarTenantEntrada,
 } from '../dtos/tenant-interno.dto.js';
@@ -12,6 +13,7 @@ import type { TenantCentralRepository } from '../repositories/tenant-central.rep
 import type { AdministracaoTenantsService } from '../services/administracao-tenants.service.js';
 import type { ProvisionamentoTenantService } from '../services/provisionamento-tenant.service.js';
 import type { ImpersonacaoTenantService } from '../services/impersonacao-tenant.service.js';
+import type { ExclusaoTenantService } from '../services/exclusao-tenant.service.js';
 
 export class TenantsInternosController {
   public constructor(
@@ -19,6 +21,7 @@ export class TenantsInternosController {
     private readonly administracao: AdministracaoTenantsService,
     private readonly provisionamento: ProvisionamentoTenantService,
     private readonly impersonacao: ImpersonacaoTenantService,
+    private readonly exclusao: ExclusaoTenantService,
   ) {}
 
   public listar = async (requisicao: Request, resposta: Response): Promise<void> => {
@@ -71,6 +74,22 @@ export class TenantsInternosController {
     });
     limparCookieRefresh(resposta);
     resposta.status(200).json(resultado);
+  };
+
+  public excluirDefinitivamente = async (
+    requisicao: Request,
+    resposta: Response,
+  ): Promise<void> => {
+    const contexto = this.contexto(requisicao);
+    await this.exclusao.excluirDefinitivamente(
+      this.tenantId(requisicao),
+      requisicao.body as ExcluirTenantDefinitivamenteEntrada,
+      {
+        operadorPublicId: contexto.autorPublicId,
+        ...(contexto.ip ? { ip: contexto.ip } : {}),
+      },
+    );
+    resposta.status(204).send();
   };
 
   private contexto(requisicao: Request): { autorPublicId: string; ip?: string } {
