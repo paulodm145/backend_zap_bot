@@ -54,6 +54,18 @@ Os tipos reais devem ser gerados ou escritos a partir de
 `GET /api/v1/openapi.json`. O exemplo usa `unknown` nos detalhes porque cada
 código de erro pode possuir uma estrutura específica; valide antes de acessar.
 
+Para gerar os tipos da INT-10 com a API em execução:
+
+```bash
+npx openapi-typescript \
+  http://localhost:3000/api/v1/openapi.json \
+  --output src/lib/api/generated.ts
+```
+
+O endereço deve ser obtido pela origem exata configurada em
+`ORIGENS_PERMITIDAS`. Respostas JSON 2xx possuem schema executável no contrato;
+respostas `204` não possuem corpo e não devem ser desserializadas.
+
 ## Login e renovação tenant
 
 Fluxo recomendado:

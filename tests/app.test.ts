@@ -37,6 +37,16 @@ describe('aplicação', () => {
     expect(resposta.body).toMatchObject({ openapi: '3.0.3' });
   });
 
+  it('permite ao frontend configurado obter o contrato OpenAPI', async () => {
+    const resposta = await request(aplicacao)
+      .get('/api/v1/openapi.json')
+      .set('Origin', 'http://localhost:3001');
+
+    expect(resposta.status).toBe(200);
+    expect(resposta.headers['access-control-allow-origin']).toBe('http://localhost:3001');
+    expect(resposta.headers['access-control-allow-credentials']).toBe('true');
+  });
+
   it('expõe o Swagger UI em desenvolvimento e teste', async () => {
     const resposta = await request(aplicacao).get('/api/v1/docs/');
 

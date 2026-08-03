@@ -143,38 +143,46 @@ const webhookRespostaSchema = z
     duplicadas: z.number().int().nonnegative(),
   })
   .openapi('WebhookWhatsappResposta');
-const fluxoResumoSchema = z.object({
-  public_id: z.uuid(),
-  nome: z.string(),
-  versao: z.number().int().nonnegative(),
-  ativo: z.boolean(),
-  possui_alteracoes_nao_publicadas: z.boolean(),
-  publicado_at: z.iso.datetime().nullable(),
-  created_at: z.iso.datetime(),
-  updated_at: z.iso.datetime(),
-});
-const fluxoDetalheSchema = fluxoResumoSchema.extend({
-  definicao: definicaoFluxoSchema,
-  versoes: z.array(
-    z.object({
-      public_id: z.uuid(),
-      versao: z.number().int().positive(),
-      created_at: z.iso.datetime(),
-    }),
-  ),
-});
-const paginaFluxosSchema = z.object({
-  dados: z.array(fluxoResumoSchema),
-  total: z.number().int().nonnegative(),
-  skip: z.number().int().nonnegative(),
-  take: z.number().int().positive(),
-});
-const versaoFluxoSchema = z.object({
-  public_id: z.uuid(),
-  versao: z.number().int().positive(),
-  definicao: definicaoFluxoSchema,
-  created_at: z.iso.datetime(),
-});
+const fluxoResumoSchema = z
+  .object({
+    public_id: z.uuid(),
+    nome: z.string(),
+    versao: z.number().int().nonnegative(),
+    ativo: z.boolean(),
+    possui_alteracoes_nao_publicadas: z.boolean(),
+    publicado_at: z.iso.datetime().nullable(),
+    created_at: z.iso.datetime(),
+    updated_at: z.iso.datetime(),
+  })
+  .openapi('FluxoResumoResposta');
+const fluxoDetalheSchema = fluxoResumoSchema
+  .extend({
+    definicao: definicaoFluxoSchema,
+    versoes: z.array(
+      z.object({
+        public_id: z.uuid(),
+        versao: z.number().int().positive(),
+        created_at: z.iso.datetime(),
+      }),
+    ),
+  })
+  .openapi('FluxoDetalheResposta');
+const paginaFluxosSchema = z
+  .object({
+    dados: z.array(fluxoResumoSchema),
+    total: z.number().int().nonnegative(),
+    skip: z.number().int().nonnegative(),
+    take: z.number().int().positive(),
+  })
+  .openapi('PaginaFluxosResposta');
+const versaoFluxoSchema = z
+  .object({
+    public_id: z.uuid(),
+    versao: z.number().int().positive(),
+    definicao: definicaoFluxoSchema,
+    created_at: z.iso.datetime(),
+  })
+  .openapi('VersaoFluxoResposta');
 const saidaFluxoSchema = z.discriminatedUnion('tipo', [
   z.object({ tipo: z.literal('mensagem'), texto: z.string(), noId: z.string() }),
   z.object({
@@ -328,6 +336,140 @@ const mensagemHistoricoSchema = z.object({
   created_at: z.iso.datetime(),
 });
 
+const atendenteDirecionamentoSchema = z
+  .object({ id: z.number().int().positive(), public_id: z.uuid(), nome: z.string() })
+  .openapi('AtendenteDirecionamentoResposta');
+const setorDirecionamentoSchema = z
+  .object({ id: z.number().int().positive(), public_id: z.uuid(), nome: z.string() })
+  .openapi('SetorDirecionamentoResposta');
+const assumirConversaRespostaSchema = z
+  .object({
+    conversaId: z.uuid(),
+    status: z.literal('COM_ATENDENTE'),
+    atendente: atendenteDirecionamentoSchema,
+  })
+  .openapi('AssumirConversaResposta');
+const reatribuirConversaRespostaSchema = z
+  .object({
+    conversaId: z.uuid(),
+    status: z.enum(['COM_ATENDENTE', 'AGUARDANDO_ATENDENTE']),
+    setor: setorDirecionamentoSchema,
+    atendente: atendenteDirecionamentoSchema.nullable(),
+  })
+  .openapi('ReatribuirConversaResposta');
+const encerrarConversaRespostaSchema = z
+  .object({
+    conversaId: z.uuid(),
+    status: z.enum(['BOT', 'ENCERRADA']),
+    estadoFluxoRestaurado: z.unknown().nullable(),
+  })
+  .openapi('EncerrarConversaResposta');
+const enviarMensagemRespostaSchema = z
+  .object({
+    public_id: z.uuid(),
+    status_entrega: z.enum(['RECEBIDA', 'PENDENTE', 'ENVIADA', 'ENTREGUE', 'LIDA', 'FALHA']),
+    duplicada: z.boolean(),
+  })
+  .openapi('EnviarMensagemAtendimentoResposta');
+const alterarEmailRespostaSchema = z
+  .object({ email: z.email() })
+  .openapi('AlterarEmailPerfilResposta');
+const setoresUsuarioRespostaSchema = z
+  .object({ setores: z.array(setorSchema) })
+  .openapi('SetoresUsuarioResposta');
+const mensagemOperacaoSchema = z
+  .object({ mensagem: z.string() })
+  .openapi('MensagemOperacaoResposta');
+
+const statusTenantSchema = z.enum([
+  'AGUARDANDO_PAGAMENTO',
+  'PROVISIONANDO',
+  'ATIVO',
+  'SUSPENSO',
+  'CANCELADO',
+  'FALHA_PROVISIONAMENTO',
+]);
+const planoInternoSchema = z
+  .object({
+    id: z.number().int().positive(),
+    public_id: z.uuid(),
+    nome: z.string(),
+    limite_conversas_mes: z.number().int().nonnegative(),
+    limite_contas_whatsapp: z.number().int().nonnegative(),
+    preco_centavos: z.number().int().nonnegative(),
+    ativo: z.boolean(),
+    created_at: z.iso.datetime(),
+    updated_at: z.iso.datetime(),
+  })
+  .openapi('PlanoInternoResposta');
+const assinaturaInternaSchema = z
+  .object({
+    id: z.number().int().positive(),
+    tenant_id: z.number().int().positive(),
+    plano_id: z.number().int().positive(),
+    status: z.enum(['AGUARDANDO_PAGAMENTO', 'ATIVA', 'INADIMPLENTE', 'CANCELADA', 'MANUAL']),
+    gateway_assinatura_id: z.string().nullable(),
+    proxima_cobranca: z.iso.datetime().nullable(),
+    cancelada_at: z.iso.datetime().nullable(),
+    created_at: z.iso.datetime(),
+    updated_at: z.iso.datetime(),
+    plano: planoInternoSchema,
+  })
+  .openapi('AssinaturaInternaResposta');
+const tenantInternoSchema = z
+  .object({
+    id: z.number().int().positive(),
+    public_id: z.uuid(),
+    provisionamento_chave: z.uuid().nullable(),
+    nome: z.string(),
+    nome_do_banco: z.string().nullable(),
+    string_conexao_encrypted: z.string().nullable(),
+    status: statusTenantSchema,
+    etapa_provisionamento: z.string().nullable(),
+    erro_provisionamento: z.string().nullable(),
+    deletado_at: z.iso.datetime().nullable(),
+    created_at: z.iso.datetime(),
+    updated_at: z.iso.datetime(),
+  })
+  .openapi('TenantInternoResposta');
+const tenantDetalheInternoSchema = tenantInternoSchema
+  .extend({
+    usuarios: z.array(
+      z.object({
+        public_id: z.uuid(),
+        nome: z.string(),
+        email: z.email(),
+        papel: z.enum(['SUPER_ADMIN', 'ADMIN_TENANT', 'GESTOR', 'ATENDENTE']),
+        ativo: z.boolean(),
+      }),
+    ),
+    assinaturas: z.array(assinaturaInternaSchema),
+  })
+  .openapi('TenantDetalheInternoResposta');
+const paginaTenantsInternosSchema = z
+  .object({
+    dados: z.array(tenantInternoSchema.extend({ assinaturas: z.array(assinaturaInternaSchema) })),
+    total: z.number().int().nonnegative(),
+    skip: z.number().int().nonnegative(),
+    take: z.number().int().positive(),
+  })
+  .openapi('PaginaTenantsInternosResposta');
+const saudeInternaSchema = z
+  .object({
+    status: z.literal('ok'),
+    escopo: z.literal('interno'),
+    usuario: z.object({ id: z.uuid(), email: z.email(), papel: z.literal('SUPER_ADMIN') }),
+  })
+  .openapi('SaudeInternaResposta');
+const documentoOpenApiSchema = z
+  .object({
+    openapi: z.string(),
+    info: z.object({ title: z.string(), version: z.string() }).loose(),
+    paths: z.record(z.string(), z.unknown()),
+  })
+  .loose()
+  .openapi('DocumentoOpenApiResposta');
+
 function criarRegistro(): OpenAPIRegistry {
   const registro = new OpenAPIRegistry();
 
@@ -440,7 +582,10 @@ function criarRegistro(): OpenAPIRegistry {
     security: [{ bearerAuth: [] }],
     request: { params: conversaParametroSchema },
     responses: {
-      200: { description: 'Conversa atribuída ao atendente autenticado.' },
+      200: {
+        description: 'Conversa atribuída ao atendente autenticado.',
+        content: { 'application/json': { schema: assumirConversaRespostaSchema } },
+      },
       403: {
         description: 'Atendente sem vínculo com o setor.',
         content: { 'application/json': { schema: erroSchema } },
@@ -465,7 +610,10 @@ function criarRegistro(): OpenAPIRegistry {
       },
     },
     responses: {
-      200: { description: 'Conversa enviada ao setor ou atendente informado.' },
+      200: {
+        description: 'Conversa enviada ao setor ou atendente informado.',
+        content: { 'application/json': { schema: reatribuirConversaRespostaSchema } },
+      },
       403: {
         description: 'Ação restrita a admin e gestor.',
         content: { 'application/json': { schema: erroSchema } },
@@ -487,7 +635,10 @@ function criarRegistro(): OpenAPIRegistry {
       body: { required: true, content: { 'application/json': { schema: encerrarConversaSchema } } },
     },
     responses: {
-      200: { description: 'Novo estado da conversa.' },
+      200: {
+        description: 'Novo estado da conversa.',
+        content: { 'application/json': { schema: encerrarConversaRespostaSchema } },
+      },
       403: {
         description: 'Atendente não é o responsável.',
         content: { 'application/json': { schema: erroSchema } },
@@ -512,8 +663,14 @@ function criarRegistro(): OpenAPIRegistry {
       },
     },
     responses: {
-      202: { description: 'Mensagem persistida como PENDENTE e enfileirada.' },
-      200: { description: 'A mesma chave idempotente já havia sido persistida.' },
+      202: {
+        description: 'Mensagem persistida como PENDENTE e enfileirada.',
+        content: { 'application/json': { schema: enviarMensagemRespostaSchema } },
+      },
+      200: {
+        description: 'A mesma chave idempotente já havia sido persistida.',
+        content: { 'application/json': { schema: enviarMensagemRespostaSchema } },
+      },
       403: {
         description: 'Usuário não é o atendente responsável.',
         content: { 'application/json': { schema: erroSchema } },
@@ -591,7 +748,10 @@ function criarRegistro(): OpenAPIRegistry {
       },
     },
     responses: {
-      200: { description: 'E-mail sincronizado; novo login necessário.' },
+      200: {
+        description: 'E-mail sincronizado; novo login necessário.',
+        content: { 'application/json': { schema: alterarEmailRespostaSchema } },
+      },
       409: {
         description: 'E-mail já utilizado.',
         content: { 'application/json': { schema: erroSchema } },
@@ -708,7 +868,10 @@ function criarRegistro(): OpenAPIRegistry {
       },
     },
     responses: {
-      200: { description: 'Vínculos substituídos.' },
+      200: {
+        description: 'Vínculos substituídos.',
+        content: { 'application/json': { schema: setoresUsuarioRespostaSchema } },
+      },
       422: {
         description: 'Setor inexistente ou inativo.',
         content: { 'application/json': { schema: erroSchema } },
@@ -727,6 +890,7 @@ function criarRegistro(): OpenAPIRegistry {
     responses: {
       202: {
         description: 'Solicitação aceita e e-mail enfileirado, exista ou não o endereço.',
+        content: { 'application/json': { schema: mensagemOperacaoSchema } },
       },
       429: {
         description: 'Limite por IP e identidade excedido.',
@@ -1310,6 +1474,7 @@ function criarRegistro(): OpenAPIRegistry {
     responses: {
       200: {
         description: 'Sessão interna válida.',
+        content: { 'application/json': { schema: saudeInternaSchema } },
       },
       401: {
         description: 'Token ausente, inválido ou expirado.',
@@ -1330,7 +1495,7 @@ function criarRegistro(): OpenAPIRegistry {
     responses: {
       200: {
         description: 'Página de tenants.',
-        content: { 'application/json': { schema: paginacaoSchema } },
+        content: { 'application/json': { schema: paginaTenantsInternosSchema } },
       },
       401: {
         description: 'Sessão interna ausente ou inválida.',
@@ -1352,7 +1517,10 @@ function criarRegistro(): OpenAPIRegistry {
       },
     },
     responses: {
-      202: { description: 'Provisionamento concluído ou retomado.' },
+      202: {
+        description: 'Provisionamento concluído ou retomado.',
+        content: { 'application/json': { schema: tenantInternoSchema } },
+      },
       401: {
         description: 'Sessão interna ausente ou inválida.',
         content: { 'application/json': { schema: erroSchema } },
@@ -1372,7 +1540,10 @@ function criarRegistro(): OpenAPIRegistry {
     security: [{ bearerAuth: [] }],
     request: { params: tenantPublicIdSchema },
     responses: {
-      200: { description: 'Detalhe, usuários e histórico de assinaturas.' },
+      200: {
+        description: 'Detalhe, usuários e histórico de assinaturas.',
+        content: { 'application/json': { schema: tenantDetalheInternoSchema } },
+      },
       404: {
         description: 'Tenant não encontrado.',
         content: { 'application/json': { schema: erroSchema } },
@@ -1394,7 +1565,10 @@ function criarRegistro(): OpenAPIRegistry {
       },
     },
     responses: {
-      200: { description: 'Status alterado.' },
+      200: {
+        description: 'Status alterado.',
+        content: { 'application/json': { schema: tenantInternoSchema } },
+      },
       422: {
         description: 'Confirmação ausente ou transição inválida.',
         content: { 'application/json': { schema: erroSchema } },
@@ -1416,7 +1590,10 @@ function criarRegistro(): OpenAPIRegistry {
       },
     },
     responses: {
-      200: { description: 'Assinatura manual criada.' },
+      200: {
+        description: 'Assinatura manual criada.',
+        content: { 'application/json': { schema: assinaturaInternaSchema } },
+      },
       422: {
         description: 'Confirmação ausente ou regra inválida.',
         content: { 'application/json': { schema: erroSchema } },
@@ -1456,7 +1633,10 @@ function criarRegistro(): OpenAPIRegistry {
       },
     },
     responses: {
-      201: { description: 'Rascunho criado.' },
+      201: {
+        description: 'Rascunho criado com `public_id` para navegação e edição.',
+        content: { 'application/json': { schema: fluxoDetalheSchema.omit({ versoes: true }) } },
+      },
       422: {
         description: 'Contrato estrutural inválido.',
         content: { 'application/json': { schema: erroSchema } },
@@ -1584,6 +1764,7 @@ function criarRegistro(): OpenAPIRegistry {
     responses: {
       200: {
         description: 'Documento OpenAPI atual.',
+        content: { 'application/json': { schema: documentoOpenApiSchema } },
       },
       401: {
         description: 'Autenticação Basic necessária em produção.',
@@ -1602,6 +1783,7 @@ function criarRegistro(): OpenAPIRegistry {
     responses: {
       200: {
         description: 'Interface HTML da documentação.',
+        content: { 'text/html': { schema: z.string() } },
       },
       401: {
         description: 'Autenticação Basic necessária em produção.',
