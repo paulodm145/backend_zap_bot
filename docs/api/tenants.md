@@ -5,6 +5,30 @@
 Todas as rotas usam `/api/v1/interno/tenants` e exigem JWT interno de
 `super_admin`. Tokens de usuários de tenant não são aceitos.
 
+## Conectar como tenant (impersonação)
+
+Na lista ou no detalhe, o botão **Conectar** chama:
+
+```http
+POST /api/v1/interno/tenants/{tenantId}/impersonar
+Authorization: Bearer <token-interno>
+```
+
+Não envie body. Em sucesso, a resposta contém o `accessToken`, o administrador
+tenant assumido e os metadados `impersonacao` (`operadorId`, `sessaoId` e
+`expiraEmSegundos`).
+
+O frontend deve manter o token interno original separado, guardar o token
+impersonado apenas em memória e abrir o painel do tenant com este último. Exiba
+um banner persistente “Acessando como Empresa X” e uma ação **Sair da conta do
+cliente**, que descarta o token impersonado e retorna ao painel interno.
+
+Não chame `/auth/refresh` durante a impersonação: ela dura no máximo 15 minutos
+e não possui refresh token. Ao receber `401`, descarte a sessão impersonada e
+retorne ao painel interno. O endpoint limpa eventual cookie de refresh tenant
+anterior. Tenant suspenso/inexistente ou sem administrador ativo retorna `404`.
+Cada conexão gera uma auditoria `IMPERSONAR_TENANT`.
+
 ## Tela de listagem
 
 Use `GET /api/v1/interno/tenants`:

@@ -68,6 +68,58 @@ export class TenantCentralRepository {
     });
   }
 
+  public buscarAtivoComAdministrador(publicId: string) {
+    return this.prisma.tenant.findFirst({
+      where: { public_id: publicId, status: 'ATIVO', deletado_at: null },
+      select: {
+        id: true,
+        public_id: true,
+        nome: true,
+        usuarios: {
+          where: { papel: 'ADMIN_TENANT', ativo: true, deletado_at: null },
+          orderBy: { created_at: 'asc' },
+          take: 1,
+          select: { public_id: true, nome: true, email: true, papel: true },
+        },
+      },
+    });
+  }
+
+  public async registrarImpersonacao(entrada: {
+    tenantPublicId: string;
+    usuarioAssumidoPublicId: string;
+    sessaoPublicId: string;
+    autorPublicId: string;
+    ip?: string;
+  }): Promise<boolean> {
+    return this.prisma.$transaction(async (transacao) => {
+      const autor = await transacao.usuario.findFirst({
+        where: {
+          public_id: entrada.autorPublicId,
+          papel: 'SUPER_ADMIN',
+          ativo: true,
+          deletado_at: null,
+        },
+        select: { id: true },
+      });
+      if (!autor) return false;
+      await transacao.auditoriaInterna.create({
+        data: {
+          autor_usuario_id: autor.id,
+          acao: 'IMPERSONAR_TENANT',
+          entidade: 'Tenant',
+          entidade_public_id: entrada.tenantPublicId,
+          detalhes: {
+            usuarioAssumidoPublicId: entrada.usuarioAssumidoPublicId,
+            sessaoPublicId: entrada.sessaoPublicId,
+          },
+          ...(entrada.ip ? { ip: entrada.ip } : {}),
+        },
+      });
+      return true;
+    });
+  }
+
   public async listar(entrada: ListarTenantsEntrada) {
     const where: Prisma.TenantWhereInput = {
       deletado_at: null,

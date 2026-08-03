@@ -69,6 +69,7 @@ dependem do cookie HttpOnly. Uma implementação sugerida do cliente HTTP está 
 | GET    | `/api/v1/interno/tenants/{tenantId}`             | JWT interno                       | Detalhar tenant                           |
 | PATCH  | `/api/v1/interno/tenants/{tenantId}/status`      | JWT interno                       | Suspender, reativar ou cancelar           |
 | PATCH  | `/api/v1/interno/tenants/{tenantId}/plano`       | JWT interno                       | Alterar plano manualmente                 |
+| POST   | `/api/v1/interno/tenants/{tenantId}/impersonar`  | JWT interno                       | Acessar tenant temporariamente e auditar  |
 | GET    | `/api/v1/fluxos`                                 | JWT tenant                        | Listar fluxos                             |
 | POST   | `/api/v1/fluxos`                                 | JWT tenant                        | Criar rascunho                            |
 | GET    | `/api/v1/fluxos/{fluxoId}`                       | JWT tenant                        | Abrir editor                              |
@@ -215,6 +216,13 @@ invalide lista e detalhe. Não ofereça reativação para tenant cancelado.
 Exija confirmação, motivo e `planoId`. Depois de `200`, refaça o detalhe para
 obter a nova assinatura. Regras e exemplos completos:
 [Administração de tenants](tenants.md).
+
+### `POST /api/v1/interno/tenants/{tenantId}/impersonar`
+
+Botão **Conectar** do painel interno. Não recebe body. Retorna access token
+tenant temporário, usuário administrador assumido e metadados de auditoria.
+Não emite refresh token. Consulte [Tenants](tenants.md) para troca segura de
+contexto, banner obrigatório e encerramento da sessão impersonada.
 
 ## Fluxos
 

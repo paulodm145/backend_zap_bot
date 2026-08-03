@@ -859,6 +859,29 @@ Implementação via TOTP (`speakeasy` ou `otpauth`), compatível com Google Auth
 - `central_db.users` ganha os campos `totp_secret_criptografado` e `totp_habilitado` (apenas relevantes para usuários com papel `super_admin`).
 - JWT do painel interno é emitido com escopo próprio (claim `papel: 'super_admin'`), verificado por um middleware dedicado (`autenticacaoInterna.middleware.ts`), nunca aceito nas rotas do tenant e vice-versa.
 
+### 18.4 Impersonação administrativa de tenant
+
+O `super_admin` pode abrir temporariamente o painel de um tenant ativo por
+`POST /interno/tenants/:tenantId/impersonar`. O backend resolve o tenant pelo
+`public_id` no banco central, seleciona seu primeiro `ADMIN_TENANT` ativo e
+emite um access token tenant; nome de banco e string de conexão nunca são
+aceitos do cliente.
+
+Restrições obrigatórias:
+
+- exige JWT interno válido e operador `SUPER_ADMIN` ainda ativo;
+- aceita somente tenant `ATIVO` com administrador tenant ativo;
+- access token expira em no máximo 15 minutos e não possui refresh token;
+- token carrega `impersonacao.operadorPublicId` e
+  `impersonacao.sessaoPublicId`, além das claims normais do tenant;
+- cada emissão registra `IMPERSONAR_TENANT` em `auditoria_interna`, com
+  operador, tenant, usuário assumido, sessão, IP e timestamp;
+- o endpoint limpa eventual cookie de refresh tenant anterior;
+- o frontend mantém os tokens interno e impersonado separados, mostra banner
+  de contexto e nunca tenta renovar a sessão impersonada;
+- encerrar a impersonação consiste em descartar o token temporário e retornar
+  à sessão interna, sem criar ou revogar credenciais do usuário assumido.
+
 ---
 
 **Próximo passo sugerido:** iniciar o schema Prisma (baseado nas seções 6, 7 e 17) e o esqueleto do `FlowEngineService`, já validando o schema de fluxo apresentado na seção 15.

@@ -47,6 +47,11 @@ export function criarRotasInternas(
     validar(alterarPlanoTenantSchema),
     tratarAsync(tenants.alterarPlano),
   );
+  rotas.post(
+    '/tenants/:tenantId/impersonar',
+    validar(tenantPublicIdSchema, 'params'),
+    tratarAsync(tenants.impersonar),
+  );
 
   return rotas;
 }

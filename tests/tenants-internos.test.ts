@@ -9,6 +9,7 @@ import { criarAplicacao } from '../src/app.js';
 import { PrismaClient } from '../src/generated/prisma/client.js';
 import { HashSenhaService } from '../src/services/hash-senha.service.js';
 import { TokenInternoService } from '../src/services/token-interno.service.js';
+import { TokenTenantService } from '../src/services/token-tenant.service.js';
 import { TenantCentralRepository } from '../src/repositories/tenant-central.repository.js';
 import { CriptografiaService } from '../src/services/criptografia.service.js';
 import { ProvisionamentoTenantService } from '../src/services/provisionamento-tenant.service.js';
@@ -121,6 +122,80 @@ descreverIntegracao('administração interna de tenants', () => {
       .get('/api/v1/interno/tenants/3ae6b7a8-22bf-46eb-a9ae-e722229602ee')
       .set('Authorization', `Bearer ${token}`);
     expect(resposta.status).toBe(404);
+  });
+
+  it('emite acesso tenant temporário, limpa refresh anterior e registra auditoria', async () => {
+    const tenant = await prisma.tenant.create({
+      data: {
+        nome: 'Admin Teste Impersonação',
+        status: 'ATIVO',
+        usuarios: {
+          create: {
+            nome: 'Admin Tenant Impersonado',
+            email: 'admin-impersonado@tenant.test',
+            senha_hash: await new HashSenhaService().gerar('senha-tenant-segura'),
+            papel: 'ADMIN_TENANT',
+          },
+        },
+      },
+      include: { usuarios: true },
+    });
+
+    const resposta = await request(aplicacao)
+      .post(`/api/v1/interno/tenants/${tenant.public_id}/impersonar`)
+      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', 'refreshToken=sessao-tenant-anterior');
+
+    expect(resposta.status, JSON.stringify(resposta.body as unknown)).toBe(200);
+    expect(resposta.headers['set-cookie']?.[0]).toContain('refreshToken=;');
+    expect(resposta.body as unknown).toMatchObject({
+      usuario: {
+        id: tenant.usuarios[0]?.public_id,
+        tenantId: tenant.public_id,
+        papel: 'ADMIN_TENANT',
+      },
+      impersonacao: { ativa: true, operadorId: adminPublicId, expiraEmSegundos: 900 },
+    });
+    const accessToken = z.object({ accessToken: z.string() }).parse(resposta.body).accessToken;
+    const payload = new TokenTenantService(process.env.JWT_TENANT_SECRET ?? '', 900).verificar(
+      accessToken,
+    );
+    expect(payload).toMatchObject({
+      sub: tenant.usuarios[0]?.public_id,
+      tenantId: tenant.public_id,
+      papel: 'ADMIN_TENANT',
+      impersonacao: { operadorPublicId: adminPublicId },
+    });
+    expect(
+      await prisma.auditoriaInterna.count({
+        where: {
+          acao: 'IMPERSONAR_TENANT',
+          entidade_public_id: tenant.public_id,
+          autor: { public_id: adminPublicId },
+        },
+      }),
+    ).toBe(1);
+  });
+
+  it('não permite impersonar tenant suspenso ou sem administrador ativo', async () => {
+    const suspenso = await prisma.tenant.create({
+      data: { nome: 'Admin Teste Impersonação Suspenso', status: 'SUSPENSO' },
+    });
+    const semAdministrador = await prisma.tenant.create({
+      data: { nome: 'Admin Teste Impersonação Sem Admin', status: 'ATIVO' },
+    });
+
+    const [respostaSuspenso, respostaSemAdministrador] = await Promise.all([
+      request(aplicacao)
+        .post(`/api/v1/interno/tenants/${suspenso.public_id}/impersonar`)
+        .set('Authorization', `Bearer ${token}`),
+      request(aplicacao)
+        .post(`/api/v1/interno/tenants/${semAdministrador.public_id}/impersonar`)
+        .set('Authorization', `Bearer ${token}`),
+    ]);
+
+    expect(respostaSuspenso.status).toBe(404);
+    expect(respostaSemAdministrador.status).toBe(404);
   });
 
   it('altera status com confirmação e registra auditoria', async () => {

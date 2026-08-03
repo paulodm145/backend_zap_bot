@@ -461,6 +461,24 @@ const saudeInternaSchema = z
     usuario: z.object({ id: z.uuid(), email: z.email(), papel: z.literal('SUPER_ADMIN') }),
   })
   .openapi('SaudeInternaResposta');
+const impersonacaoTenantRespostaSchema = z
+  .object({
+    accessToken: z.string(),
+    usuario: z.object({
+      id: z.uuid(),
+      nome: z.string(),
+      email: z.email(),
+      tenantId: z.uuid(),
+      papel: z.literal('ADMIN_TENANT'),
+    }),
+    impersonacao: z.object({
+      ativa: z.literal(true),
+      operadorId: z.uuid(),
+      sessaoId: z.uuid(),
+      expiraEmSegundos: z.number().int().positive().max(900),
+    }),
+  })
+  .openapi('ImpersonacaoTenantResposta');
 const documentoOpenApiSchema = z
   .object({
     openapi: z.string(),
@@ -1596,6 +1614,31 @@ function criarRegistro(): OpenAPIRegistry {
       },
       422: {
         description: 'Confirmação ausente ou regra inválida.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+
+  registro.registerPath({
+    method: 'post',
+    path: '/api/v1/interno/tenants/{tenantId}/impersonar',
+    tags: ['Admin interno - Tenants'],
+    summary: 'Emite acesso temporário e auditado ao painel do tenant',
+    description:
+      'Seleciona o primeiro administrador ativo do tenant. Não cria refresh token e limpa eventual cookie de sessão tenant anterior.',
+    security: [{ bearerAuth: [] }],
+    request: { params: tenantPublicIdSchema },
+    responses: {
+      200: {
+        description: 'Sessão impersonada temporária. O frontend não deve tentar renová-la.',
+        content: { 'application/json': { schema: impersonacaoTenantRespostaSchema } },
+      },
+      403: {
+        description: 'Operador interno não está mais ativo.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+      404: {
+        description: 'Tenant ativo ou administrador ativo não encontrado.',
         content: { 'application/json': { schema: erroSchema } },
       },
     },
