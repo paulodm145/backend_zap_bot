@@ -2,6 +2,7 @@ import { OpenAPIRegistry, OpenApiGeneratorV3 } from '@asteasolutions/zod-to-open
 
 import {
   atualizarFluxoSchema,
+  catalogoBlocosFluxoSchema,
   criarFluxoSchema,
   definicaoFluxoSchema,
   estadoConversaFluxoSchema,
@@ -1676,6 +1677,24 @@ function criarRegistro(): OpenAPIRegistry {
       },
       422: {
         description: 'Confirmação inválida ou nome do tenant divergente.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+
+  registro.registerPath({
+    method: 'get',
+    path: '/api/v1/fluxos/blocos',
+    tags: ['Fluxos'],
+    summary: 'Fornece configurações dos blocos suportados pelo editor',
+    security: [{ bearerAuth: [] }],
+    responses: {
+      200: {
+        description: 'Catálogo compatível com a versão atual do schema e do motor.',
+        content: { 'application/json': { schema: catalogoBlocosFluxoSchema } },
+      },
+      401: {
+        description: 'Access token ausente ou inválido.',
         content: { 'application/json': { schema: erroSchema } },
       },
     },

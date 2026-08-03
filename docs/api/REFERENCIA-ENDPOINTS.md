@@ -72,6 +72,7 @@ dependem do cookie HttpOnly. Uma implementação sugerida do cliente HTTP está 
 | POST   | `/api/v1/interno/tenants/{tenantId}/impersonar`  | JWT interno                       | Acessar tenant temporariamente e auditar  |
 | DELETE | `/api/v1/interno/tenants/{tenantId}`             | JWT interno + senha               | Excluir tenant e banco definitivamente    |
 | GET    | `/api/v1/fluxos`                                 | JWT tenant                        | Listar fluxos                             |
+| GET    | `/api/v1/fluxos/blocos`                          | JWT tenant                        | Configurar paleta e formulários do editor |
 | POST   | `/api/v1/fluxos`                                 | JWT tenant                        | Criar rascunho                            |
 | GET    | `/api/v1/fluxos/{fluxoId}`                       | JWT tenant                        | Abrir editor                              |
 | PUT    | `/api/v1/fluxos/{fluxoId}`                       | JWT tenant                        | Salvar rascunho                           |
@@ -233,6 +234,12 @@ Em sucesso retorna `204` sem corpo. Consulte [Tenants](tenants.md) para o modal,
 tratamento de falhas e consequências da remoção.
 
 ## Fluxos
+
+### `GET /api/v1/fluxos/blocos`
+
+Consulte antes de montar o editor. A resposta define a paleta disponível,
+campos, validações, handles, valores iniciais e fontes de opções. Não mantenha
+tipos de bloco paralelos no frontend. Guia completo: [Catálogo de blocos](blocos-fluxo.md).
 
 ### `GET /api/v1/fluxos`
 

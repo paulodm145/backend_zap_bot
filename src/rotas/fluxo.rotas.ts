@@ -14,6 +14,7 @@ import { validar } from '../middlewares/validar.middleware.js';
 export function criarRotasFluxos(controller: FluxoController): Router {
   const rotas = Router();
 
+  rotas.get('/blocos', controller.catalogoBlocos);
   rotas.get('/', validar(listarFluxosSchema, 'query'), tratarAsync(controller.listar));
   rotas.post('/', validar(criarFluxoSchema), tratarAsync(controller.criar));
   rotas.get('/:fluxoId', validar(fluxoPublicIdSchema, 'params'), tratarAsync(controller.detalhar));

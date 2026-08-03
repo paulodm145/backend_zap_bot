@@ -92,6 +92,114 @@ export const noFluxoSchema = z
   ])
   .openapi('NoFluxo');
 
+const validacaoCampoBlocoSchema = z
+  .object({
+    minimoCaracteres: z.number().int().nonnegative().optional(),
+    maximoCaracteres: z.number().int().positive().optional(),
+    minimoItens: z.number().int().nonnegative().optional(),
+    maximoItens: z.number().int().positive().optional(),
+    padrao: z.string().optional(),
+  })
+  .strict();
+
+const fonteOpcoesCampoSchema = z
+  .discriminatedUnion('tipo', [
+    z.object({ tipo: z.literal('nos_fluxo') }).strict(),
+    z.object({ tipo: z.literal('variaveis_fluxo') }).strict(),
+    z
+      .object({
+        tipo: z.literal('endpoint'),
+        metodo: z.literal('GET'),
+        caminho: z.string(),
+        campoValor: z.string(),
+        campoRotulo: z.string(),
+        query: z.record(z.string(), z.string()).optional(),
+      })
+      .strict(),
+  ])
+  .openapi('FonteOpcoesCampoBlocoFluxo');
+
+const campoBlocoFluxoSchema = z
+  .object({
+    caminho: z.string(),
+    rotulo: z.string(),
+    descricao: z.string(),
+    tipo: z.enum([
+      'texto_curto',
+      'texto_longo',
+      'variavel',
+      'lista_condicoes',
+      'referencia_no',
+      'seletor_setor',
+    ]),
+    obrigatorio: z.boolean(),
+    valorInicial: z.unknown().optional(),
+    validacao: validacaoCampoBlocoSchema.optional(),
+    fonteOpcoes: fonteOpcoesCampoSchema.optional(),
+    serializacao: z.string().optional(),
+  })
+  .strict()
+  .openapi('CampoBlocoFluxo');
+
+const saidaBlocoFluxoSchema = z
+  .object({
+    chave: z.string(),
+    rotulo: z.string(),
+    tipo: z.enum(['unica', 'dinamica']),
+    obrigatoria: z.boolean(),
+    quantidadeMaxima: z.number().int().positive().nullable(),
+  })
+  .strict();
+
+export const blocoCatalogoFluxoSchema = z
+  .object({
+    tipo: tipoNoFluxoSchema,
+    nome: z.string(),
+    descricao: z.string(),
+    categoria: z.enum(['comunicacao', 'entrada', 'logica', 'atendimento']),
+    icone: z.string(),
+    comportamento: z
+      .object({
+        pausaExecucao: z.boolean(),
+        produzSaida: z.boolean(),
+        podeFinalizarFluxo: z.boolean(),
+      })
+      .strict(),
+    campos: z.array(campoBlocoFluxoSchema),
+    conexoes: z
+      .object({
+        aceitaEntrada: z.boolean(),
+        saidas: z.array(saidaBlocoFluxoSchema),
+      })
+      .strict(),
+    configuracaoInicial: z.record(z.string(), z.unknown()),
+    exemplo: noFluxoSchema,
+  })
+  .strict()
+  .openapi('BlocoCatalogoFluxo');
+
+export const catalogoBlocosFluxoSchema = z
+  .object({
+    schemaVersao: z.literal(1),
+    restricoesGrafo: z
+      .object({
+        maximoBlocos: z.literal(500),
+        ciclosPermitidos: z.literal(false),
+        padraoIdentificador: z.string(),
+      })
+      .strict(),
+    linguagemCondicao: z
+      .object({
+        operadores: z.tuple([z.literal('=='), z.literal('!=')]),
+        formato: z.string(),
+        exemplo: z.string(),
+      })
+      .strict(),
+    blocos: z.array(blocoCatalogoFluxoSchema).length(TIPOS_NO_FLUXO.length),
+  })
+  .strict()
+  .openapi('CatalogoBlocosFluxoResposta');
+
 export const definicaoFluxoSchema = z
   .object({
     schemaVersao: z.literal(1),
@@ -155,3 +263,4 @@ export type AtualizarFluxoEntrada = z.infer<typeof atualizarFluxoSchema>;
 export type ListarFluxosEntrada = z.infer<typeof listarFluxosSchema>;
 export type EstadoConversaFluxo = z.infer<typeof estadoConversaFluxoSchema>;
 export type SimularFluxoEntrada = z.infer<typeof simularFluxoSchema>;
+export type CatalogoBlocosFluxo = z.infer<typeof catalogoBlocosFluxoSchema>;

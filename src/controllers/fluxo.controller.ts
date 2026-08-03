@@ -12,10 +12,15 @@ import type { PrismaClient } from '../generated/prisma-tenant/client.js';
 import { FluxoRepository } from '../repositories/fluxo.repository.js';
 import { SetorRepository } from '../repositories/setor.repository.js';
 import { MotorFluxoService } from '../services/motor-fluxo.service.js';
+import { CatalogoBlocosFluxoService } from '../services/catalogo-blocos-fluxo.service.js';
 import { PublicacaoFluxoService } from '../services/publicacao-fluxo.service.js';
 import { ValidacaoGrafoFluxoService } from '../services/validacao-grafo-fluxo.service.js';
 
 export class FluxoController {
+  public catalogoBlocos = (_requisicao: Request, resposta: Response): void => {
+    resposta.status(200).json(new CatalogoBlocosFluxoService().consultar());
+  };
+
   public listar = async (requisicao: Request, resposta: Response): Promise<void> => {
     const repository = this.repository(requisicao);
     resposta
