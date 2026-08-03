@@ -70,6 +70,7 @@ dependem do cookie HttpOnly. Uma implementação sugerida do cliente HTTP está 
 | PATCH  | `/api/v1/interno/tenants/{tenantId}/status`      | JWT interno                       | Suspender, reativar ou cancelar           |
 | PATCH  | `/api/v1/interno/tenants/{tenantId}/plano`       | JWT interno                       | Alterar plano manualmente                 |
 | POST   | `/api/v1/interno/tenants/{tenantId}/impersonar`  | JWT interno                       | Acessar tenant temporariamente e auditar  |
+| DELETE | `/api/v1/interno/tenants/{tenantId}`             | JWT interno + senha               | Excluir tenant e banco definitivamente    |
 | GET    | `/api/v1/fluxos`                                 | JWT tenant                        | Listar fluxos                             |
 | POST   | `/api/v1/fluxos`                                 | JWT tenant                        | Criar rascunho                            |
 | GET    | `/api/v1/fluxos/{fluxoId}`                       | JWT tenant                        | Abrir editor                              |
@@ -223,6 +224,13 @@ Botão **Conectar** do painel interno. Não recebe body. Retorna access token
 tenant temporário, usuário administrador assumido e metadados de auditoria.
 Não emite refresh token. Consulte [Tenants](tenants.md) para troca segura de
 contexto, banner obrigatório e encerramento da sessão impersonada.
+
+### `DELETE /api/v1/interno/tenants/{tenantId}`
+
+Operação irreversível para tenant previamente suspenso ou cancelado. Exige
+senha atual do superadministrador, confirmação literal, nome exato e motivo.
+Em sucesso retorna `204` sem corpo. Consulte [Tenants](tenants.md) para o modal,
+tratamento de falhas e consequências da remoção.
 
 ## Fluxos
 

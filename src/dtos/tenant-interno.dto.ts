@@ -47,6 +47,20 @@ export type ListarTenantsEntrada = z.infer<typeof listarTenantsSchema>;
 export type AlterarStatusTenantEntrada = z.infer<typeof alterarStatusTenantSchema>;
 export type AlterarPlanoTenantEntrada = z.infer<typeof alterarPlanoTenantSchema>;
 
+export const excluirTenantDefinitivamenteSchema = z
+  .object({
+    senha: z.string().min(8).max(128),
+    confirmar: z.literal(true),
+    nomeTenant: z.string().trim().min(2).max(150),
+    motivo: z.string().trim().min(10).max(500),
+  })
+  .strict()
+  .openapi('ExcluirTenantDefinitivamenteEntrada');
+
+export type ExcluirTenantDefinitivamenteEntrada = z.infer<
+  typeof excluirTenantDefinitivamenteSchema
+>;
+
 export const provisionarTenantSchema = z
   .object({
     chaveIdempotencia: z.uuid(),

@@ -55,6 +55,7 @@ import {
 import {
   alterarPlanoTenantSchema,
   alterarStatusTenantSchema,
+  excluirTenantDefinitivamenteSchema,
   listarTenantsSchema,
   provisionarTenantSchema,
   tenantPublicIdSchema,
@@ -1639,6 +1640,42 @@ function criarRegistro(): OpenAPIRegistry {
       },
       404: {
         description: 'Tenant ativo ou administrador ativo não encontrado.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+
+  registro.registerPath({
+    method: 'delete',
+    path: '/api/v1/interno/tenants/{tenantId}',
+    tags: ['Admin interno - Tenants'],
+    summary: 'Exclui definitivamente o tenant e seu banco físico',
+    description:
+      'Operação irreversível. Exige reautenticação do super administrador e tenant previamente suspenso ou cancelado.',
+    security: [{ bearerAuth: [] }],
+    request: {
+      params: tenantPublicIdSchema,
+      body: {
+        required: true,
+        content: { 'application/json': { schema: excluirTenantDefinitivamenteSchema } },
+      },
+    },
+    responses: {
+      204: { description: 'Banco físico e registros centrais removidos definitivamente.' },
+      401: {
+        description: 'Sessão interna ou senha de reautenticação inválida.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+      404: {
+        description: 'Tenant não encontrado.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+      409: {
+        description: 'Tenant não está suspenso/cancelado ou não possui banco registrado.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+      422: {
+        description: 'Confirmação inválida ou nome do tenant divergente.',
         content: { 'application/json': { schema: erroSchema } },
       },
     },

@@ -80,6 +80,40 @@ A tela deve exigir confirmação e motivo. Transições:
 
 Tenant cancelado não pode ser reativado. Toda alteração gera auditoria.
 
+Para bloquear temporariamente sem apagar dados, use `SUSPENSO`. A resolução de
+conexão recusa imediatamente novos acessos do tenant, e a reativação continua
+disponível pelo mesmo endpoint com status `ATIVO`.
+
+## Exclusão definitiva
+
+`DELETE /api/v1/interno/tenants/{tenantId}` elimina banco físico, usuários,
+sessões, assinaturas, configurações, conversas e mensagens. Nesta etapa ainda
+não existe backup automático em S3; portanto não há recuperação.
+
+O botão **Excluir definitivamente** deve ficar disponível somente quando o
+tenant estiver `SUSPENSO` ou `CANCELADO`. Use um modal separado da alteração de
+status, sem confirmação genérica. Solicite senha atual do operador, motivo e
+digitação do nome exato exibido no detalhe:
+
+```json
+{
+  "senha": "senha-atual-do-super-admin",
+  "confirmar": true,
+  "nomeTenant": "Empresa Exemplo",
+  "motivo": "Encerramento definitivo solicitado pelo responsável"
+}
+```
+
+Em `204`, remova o tenant do cache e retorne à lista. Não tente ler JSON. Em
+`401`, mantenha o modal aberto, limpe somente a senha e informe falha de
+reautenticação. Em `409`, refaça o detalhe porque o tenant não está bloqueado
+ou não possui banco provisionado. Em `422`, destaque a confirmação/nome.
+
+Durante a requisição, bloqueie fechamento do modal e repetição do botão. Se o
+drop do banco falhar, o backend mantém os registros centrais, deixa o tenant
+`CANCELADO` e registra a falha para retry. A auditoria final é preservada fora
+do registro removido.
+
 ## Alteração manual de plano
 
 `PATCH /api/v1/interno/tenants/{tenantId}/plano`:

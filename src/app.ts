@@ -67,8 +67,11 @@ import { TokenTenantService } from './services/token-tenant.service.js';
 import { TotpService } from './services/totp.service.js';
 import { CriptografiaService } from './services/criptografia.service.js';
 import { ProvisionadorBancoTenantService } from './services/provisionador-banco-tenant.service.js';
+import type { ExclusorBancoTenant } from './services/provisionador-banco-tenant.service.js';
 import { ProvisionamentoTenantService } from './services/provisionamento-tenant.service.js';
 import { ImpersonacaoTenantService } from './services/impersonacao-tenant.service.js';
+import { ExclusaoTenantService } from './services/exclusao-tenant.service.js';
+import type { EncerradorConexaoTenant } from './services/exclusao-tenant.service.js';
 import { BrasilApiService } from './services/brasil-api.service.js';
 import { WhatsappGraphApiService } from './services/whatsapp-graph-api.service.js';
 import { RoteamentoWhatsappRepository } from './repositories/roteamento-whatsapp.repository.js';
@@ -82,6 +85,8 @@ interface OpcoesAplicacao {
   };
   enfileiradorMensagemSaida?: EnfileiradorMensagemSaida;
   enfileiradorEmail?: EnfileiradorEmail;
+  exclusorBancoTenant?: ExclusorBancoTenant;
+  encerradorConexaoTenant?: EncerradorConexaoTenant;
 }
 
 export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
@@ -130,6 +135,10 @@ export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
   const criptografiaConexaoTenant = new CriptografiaService(
     ambiente.TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE,
   );
+  const conexoesTenant = obterGerenciadorConexoesTenant();
+  const provisionadorBancoTenant = new ProvisionadorBancoTenantService(
+    ambiente.POSTGRES_ADMIN_URL ?? 'postgresql://configuracao:ausente@localhost:5432/postgres',
+  );
   const tenantsController = new TenantsInternosController(
     tenantsRepository,
     new AdministracaoTenantsService(tenantsRepository),
@@ -137,11 +146,16 @@ export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
       tenantsRepository,
       new HashSenhaService(),
       new CriptografiaService(ambiente.TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE),
-      new ProvisionadorBancoTenantService(
-        ambiente.POSTGRES_ADMIN_URL ?? 'postgresql://configuracao:ausente@localhost:5432/postgres',
-      ),
+      provisionadorBancoTenant,
     ),
     new ImpersonacaoTenantService(tenantsRepository, tokenTenant),
+    new ExclusaoTenantService(
+      tenantsRepository,
+      usuariosCentrais,
+      new HashSenhaService(),
+      opcoes.encerradorConexaoTenant ?? conexoesTenant,
+      opcoes.exclusorBancoTenant ?? provisionadorBancoTenant,
+    ),
   );
   const prontidaoController = new ProntidaoController(
     new ProntidaoService(opcoes.verificadoresProntidao ?? []),
