@@ -61,8 +61,28 @@ Permitir que um usuário sem conhecimento técnico monte, em minutos, um fluxo d
 - Processa mensagens recebidas de forma assíncrona via fila (BullMQ), desacoplando o webhook do processamento.
 
 ### 5.3 Integração com WhatsApp
-- Conexão via **WhatsApp Cloud API oficial** (não Tech Provider no MVP — onboarding manual por cliente).
-- Recebimento e envio de mensagens (texto, mídia, template).
+
+> **Decisão (fase de estudo):** a conexão com o WhatsApp passa a ser feita via
+> **Evolution API** (servidor próprio, self-hosted, protocolo não oficial via
+> Baileys), substituindo o plano original de WhatsApp Cloud API oficial
+> (Meta) registrado nesta seção. Motivo: este momento do projeto é voltado a
+> estudo/aprendizado, e a Evolution API dispensa verificação de negócio,
+> WABA e aprovação da Meta — pareamento é feito por QR code, sem
+> onboarding manual burocrático. Esta seção descreve o comportamento visado;
+> o levantamento do que muda no código está em
+> `docs/TAREFAS-INTEGRACAO-EVOLUTION-API.md`.
+>
+> Trade-off assumido: por não ser canal oficial, fica sujeito aos termos de
+> uso do WhatsApp para automação não aprovada (maior risco de bloqueio do
+> número), sem templates aprovados nem janela de 24h oficial. **Antes de
+> qualquer operação comercial real com clientes pagantes, revisitar esta
+> decisão e considerar migrar para a Cloud API oficial** (ver item 2 do
+> roadmap, seção 13).
+
+- Conexão via **Evolution API**, com uma instância (sessão WhatsApp) por
+  tenant, pareada por QR code.
+- Recebimento e envio de mensagens (texto, mídia) via webhook e REST da
+  Evolution API.
 - Suporte a variáveis de contexto (nome do contato, telefone, etc.).
 
 ### 5.4 Multi-tenant
@@ -155,14 +175,14 @@ Ambiente separado do painel de cada tenant, acessível somente à equipe operado
 - **Cache / estado de sessão:** Redis
 - **Filas:** BullMQ (sobre o mesmo Redis)
 - **IA:** LangChain.js + AWS Bedrock (ou API direta Anthropic/OpenAI)
-- **WhatsApp:** Cloud API oficial (Meta), onboarding manual por tenant
+- **WhatsApp:** Evolution API (self-hosted, Baileys), pareamento por QR code por tenant — decisão de fase de estudo, ver seção 5.3
 - **Monitoramento de filas:** Bull Board
 - **Proxy/SSL:** NGINX + certbot
 
 ## 9. Modelo de dados (alto nível)
 
 - `tenants` — dados da conta/cliente
-- `whatsapp_accounts` — WABA/número vinculado a cada tenant
+- `whatsapp_accounts` — instância Evolution API (número) vinculada a cada tenant
 - `flows` — JSON do fluxo, versão, status (rascunho/publicado)
 - `flow_nodes` (ou embutido no JSON) — nós e conexões
 - `contacts` — contatos do WhatsApp por tenant
@@ -199,7 +219,7 @@ IA e mensageria fora da janela de 24h embutidas no preço até um limite razoáv
 | Risco | Mitigação |
 |---|---|
 | Custo de LLM sobe com volume | Cache de respostas, modelo custo-benefício por padrão, monitoramento por tenant |
-| Bloqueio/qualidade baixa do número WhatsApp do cliente | Orientar tenant sobre boas práticas (opt-in, não enviar fora da janela sem necessidade) |
+| Bloqueio do número WhatsApp por uso de canal não oficial (Evolution API/Baileys) | Aceitável na fase de estudo; orientar tenant sobre boas práticas (opt-in, volume moderado); revisitar migração para Cloud API oficial antes de clientes pagantes reais |
 | VPS único como ponto único de falha | Backup automatizado (snapshot + dump do banco), plano de migração documentado |
 | Cliente pedir integração de ERP não suportada | Nó genérico HTTP cobre a maioria dos casos até criar preset dedicado |
 | Limite de onboarding sem Tech Provider (processo manual) | Aceitável no MVP; revisitar quando houver fila de espera de clientes |
@@ -207,7 +227,7 @@ IA e mensageria fora da janela de 24h embutidas no preço até um limite razoáv
 ## 13. Roadmap pós-MVP
 
 1. Presets de integração com ERPs mais pedidos (Omie, Bling, ContaAzul)
-2. Virar Tech Provider Meta + Embedded Signup (onboarding self-service)
+2. Migrar de Evolution API para WhatsApp Cloud API oficial (Meta), virando Tech Provider + Embedded Signup (onboarding self-service) — pré-requisito para operar com clientes pagantes reais
 3. Cadastro self-service de tenants com gateway de pagamento e cobrança recorrente automatizada
 4. Distribuição automática de conversas dentro do setor (round-robin / menor-carga), além do claim manual
 5. Campanhas/broadcast de mensagens (marketing)

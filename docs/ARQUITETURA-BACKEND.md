@@ -35,7 +35,7 @@ Sistema multi-tenant onde cada tenant (cliente do SaaS) desenha fluxos de atendi
 │  ┌────────────────────────────────────────────────────────────┐  │
 │  │  API Node.js + Express + TypeScript (PM2)                   │  │
 │  │  - Auth / gestão de tenants, fluxos, contatos, setores       │  │
-│  │  - Webhook receiver (WhatsApp Cloud API)                     │  │
+│  │  - Webhook receiver (Evolution API — ver seção 1.2)          │  │
 │  │  - WebSocket server (painel de atendente em tempo real)      │  │
 │  └───────┬────────────────────────────────────────┬────────────┘  │
 │          │ enfileira job                          │ lê/escreve    │
@@ -53,7 +53,7 @@ Sistema multi-tenant onde cada tenant (cliente do SaaS) desenha fluxos de atendi
 │  │  - Motor de execução de fluxo                                │  │
 │  │  - Chamada a LangChain / LLM (Bedrock ou API direta)          │  │
 │  │  - Chamada a integrações HTTP externas (ERP/CRM)              │  │
-│  │  - Envio de resposta via WhatsApp Cloud API                   │  │
+│  │  - Envio de resposta via Evolution API                        │  │
 │  └────────────────────────────────────────────────────────────┘  │
 │                                                                    │
 │  ┌────────────────────────────────────────────────────────────┐  │
@@ -63,8 +63,8 @@ Sistema multi-tenant onde cada tenant (cliente do SaaS) desenha fluxos de atendi
                                  │
                                  ▼
                     ┌────────────────────────┐
-                    │  WhatsApp Cloud API     │
-                    │  (Meta)                 │
+                    │  Evolution API          │
+                    │  (self-hosted)          │
                     └────────────────────────┘
                                  │
                                  ▼
@@ -74,6 +74,37 @@ Sistema multi-tenant onde cada tenant (cliente do SaaS) desenha fluxos de atendi
                     │  — por tenant           │
                     └────────────────────────┘
 ```
+
+## 1.2 Decisão: Evolution API para comunicação com WhatsApp (fase de estudo)
+
+Este momento do projeto é voltado a estudo/aprendizado. Por isso, a conexão
+com o WhatsApp passa a ser feita via **Evolution API** (servidor próprio,
+self-hosted, protocolo não oficial via Baileys), substituindo o plano
+original de **WhatsApp Cloud API oficial (Meta)** — a decisão registrada no
+restante deste documento e no PRD (seção 5.3).
+
+O que muda na prática:
+- Pareamento por **QR code por instância** (uma instância Evolution = um
+  número/sessão WhatsApp), sem WABA, verificação de negócio ou aprovação da
+  Meta.
+- Sem `phone_number_id`/`waba_id`; a instância é identificada por um nome
+  escolhido no provisionamento (`instance_name` ou equivalente).
+- Webhook e envio de mensagem seguem o formato REST/eventos da Evolution
+  API, não o payload/assinatura (`X-Hub-Signature-256`) da Meta — a
+  validação da origem do webhook passa a depender de um segredo
+  compartilhado configurado no próprio servidor Evolution, não de HMAC.
+- Sem templates aprovados nem janela oficial de 24h — o risco de bloqueio do
+  número é maior por não ser canal oficial (ver riscos no PRD, seção 12).
+
+Este documento mantém, nas seções seguintes, a descrição original pensada
+para Cloud API (diagrama, fluxo de mensagens, exemplo de schema, segurança e
+rotas) como referência do desenho geral — que continua válido — mas os
+detalhes específicos de Meta (nomes de campo, cabeçalho de assinatura, rota
+de challenge) estão desatualizados até a migração ser implementada. O
+levantamento atômico dessa migração está em
+`docs/TAREFAS-INTEGRACAO-EVOLUTION-API.md`. **Antes de qualquer operação
+comercial real, revisitar esta decisão e considerar voltar à Cloud API
+oficial.**
 
 ## 2. Stack tecnológica consolidada
 
@@ -89,7 +120,7 @@ Sistema multi-tenant onde cada tenant (cliente do SaaS) desenha fluxos de atendi
 | Filas | BullMQ (sobre Redis) | Sem serviço adicional, leve para VPS único |
 | Monitoramento de filas | Bull Board | Visual, gratuito, leve |
 | IA | LangChain.js + AWS Bedrock (ou API direta Anthropic/OpenAI) | Flexibilidade de modelo, custo controlado |
-| WhatsApp | Cloud API oficial (Meta) | Onboarding manual por tenant (sem Tech Provider no MVP) |
+| WhatsApp | Evolution API (self-hosted, Baileys) | Decisão de fase de estudo — pareamento por QR code, sem aprovação da Meta (ver seção 1.2) |
 | Tempo real (painel atendente) | WebSocket (Socket.io) | Necessário para fila e chat ao vivo |
 | Processo/deploy backend | Docker Compose + PM2 | Isolamento de serviços, fácil migração de VPS |
 | Proxy/SSL | NGINX + certbot | Padrão já usado em outros projetos |
@@ -134,8 +165,8 @@ Workers (processos separados, mesma base de código)
 
 ## 5. Fluxo de mensagens (sequência detalhada)
 
-1. WhatsApp Cloud API envia webhook (POST) para a API com a mensagem recebida.
-2. API valida a assinatura do webhook (segurança), identifica o tenant pelo `phone_number_id`, e **responde 200 imediatamente**.
+1. Evolution API envia webhook (POST) para a API com a mensagem recebida da instância do tenant.
+2. API valida a origem do webhook (segredo compartilhado — ver seção 1.2), identifica o tenant pela instância, e **responde 200 imediatamente**.
 3. API enfileira job `processar-mensagem-recebida` no BullMQ com payload (tenant, contato, conteúdo).
 4. Worker consome o job:
    a. Recupera estado atual da conversa no Redis (nó atual do fluxo, variáveis).
@@ -144,7 +175,7 @@ Workers (processos separados, mesma base de código)
    d. Se o nó for de integração → `IntegrationService` chama a API externa do tenant, trata sucesso/falha.
    e. Se o nó for de direcionamento para setor → `RoutingService` muda status da conversa para `aguardando_atendente`, define `team_id`, notifica painel via WebSocket.
 5. Worker enfileira job `enviar-mensagem-whatsapp` com a resposta a ser enviada.
-6. Consumer de envio chama a Cloud API do WhatsApp e persiste a mensagem em `conversation_messages`.
+6. Consumer de envio chama a Evolution API e persiste a mensagem em `conversation_messages`.
 7. `UsageTrackingService` registra custo estimado (tokens de IA, tipo de mensagem) em `usage_logs`.
 
 ## 6. Modelo de dados detalhado (schema replicado em cada banco de tenant)
@@ -152,11 +183,15 @@ Workers (processos separados, mesma base de código)
 > Nota: com a decisão de banco físico separado por tenant (seção 7), as tabelas abaixo não carregam mais `tenant_id` — cada tenant tem sua própria instância completa deste schema. O banco central (`central_db`), com `users` e `tenants`, está detalhado na seção 7.1.
 
 ```sql
+-- Exemplo ilustrativo desatualizado para os campos específicos da Meta
+-- (phone_number_id/waba_id/access_token). Ver decisão da seção 1.2: a
+-- conexão passa a ser via Evolution API (instance_name + api_key), campos
+-- exatos a definir em docs/TAREFAS-INTEGRACAO-EVOLUTION-API.md. O schema
+-- real implementado (Prisma) já usa id inteiro + public_id, ver seção 13.8.
 whatsapp_accounts (
   id UUID PK,
-  phone_number_id VARCHAR,
-  waba_id VARCHAR,
-  access_token_criptografado TEXT,
+  instance_name VARCHAR,          -- identificador da instância na Evolution API
+  api_key_criptografada TEXT,     -- credencial de acesso à instância
   criado_em TIMESTAMP
 )
 
@@ -262,6 +297,10 @@ central_db.tenants (
   criado_em TIMESTAMP
 )
 
+-- phone_number_id é específico da Meta Cloud API. Com a Evolution API (seção
+-- 1.2), a chave de roteamento passa a ser o identificador da instância
+-- (instance_name ou equivalente) — definição exata em
+-- docs/TAREFAS-INTEGRACAO-EVOLUTION-API.md.
 central_db.roteamentos_whatsapp (
   id INTEGER PK SEQUENCIAL,
   tenant_id INTEGER FK -> tenants,
@@ -275,7 +314,7 @@ central_db.roteamentos_whatsapp (
 de abrir qualquer banco de tenant. Ele não armazena access token, WABA,
 credenciais ou dados de conversa. Esses dados permanecem exclusivamente em
 `contas_whatsapp`, no banco físico do tenant. O vínculo central deve ser
-criado ou atualizado junto ao onboarding manual da conta WhatsApp.
+criado ou atualizado junto ao provisionamento/pareamento da conta WhatsApp.
 
 ### 7.2 Banco por tenant (`tenant_<id>`)
 
@@ -292,9 +331,10 @@ Réplica do schema completo descrito na seção 6 (`whatsapp_accounts`, `flows`,
 ```
 
 Webhooks não possuem e-mail autenticado. Nesse caso específico, a API consulta
-`central_db.roteamentos_whatsapp` pelo `phone_number_id`, obtém o tenant e só
-então acessa seu banco físico. Subdomínio e valores de conexão enviados pelo
-cliente nunca participam dessa resolução.
+`central_db.roteamentos_whatsapp` pelo identificador da instância Evolution
+(hoje modelado como `phone_number_id`, a renomear na migração — seção 1.2),
+obtém o tenant e só então acessa seu banco físico. Subdomínio e valores de
+conexão enviados pelo cliente nunca participam dessa resolução.
 
 ### 7.4 Gerenciamento de conexões (ponto crítico)
 
@@ -339,7 +379,7 @@ Se a instrução afetar 0 linhas, outro atendente já assumiu — o painel receb
 ## 9. Segurança
 
 - Autenticação do painel: JWT (access + refresh token), por tenant e por agente.
-- Validação de assinatura do webhook do WhatsApp (`X-Hub-Signature-256`) antes de processar qualquer payload.
+- Validação da origem do webhook do WhatsApp antes de processar qualquer payload — com Evolution API (seção 1.2), via segredo compartilhado configurado no servidor, e não mais `X-Hub-Signature-256` (específico da Meta).
 - Rate limiting na API pública (por IP e por tenant) para mitigar abuso.
 - Criptografia de credenciais sensíveis (tenant_credentials, tokens de WhatsApp) com biblioteca nativa (`crypto`/libsodium), chave fora do repositório de código.
 - Bull Board protegido por autenticação básica (não exposto publicamente sem senha).
@@ -480,7 +520,7 @@ Implementado uma vez como método genérico no repositório base (`RepositoryBas
 - **ESLint + Prettier** com config compartilhada no monorepo, rodando no CI (falha o build se houver violação) — evita revisão manual de estilo.
 - **Logs estruturados** (ex: `pino`) em vez de `console.log`, com nível (info/warn/error) e contexto (tenant, conversationId) — facilita depurar produção.
 - **Validação de variáveis de ambiente na inicialização** (schema Zod para `.env`) — a aplicação falha rápido e com mensagem clara se faltar uma variável, em vez de quebrar em produção no meio de uma requisição.
-- **Idempotência no processamento de webhook**: o WhatsApp pode reenviar o mesmo evento; usar um identificador único da mensagem para evitar processar/duplicar a mesma mensagem duas vezes.
+- **Idempotência no processamento de webhook**: a Evolution API (como a Meta) pode reenviar o mesmo evento; usar um identificador único da mensagem para evitar processar/duplicar a mesma mensagem duas vezes.
 - **Soft delete** (`deletado_em` nullable) em vez de `DELETE` físico nas entidades principais (fluxos, contatos, conversas) — facilita auditoria e recuperação de erro operacional.
 - **Testes automatizados focados nas camadas de Service e Repository** (Vitest ou Jest) — não é necessário cobrir 100%, mas a lógica de roteamento, claim de conversa e motor de fluxo merecem teste, por serem o núcleo de risco do produto.
 - **Conventional Commits** (`feat:`, `fix:`, `refactor:`) — ajuda a manter changelog legível e facilita automação futura de versionamento.
@@ -594,10 +634,14 @@ Convenção geral: prefixo `/api/v1`, autenticação via JWT (header `Authorizat
 
 ### 14.6 Webhook (WhatsApp)
 
+> Contrato descrito abaixo é o desenhado para Cloud API. Com Evolution API
+> (seção 1.2) não há rota de challenge nem `phone_number_id` — a definição
+> exata está em `docs/TAREFAS-INTEGRACAO-EVOLUTION-API.md`.
+
 | Método | Rota | Descrição |
 |---|---|---|
-| GET | `/api/v1/webhook/whatsapp` | Verificação do webhook (challenge da Meta) |
-| POST | `/api/v1/webhook/whatsapp` | Recebe eventos de mensagem; valida assinatura, resolve tenant pelo `phone_number_id`, garante idempotência (seção 13.7) e enfileira job |
+| GET | `/api/v1/webhook/whatsapp` | Verificação do webhook (challenge da Meta) — não existe na Evolution API |
+| POST | `/api/v1/webhook/whatsapp` | Recebe eventos de mensagem; valida a origem do webhook, resolve tenant pela instância, garante idempotência (seção 13.7) e enfileira job |
 
 ### 14.7 Eventos WebSocket (painel de atendente)
 
@@ -716,7 +760,7 @@ No Swagger, cada rota protegida declara o `securityScheme` (Bearer JWT). Além d
 ### 16.3 O que fica em Markdown (fora do Swagger)
 
 OpenAPI não representa bem fluxos assíncronos e eventos em tempo real. Ficam documentados em `docs/`:
-- `docs/eventos/webhook-whatsapp.md` — formato do payload recebido da Meta, regra de idempotência (seção 13.7), como testar localmente (ex: via ngrok)
+- `docs/eventos/webhook-whatsapp.md` — formato do payload recebido da Evolution API, regra de idempotência (seção 13.7), como testar localmente (ex: via ngrok)
 - `docs/eventos/websocket.md` — tabela da seção 14.7 detalhada, com payload de exemplo de cada evento e ordem esperada (ex: `conversa:nova_na_fila` sempre antes de `conversa:assumida`)
 - `docs/schemas/fluxo-json.md` — versão detalhada da seção 15, com todos os tipos de nó e exemplos completos
 - `docs/erros/codigos.md` — tabela de todos os códigos de erro (`NAO_ENCONTRADO`, `VALIDACAO`, `SETOR_INVALIDO`, etc.) com significado e status HTTP correspondente

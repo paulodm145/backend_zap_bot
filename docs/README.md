@@ -53,6 +53,7 @@ Documentos funcionais disponíveis:
 - [Contribuição e checks de qualidade](CONTRIBUICAO.md)
 - [Tarefas dos recursos operacionais](TAREFAS-RECURSOS-OPERACIONAIS.md)
 - [Tarefas de e-mail transacional](TAREFAS-EMAIL-TRANSACIONAL.md)
+- [Tarefas de migração para Evolution API](TAREFAS-INTEGRACAO-EVOLUTION-API.md)
 
 ## Swagger e Markdown
 
