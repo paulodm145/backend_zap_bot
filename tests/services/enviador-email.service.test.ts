@@ -1,3 +1,4 @@
+import '../configurar-ambiente.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
