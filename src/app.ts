@@ -73,7 +73,7 @@ import { ImpersonacaoTenantService } from './services/impersonacao-tenant.servic
 import { ExclusaoTenantService } from './services/exclusao-tenant.service.js';
 import type { EncerradorConexaoTenant } from './services/exclusao-tenant.service.js';
 import { BrasilApiService } from './services/brasil-api.service.js';
-import { WhatsappGraphApiService } from './services/whatsapp-graph-api.service.js';
+import { EvolutionApiService } from './services/evolution-api.service.js';
 import { RoteamentoWhatsappRepository } from './repositories/roteamento-whatsapp.repository.js';
 
 interface OpcoesAplicacao {
@@ -81,7 +81,6 @@ interface OpcoesAplicacao {
   prismaCentral?: PrismaClient;
   webhookWhatsapp?: {
     controller: WebhookWhatsappController;
-    appSecret: string;
   };
   enfileiradorMensagemSaida?: EnfileiradorMensagemSaida;
   enfileiradorEmail?: EnfileiradorEmail;
@@ -194,16 +193,13 @@ export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
     swaggerUi.setup(documentoOpenApi),
   );
   aplicacao.use(helmet());
+  aplicacao.use(express.json({ limit: '1mb' }));
   if (opcoes.webhookWhatsapp) {
     aplicacao.use(
       '/api/v1/webhook/whatsapp',
-      criarRotasWebhookWhatsapp(
-        opcoes.webhookWhatsapp.controller,
-        opcoes.webhookWhatsapp.appSecret,
-      ),
+      criarRotasWebhookWhatsapp(opcoes.webhookWhatsapp.controller),
     );
   }
-  aplicacao.use(express.json({ limit: '1mb' }));
   aplicacao.use(
     '/api/v1/auth',
     criarRotasAutenticacao(autenticacaoTenantController, recuperacaoSenhaController),
@@ -248,7 +244,11 @@ export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
       new ContaWhatsappController(
         new RoteamentoWhatsappRepository(prismaCentral),
         new CriptografiaService(ambiente.WHATSAPP_CREDENCIAIS_CRIPTOGRAFIA_CHAVE),
-        new WhatsappGraphApiService(ambiente.WHATSAPP_GRAPH_API_URL),
+        new EvolutionApiService(
+          ambiente.EVOLUTION_API_URL,
+          ambiente.EVOLUTION_API_KEY,
+          `${ambiente.EVOLUTION_WEBHOOK_URL_BASE}/api/v1/webhook/whatsapp`,
+        ),
       ),
     ),
   );

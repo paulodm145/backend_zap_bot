@@ -1,19 +1,15 @@
 import type { Prisma, PrismaClient } from '../generated/prisma-tenant/client.js';
-import type {
-  AtualizarContaWhatsappEntrada,
-  ListarContasWhatsappEntrada,
-} from '../dtos/conta-whatsapp.dto.js';
+import type { ListarContasWhatsappEntrada } from '../dtos/conta-whatsapp.dto.js';
 import { criarPaginacaoResultado } from '../dtos/paginacao.dto.js';
 
 export const selecaoContaWhatsappSegura = {
   public_id: true,
   nome: true,
-  phone_number_id: true,
-  waba_id: true,
+  instance_name: true,
+  instance_id: true,
   numero_exibicao: true,
-  versao_graph_api: true,
   status: true,
-  ultima_validacao_at: true,
+  ultima_sincronizacao_at: true,
   ultimo_erro_codigo: true,
   ultimo_erro_mensagem: true,
   ativo: true,
@@ -56,6 +52,13 @@ export class ContaWhatsappRepository {
     });
   }
 
+  public buscarPorInstancia(instanceName: string, incluirSegredo = false) {
+    return this.prisma.contaWhatsapp.findFirst({
+      where: { instance_name: instanceName, deletado_at: null },
+      ...(incluirSegredo ? {} : { select: selecaoContaWhatsappSegura }),
+    });
+  }
+
   public contarAtivas() {
     return this.prisma.contaWhatsapp.count({ where: { ativo: true, deletado_at: null } });
   }
@@ -72,22 +75,19 @@ export class ContaWhatsappRepository {
 
   public criar(entrada: {
     nome: string;
-    phoneNumberId: string;
-    wabaId: string;
-    numeroExibicao?: string;
-    versaoGraphApi: string;
-    tokenEncrypted: string;
+    instanceName: string;
+    instanceId: string;
+    apiKeyEncrypted: string;
     autorUsuarioId: string;
   }) {
     return this.prisma.$transaction(async (transacao) => {
       const conta = await transacao.contaWhatsapp.create({
         data: {
           nome: entrada.nome,
-          phone_number_id: entrada.phoneNumberId,
-          waba_id: entrada.wabaId,
-          ...(entrada.numeroExibicao ? { numero_exibicao: entrada.numeroExibicao } : {}),
-          versao_graph_api: entrada.versaoGraphApi,
-          token_encrypted: entrada.tokenEncrypted,
+          instance_name: entrada.instanceName,
+          instance_id: entrada.instanceId,
+          api_key_encrypted: entrada.apiKeyEncrypted,
+          status: 'CONECTANDO',
         },
       });
       await this.auditar(transacao, conta.id, conta.public_id, entrada.autorUsuarioId, 'CRIAR');
@@ -95,11 +95,7 @@ export class ContaWhatsappRepository {
     });
   }
 
-  public atualizar(
-    publicId: string,
-    entrada: AtualizarContaWhatsappEntrada,
-    autorUsuarioId: string,
-  ) {
+  public atualizar(publicId: string, nome: string, autorUsuarioId: string) {
     return this.prisma.$transaction(async (transacao) => {
       const atual = await transacao.contaWhatsapp.findFirst({
         where: { public_id: publicId, deletado_at: null },
@@ -107,45 +103,33 @@ export class ContaWhatsappRepository {
       if (!atual) return null;
       const conta = await transacao.contaWhatsapp.update({
         where: { id: atual.id },
-        data: {
-          ...(entrada.nome === undefined ? {} : { nome: entrada.nome }),
-          ...(entrada.phoneNumberId === undefined
-            ? {}
-            : { phone_number_id: entrada.phoneNumberId }),
-          ...(entrada.wabaId === undefined ? {} : { waba_id: entrada.wabaId }),
-          ...(entrada.numeroExibicao === undefined
-            ? {}
-            : { numero_exibicao: entrada.numeroExibicao }),
-          ...(entrada.versaoGraphApi === undefined
-            ? {}
-            : { versao_graph_api: entrada.versaoGraphApi }),
-          status: 'PENDENTE',
-          ultimo_erro_codigo: null,
-          ultimo_erro_mensagem: null,
-        },
+        data: { nome },
+        select: selecaoContaWhatsappSegura,
       });
-      await this.auditar(transacao, conta.id, conta.public_id, autorUsuarioId, 'ATUALIZAR');
-      return { anterior: atual, conta };
+      await this.auditar(transacao, atual.id, atual.public_id, autorUsuarioId, 'ATUALIZAR');
+      return conta;
     });
   }
 
-  public async alterarToken(publicId: string, tokenEncrypted: string, autorUsuarioId: string) {
-    const conta = await this.prisma.contaWhatsapp.findFirst({
-      where: { public_id: publicId, deletado_at: null },
-    });
-    if (!conta) return null;
-    return this.prisma.$transaction(async (transacao) => {
-      const atualizada = await transacao.contaWhatsapp.update({
-        where: { id: conta.id },
-        data: {
-          token_encrypted: tokenEncrypted,
-          status: 'PENDENTE',
-          ultimo_erro_codigo: null,
-          ultimo_erro_mensagem: null,
-        },
-      });
-      await this.auditar(transacao, conta.id, conta.public_id, autorUsuarioId, 'ROTACIONAR_TOKEN');
-      return atualizada;
+  public async registrarEstadoConexao(
+    id: number,
+    estado: {
+      status: 'CONECTANDO' | 'CONECTADO' | 'DESCONECTADO';
+      numeroExibicao?: string;
+      codigoErro?: string;
+      mensagemErro?: string;
+    },
+  ) {
+    return this.prisma.contaWhatsapp.update({
+      where: { id },
+      data: {
+        status: estado.status,
+        ultima_sincronizacao_at: new Date(),
+        ...(estado.numeroExibicao ? { numero_exibicao: estado.numeroExibicao } : {}),
+        ultimo_erro_codigo: estado.codigoErro ?? null,
+        ultimo_erro_mensagem: estado.mensagemErro ?? null,
+      },
+      select: selecaoContaWhatsappSegura,
     });
   }
 
@@ -167,28 +151,6 @@ export class ContaWhatsappRepository {
         ativo ? 'ATIVAR' : 'DESATIVAR',
       );
       return atualizada;
-    });
-  }
-
-  public registrarValidacao(
-    id: number,
-    resultado: {
-      valida: boolean;
-      numeroExibicao?: string;
-      codigoErro?: string;
-      mensagemErro?: string;
-    },
-  ) {
-    return this.prisma.contaWhatsapp.update({
-      where: { id },
-      data: {
-        status: resultado.valida ? 'VALIDADA' : 'INVALIDA',
-        ultima_validacao_at: new Date(),
-        ...(resultado.numeroExibicao ? { numero_exibicao: resultado.numeroExibicao } : {}),
-        ultimo_erro_codigo: resultado.codigoErro ?? null,
-        ultimo_erro_mensagem: resultado.mensagemErro ?? null,
-      },
-      select: selecaoContaWhatsappSegura,
     });
   }
 

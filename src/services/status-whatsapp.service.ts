@@ -4,10 +4,9 @@ import { criarJobId } from '../helpers/chave-redis.helper.js';
 import type { TenantCentralRepository } from '../repositories/tenant-central.repository.js';
 import type { JobStatusWhatsapp } from '../types/jobs.js';
 import type { CriptografiaService } from './criptografia.service.js';
-import type { EnfileiradorStatusWhatsapp } from './webhook-whatsapp.service.js';
 import { barramentoChat } from '../eventos/barramento-chat.js';
 
-export class EnfileiradorStatusWhatsappBullMqService implements EnfileiradorStatusWhatsapp {
+export class EnfileiradorStatusWhatsappBullMqService {
   public constructor(private readonly fila: Queue<JobStatusWhatsapp>) {}
   public async adicionar(dados: JobStatusWhatsapp): Promise<void> {
     await this.fila.add('atualizar-status-whatsapp', dados, {
@@ -54,8 +53,8 @@ export class ProcessadorStatusWhatsappService {
         status_entrega: novo,
         ...(novo === 'FALHA'
           ? {
-              erro_codigo: job.codigoErro ?? 'META_FALHA',
-              erro_mensagem: 'Falha informada pela Meta',
+              erro_codigo: job.codigoErro ?? 'PROVEDOR_FALHA',
+              erro_mensagem: 'Falha informada pelo provedor de mensageria',
             }
           : {}),
       },

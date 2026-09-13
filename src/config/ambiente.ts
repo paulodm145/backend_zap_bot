@@ -23,14 +23,14 @@ const ambienteSchema = z
     REFRESH_TOKEN_EXPIRACAO_DIAS: z.coerce.number().int().positive().max(90).default(30),
     TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE: z.string().regex(/^[a-fA-F0-9]{64}$/),
     WHATSAPP_CREDENCIAIS_CRIPTOGRAFIA_CHAVE: z.string().regex(/^[a-fA-F0-9]{64}$/),
-    WHATSAPP_GRAPH_API_URL: z.url().default('https://graph.facebook.com'),
+    EVOLUTION_API_URL: z.url(),
+    EVOLUTION_API_KEY: z.string().min(1),
+    EVOLUTION_WEBHOOK_URL_BASE: z.url(),
     TENANT_CLIENTES_CACHE_MAXIMO: z.coerce.number().int().positive().max(100).default(20),
     POSTGRES_ADMIN_URL: z.url().startsWith('postgresql://').optional(),
     REDIS_URL: z.url().refine((valor) => /^rediss?:\/\//.test(valor), {
       message: 'Deve usar o protocolo redis:// ou rediss://',
     }),
-    WEBHOOK_WHATSAPP_APP_SECRET: z.string().min(32),
-    WEBHOOK_WHATSAPP_VERIFY_TOKEN: z.string().min(16),
     WEBHOOK_IDEMPOTENCIA_SEGUNDOS: z.coerce
       .number()
       .int()

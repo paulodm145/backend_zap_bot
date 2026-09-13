@@ -1,61 +1,45 @@
 import { z } from '../config/zod-openapi.js';
 
-export const challengeWhatsappSchema = z
+/**
+ * Envelope comum a todo evento de webhook da Evolution API. O campo `apikey`
+ * é a própria apikey da instância que originou o evento — é o mecanismo de
+ * autenticação usado no lugar de uma assinatura HMAC (a Evolution API não
+ * assina o payload como a Meta faz com X-Hub-Signature-256). A validação
+ * real acontece no service, comparando este valor com a apikey armazenada
+ * (criptografada) para a instância resolvida.
+ */
+export const webhookEvolutionSchema = z
   .object({
-    'hub.mode': z.literal('subscribe'),
-    'hub.verify_token': z.string().min(1),
-    'hub.challenge': z.string().min(1),
+    event: z.string().min(1),
+    instance: z.string().min(1),
+    apikey: z.string().min(1),
+    data: z.unknown(),
   })
-  .openapi('ChallengeWhatsappQuery');
+  .openapi('WebhookEvolutionEntrada');
 
-const mensagemTextoWhatsappSchema = z.object({
-  id: z.string().min(1),
-  from: z.string().min(1),
-  timestamp: z.string().regex(/^\d+$/),
-  type: z.literal('text'),
-  text: z.object({
-    body: z.string(),
-  }),
+export const dadosConexaoWhatsappSchema = z.object({
+  state: z.enum(['open', 'connecting', 'close']),
+  statusReason: z.number().int().optional(),
 });
 
-const valorWebhookWhatsappSchema = z.object({
-  messaging_product: z.literal('whatsapp'),
-  metadata: z.object({
-    display_phone_number: z.string().optional(),
-    phone_number_id: z.string().min(1),
-  }),
-  messages: z.array(mensagemTextoWhatsappSchema).optional(),
-  statuses: z
-    .array(
-      z.object({
-        id: z.string().min(1),
-        status: z.enum(['sent', 'delivered', 'read', 'failed']),
-        timestamp: z.string().regex(/^\d+$/),
-        errors: z.array(z.object({ code: z.number().int() })).optional(),
-      }),
-    )
+const chaveMensagemSchema = z.object({
+  id: z.string().min(1),
+  remoteJid: z.string().min(1),
+  fromMe: z.boolean(),
+});
+
+export const dadosMensagemWhatsappSchema = z.object({
+  key: chaveMensagemSchema,
+  pushName: z.string().optional(),
+  messageTimestamp: z.union([z.number(), z.string()]),
+  message: z
+    .object({
+      conversation: z.string().optional(),
+      extendedTextMessage: z.object({ text: z.string() }).optional(),
+    })
     .optional(),
 });
 
-export const webhookWhatsappSchema = z
-  .object({
-    object: z.literal('whatsapp_business_account'),
-    entry: z
-      .array(
-        z.object({
-          id: z.string().min(1),
-          changes: z.array(
-            z.object({
-              field: z.literal('messages'),
-              value: valorWebhookWhatsappSchema,
-            }),
-          ),
-        }),
-      )
-      .min(1),
-  })
-  .openapi('WebhookWhatsappEntrada');
-
-export type ChallengeWhatsappEntrada = z.infer<typeof challengeWhatsappSchema>;
-export type WebhookWhatsappEntrada = z.infer<typeof webhookWhatsappSchema>;
-export type MensagemTextoWhatsapp = z.infer<typeof mensagemTextoWhatsappSchema>;
+export type WebhookEvolutionEntrada = z.infer<typeof webhookEvolutionSchema>;
+export type DadosConexaoWhatsapp = z.infer<typeof dadosConexaoWhatsappSchema>;
+export type DadosMensagemWhatsapp = z.infer<typeof dadosMensagemWhatsappSchema>;

@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import type {
   AtualizarContaWhatsappEntrada,
   CriarContaWhatsappEntrada,
@@ -6,7 +8,7 @@ import { ConflitoError, NaoEncontradoError, ValidacaoError } from '../erros/erro
 import type { ContaWhatsappRepository } from '../repositories/conta-whatsapp.repository.js';
 import type { RoteamentoWhatsappRepository } from '../repositories/roteamento-whatsapp.repository.js';
 import type { CriptografiaService } from './criptografia.service.js';
-import type { WhatsappGraphApiService } from './whatsapp-graph-api.service.js';
+import { ErroEvolutionApi, type EvolutionApiService } from './evolution-api.service.js';
 
 interface ContextoContaWhatsapp {
   tenantId: number;
@@ -18,7 +20,7 @@ export class ContaWhatsappService {
     private readonly contas: ContaWhatsappRepository,
     private readonly roteamentos: RoteamentoWhatsappRepository,
     private readonly criptografia: CriptografiaService,
-    private readonly graphApi: WhatsappGraphApiService,
+    private readonly evolution: EvolutionApiService,
   ) {}
 
   public async criar(entrada: CriarContaWhatsappEntrada, contexto: ContextoContaWhatsapp) {
@@ -26,23 +28,37 @@ export class ContaWhatsappService {
     if ((await this.contas.contarAtivas()) >= limite) {
       throw new ValidacaoError(`O plano permite no máximo ${String(limite)} conta(s) WhatsApp`);
     }
-    await this.validarPropriedadeRoteamento(entrada.phoneNumberId, contexto.tenantId);
-    const conta = await this.contas.criar({
-      nome: entrada.nome,
-      phoneNumberId: entrada.phoneNumberId,
-      wabaId: entrada.wabaId,
-      ...(entrada.numeroExibicao ? { numeroExibicao: entrada.numeroExibicao } : {}),
-      versaoGraphApi: entrada.versaoGraphApi,
-      tokenEncrypted: this.criptografia.criptografar(entrada.accessToken),
-      autorUsuarioId: contexto.autorUsuarioId,
-    });
+
+    const instanceName = this.gerarNomeInstancia(contexto.tenantId);
+    await this.validarPropriedadeRoteamento(instanceName, contexto.tenantId);
+
+    let instancia;
     try {
-      await this.roteamentos.sincronizar(contexto.tenantId, conta.phone_number_id);
+      instancia = await this.evolution.criarInstancia(instanceName);
     } catch (erro: unknown) {
-      await this.contas.excluirCriacaoCompensatoria(conta.id);
+      if (erro instanceof ErroEvolutionApi) {
+        throw new ValidacaoError('Não foi possível criar a instância na Evolution API');
+      }
       throw erro;
     }
-    return this.segura(conta);
+
+    const conta = await this.contas.criar({
+      nome: entrada.nome,
+      instanceName,
+      instanceId: instancia.instanceId,
+      apiKeyEncrypted: this.criptografia.criptografar(instancia.apiKey),
+      autorUsuarioId: contexto.autorUsuarioId,
+    });
+
+    try {
+      await this.roteamentos.sincronizar(contexto.tenantId, instanceName);
+    } catch (erro: unknown) {
+      await this.contas.excluirCriacaoCompensatoria(conta.id);
+      await this.evolution.excluirInstancia(instanceName, instancia.apiKey).catch(() => undefined);
+      throw erro;
+    }
+
+    return { conta: this.segura(conta), qrCodeBase64: instancia.qrCodeBase64 };
   }
 
   public async atualizar(
@@ -50,42 +66,25 @@ export class ContaWhatsappService {
     entrada: AtualizarContaWhatsappEntrada,
     contexto: ContextoContaWhatsapp,
   ) {
-    const atual = await this.contas.buscar(publicId, true);
-    if (!atual) throw new NaoEncontradoError('Conta WhatsApp não encontrada');
-    const novoPhoneNumberId = entrada.phoneNumberId ?? atual.phone_number_id;
-    await this.validarPropriedadeRoteamento(novoPhoneNumberId, contexto.tenantId);
-    const resultado = await this.contas.atualizar(publicId, entrada, contexto.autorUsuarioId);
+    const resultado = await this.contas.atualizar(publicId, entrada.nome, contexto.autorUsuarioId);
     if (!resultado) throw new NaoEncontradoError('Conta WhatsApp não encontrada');
-    try {
-      await this.roteamentos.sincronizar(contexto.tenantId, novoPhoneNumberId);
-      if (atual.phone_number_id !== novoPhoneNumberId) {
-        await this.roteamentos.remover(contexto.tenantId, atual.phone_number_id);
-      }
-    } catch (erro: unknown) {
-      await this.contas.atualizar(
-        publicId,
-        {
-          nome: resultado.anterior.nome,
-          phoneNumberId: resultado.anterior.phone_number_id,
-          wabaId: resultado.anterior.waba_id,
-          numeroExibicao: resultado.anterior.numero_exibicao,
-          versaoGraphApi: resultado.anterior.versao_graph_api,
-        },
-        contexto.autorUsuarioId,
-      );
-      throw erro;
-    }
-    return this.segura(resultado.conta);
+    return resultado;
   }
 
-  public async rotacionarToken(publicId: string, accessToken: string, autorUsuarioId: string) {
-    const conta = await this.contas.alterarToken(
-      publicId,
-      this.criptografia.criptografar(accessToken),
-      autorUsuarioId,
-    );
+  public async reconectar(publicId: string) {
+    const conta = await this.contas.buscar(publicId, true);
     if (!conta) throw new NaoEncontradoError('Conta WhatsApp não encontrada');
-    return this.segura(conta);
+    const apiKey = this.criptografia.descriptografar(conta.api_key_encrypted);
+    const { qrCodeBase64 } = await this.evolution.reconectar(conta.instance_name, apiKey);
+    return { conta: this.segura(conta), qrCodeBase64 };
+  }
+
+  public async desconectar(publicId: string) {
+    const conta = await this.contas.buscar(publicId, true);
+    if (!conta) throw new NaoEncontradoError('Conta WhatsApp não encontrada');
+    const apiKey = this.criptografia.descriptografar(conta.api_key_encrypted);
+    await this.evolution.desconectar(conta.instance_name, apiKey);
+    return this.contas.registrarEstadoConexao(conta.id, { status: 'DESCONECTADO' });
   }
 
   public async alterarAtivo(publicId: string, ativo: boolean, contexto: ContextoContaWhatsapp) {
@@ -96,35 +95,29 @@ export class ContaWhatsappService {
       if ((await this.contas.contarAtivas()) >= limite) {
         throw new ValidacaoError(`O plano permite no máximo ${String(limite)} conta(s) WhatsApp`);
       }
-      await this.validarPropriedadeRoteamento(atual.phone_number_id, contexto.tenantId);
     }
     const conta = await this.contas.alterarAtivo(publicId, ativo, contexto.autorUsuarioId);
     if (!conta) throw new NaoEncontradoError('Conta WhatsApp não encontrada');
-    if (ativo) await this.roteamentos.sincronizar(contexto.tenantId, conta.phone_number_id);
-    else await this.roteamentos.remover(contexto.tenantId, conta.phone_number_id);
+    if (!ativo) {
+      const apiKey = this.criptografia.descriptografar(atual.api_key_encrypted);
+      await this.evolution.desconectar(atual.instance_name, apiKey).catch(() => undefined);
+    }
     return this.segura(conta);
   }
 
-  public async testar(publicId: string) {
-    const conta = await this.contas.buscar(publicId, true);
-    if (!conta) throw new NaoEncontradoError('Conta WhatsApp não encontrada');
-    const resultado = await this.graphApi.validar(
-      conta.phone_number_id,
-      conta.versao_graph_api,
-      this.criptografia.descriptografar(conta.token_encrypted),
-    );
-    return this.contas.registrarValidacao(conta.id, resultado);
+  private gerarNomeInstancia(tenantId: number): string {
+    return `tenant-${String(tenantId)}-${randomUUID()}`;
   }
 
-  private async validarPropriedadeRoteamento(phoneNumberId: string, tenantId: number) {
-    const existente = await this.roteamentos.buscar(phoneNumberId);
+  private async validarPropriedadeRoteamento(instanceName: string, tenantId: number) {
+    const existente = await this.roteamentos.buscar(instanceName);
     if (existente && existente.tenant_id !== tenantId) {
-      throw new ConflitoError('Este phone_number_id já pertence a outro tenant');
+      throw new ConflitoError('Esta instância já pertence a outro tenant');
     }
   }
 
-  private segura<T extends { token_encrypted: string }>(conta: T): Omit<T, 'token_encrypted'> {
-    const { token_encrypted: _segredo, ...segura } = conta;
+  private segura<T extends { api_key_encrypted: string }>(conta: T): Omit<T, 'api_key_encrypted'> {
+    const { api_key_encrypted: _segredo, ...segura } = conta;
     void _segredo;
     return segura;
   }

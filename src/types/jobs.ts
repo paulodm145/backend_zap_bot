@@ -5,7 +5,7 @@ export const jobComTenantSchema = z.object({
 });
 
 export const jobMensagemRecebidaSchema = jobComTenantSchema.extend({
-  phoneNumberId: z.string().min(1),
+  instanceName: z.string().min(1),
   mensagemId: z.string().min(1),
   remetente: z.string().min(1),
   timestamp: z.string().regex(/^\d+$/),

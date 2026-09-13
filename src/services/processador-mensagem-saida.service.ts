@@ -3,7 +3,7 @@ import { MensagemAtendimentoRepository } from '../repositories/mensagem-atendime
 import type { TenantCentralRepository } from '../repositories/tenant-central.repository.js';
 import type { JobMensagemSaida } from '../types/jobs.js';
 import type { CriptografiaService } from './criptografia.service.js';
-import { ErroEnvioWhatsapp, type WhatsappGraphApiService } from './whatsapp-graph-api.service.js';
+import { ErroEvolutionApi, type EvolutionApiService } from './evolution-api.service.js';
 
 export class ProcessadorMensagemSaidaService {
   public constructor(
@@ -11,7 +11,7 @@ export class ProcessadorMensagemSaidaService {
     private readonly criptografiaConexao: CriptografiaService,
     private readonly criptografiaWhatsapp: CriptografiaService,
     private readonly conexoes: GerenciadorConexoesTenant,
-    private readonly graphApi: WhatsappGraphApiService,
+    private readonly evolution: EvolutionApiService,
   ) {}
 
   public async processar(job: JobMensagemSaida): Promise<'ENVIADA' | 'JA_PROCESSADA' | 'FALHA'> {
@@ -29,33 +29,41 @@ export class ProcessadorMensagemSaidaService {
     const tentativa = await repositorio.marcarTentativa(mensagem.public_id);
     if (tentativa.count === 0) return 'JA_PROCESSADA';
     const conta = mensagem.conversa.conta_whatsapp;
+    const apiKey = this.criptografiaWhatsapp.descriptografar(conta.api_key_encrypted);
+    const numero = mensagem.conversa.contato.telefone;
+    const texto =
+      typeof mensagem.conteudo === 'object' &&
+      mensagem.conteudo !== null &&
+      'texto' in mensagem.conteudo &&
+      typeof mensagem.conteudo.texto === 'string'
+        ? mensagem.conteudo.texto
+        : undefined;
     try {
-      const metaId = await this.graphApi.enviar(
-        conta.phone_number_id,
-        conta.versao_graph_api,
-        this.criptografiaWhatsapp.descriptografar(conta.token_encrypted),
-        {
-          destinatario: mensagem.conversa.contato.telefone,
-          tipo: mensagem.tipo === 'SISTEMA' ? 'TEXTO' : mensagem.tipo,
-          ...(typeof mensagem.conteudo === 'object' &&
-          mensagem.conteudo !== null &&
-          'texto' in mensagem.conteudo &&
-          typeof mensagem.conteudo.texto === 'string'
-            ? { texto: mensagem.conteudo.texto }
-            : {}),
-          ...(mensagem.midia_url ? { midiaUrl: mensagem.midia_url } : {}),
-          ...(mensagem.midia_nome ? { midiaNome: mensagem.midia_nome } : {}),
-        },
-      );
-      await repositorio.marcarEnviada(mensagem.public_id, metaId);
+      const mensagemId =
+        mensagem.tipo === 'TEXTO' || mensagem.tipo === 'SISTEMA' || !mensagem.midia_url
+          ? await this.evolution.enviarTexto(conta.instance_name, apiKey, numero, texto ?? '')
+          : await this.evolution.enviarMidia(conta.instance_name, apiKey, numero, {
+              tipo: this.tipoMidiaEvolution(mensagem.tipo),
+              url: mensagem.midia_url,
+              ...(mensagem.midia_nome ? { nomeArquivo: mensagem.midia_nome } : {}),
+            });
+      await repositorio.marcarEnviada(mensagem.public_id, mensagemId);
       return 'ENVIADA';
     } catch (erro: unknown) {
-      if (erro instanceof ErroEnvioWhatsapp && !erro.transitorio) {
+      if (erro instanceof ErroEvolutionApi && !erro.transitorio) {
         await repositorio.marcarFalha(mensagem.public_id, erro.codigo);
         return 'FALHA';
       }
       await repositorio.liberarTentativa(mensagem.public_id);
       throw erro;
     }
+  }
+
+  private tipoMidiaEvolution(
+    tipo: 'IMAGEM' | 'AUDIO' | 'DOCUMENTO',
+  ): 'image' | 'audio' | 'document' {
+    if (tipo === 'IMAGEM') return 'image';
+    if (tipo === 'AUDIO') return 'audio';
+    return 'document';
   }
 }

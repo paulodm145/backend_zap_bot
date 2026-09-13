@@ -31,7 +31,7 @@ export class MensagemAtendimentoService {
       throw new AcessoNegadoError('Somente o atendente responsável pode enviar mensagens');
     if (!conversa.janela_expira_at || conversa.janela_expira_at <= new Date())
       throw new ValidacaoError('Janela de atendimento do WhatsApp expirada');
-    if (!conversa.conta_whatsapp.ativo || conversa.conta_whatsapp.status !== 'VALIDADA')
+    if (!conversa.conta_whatsapp.ativo || conversa.conta_whatsapp.status !== 'CONECTADO')
       throw new ValidacaoError('Conta WhatsApp não está disponível para envio');
     const mensagem = await this.repositorio.criarPendente(
       conversa.id,
