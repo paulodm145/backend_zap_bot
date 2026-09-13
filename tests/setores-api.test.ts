@@ -146,9 +146,8 @@ descreverIntegracao('API de setores e vínculos', () => {
     const conta = await prisma.contaWhatsapp.create({
       data: {
         nome: 'Conta',
-        phone_number_id: 'phone-setor',
-        waba_id: 'waba-setor',
-        token_encrypted: 'segredo',
+        instance_name: 'instance-setor',
+        api_key_encrypted: 'segredo',
       },
     });
     const contato = await prisma.contato.create({ data: { telefone: '5511999990000' } });

@@ -15,9 +15,9 @@ import type { CriptografiaService } from '../src/services/criptografia.service.j
 import { ProcessadorStatusWhatsappService } from '../src/services/status-whatsapp.service.js';
 import { ProcessadorMensagemSaidaService } from '../src/services/processador-mensagem-saida.service.js';
 import {
-  ErroEnvioWhatsapp,
-  type WhatsappGraphApiService,
-} from '../src/services/whatsapp-graph-api.service.js';
+  ErroEvolutionApi,
+  type EvolutionApiService,
+} from '../src/services/evolution-api.service.js';
 
 const url = process.env.TEST_TENANT_DATABASE_URL_B;
 const descreverIntegracao = url ? describe : describe.skip;
@@ -44,10 +44,9 @@ descreverIntegracao('mensagens manuais de atendimento', () => {
     const conta = await prisma.contaWhatsapp.create({
       data: {
         nome: 'Envio',
-        phone_number_id: 'phone-envio',
-        waba_id: 'waba-envio',
-        token_encrypted: 'token',
-        status: 'VALIDADA',
+        instance_name: 'instance-envio',
+        api_key_encrypted: 'token',
+        status: 'CONECTADO',
         ativo: true,
       },
     });
@@ -139,7 +138,7 @@ descreverIntegracao('mensagens manuais de atendimento', () => {
       .expect(422);
   });
 
-  it('aplica status da Meta sem regredir a leitura', async () => {
+  it('aplica status do provedor sem regredir a leitura', async () => {
     const conversa = await prisma.conversa.findUniqueOrThrow({ where: { public_id: conversaId } });
     await prisma.mensagem.create({
       data: {
@@ -173,7 +172,7 @@ descreverIntegracao('mensagens manuais de atendimento', () => {
     ).toMatchObject({ status_entrega: 'LIDA' });
   });
 
-  it('envia pela conta da conversa, grava ID Meta e não repete job concluído', async () => {
+  it('envia pela conta da conversa, grava o ID da Evolution API e não repete job concluído', async () => {
     const conversa = await prisma.conversa.findUniqueOrThrow({ where: { public_id: conversaId } });
     const mensagem = await prisma.mensagem.create({
       data: {
@@ -187,7 +186,7 @@ descreverIntegracao('mensagens manuais de atendimento', () => {
         ocorreu_at: new Date(),
       },
     });
-    const enviar = vi.fn().mockResolvedValue('wamid.meta-saida');
+    const enviarTexto = vi.fn().mockResolvedValue('evo-msg-saida');
     const processador = new ProcessadorMensagemSaidaService(
       {
         buscarPorPublicId: () =>
@@ -196,21 +195,21 @@ descreverIntegracao('mensagens manuais de atendimento', () => {
       { descriptografar: () => 'postgresql://tenant' } as unknown as CriptografiaService,
       { descriptografar: () => 'token-aberto' } as unknown as CriptografiaService,
       { obter: () => Promise.resolve(prisma) } as unknown as GerenciadorConexoesTenant,
-      { enviar } as unknown as WhatsappGraphApiService,
+      { enviarTexto } as unknown as EvolutionApiService,
     );
     const job = { tenantId, mensagemPublicId: mensagem.public_id };
     await expect(processador.processar(job)).resolves.toBe('ENVIADA');
     await expect(processador.processar(job)).resolves.toBe('JA_PROCESSADA');
-    expect(enviar).toHaveBeenCalledTimes(1);
-    expect(enviar).toHaveBeenCalledWith(
-      'phone-envio',
-      'v23.0',
+    expect(enviarTexto).toHaveBeenCalledTimes(1);
+    expect(enviarTexto).toHaveBeenCalledWith(
+      'instance-envio',
       'token-aberto',
-      expect.objectContaining({ destinatario: '+5511999999999', texto: 'Enviar' }),
+      '+5511999999999',
+      'Enviar',
     );
     expect(await prisma.mensagem.findUniqueOrThrow({ where: { id: mensagem.id } })).toMatchObject({
       status_entrega: 'ENVIADA',
-      whatsapp_message_id: 'wamid.meta-saida',
+      whatsapp_message_id: 'evo-msg-saida',
     });
   });
 
@@ -232,7 +231,7 @@ descreverIntegracao('mensagens manuais de atendimento', () => {
       });
     const transitoria = await criar('worker-transitoria');
     const permanente = await criar('worker-permanente');
-    let erro: ErroEnvioWhatsapp = new ErroEnvioWhatsapp('META_HTTP_503', true);
+    let erro: ErroEvolutionApi = new ErroEvolutionApi('EVOLUTION_HTTP_503', true);
     const processador = new ProcessadorMensagemSaidaService(
       {
         buscarPorPublicId: () =>
@@ -241,7 +240,7 @@ descreverIntegracao('mensagens manuais de atendimento', () => {
       { descriptografar: () => 'postgresql://tenant' } as unknown as CriptografiaService,
       { descriptografar: () => 'token' } as unknown as CriptografiaService,
       { obter: () => Promise.resolve(prisma) } as unknown as GerenciadorConexoesTenant,
-      { enviar: () => Promise.reject(erro) } as unknown as WhatsappGraphApiService,
+      { enviarTexto: () => Promise.reject(erro) } as unknown as EvolutionApiService,
     );
     await expect(
       processador.processar({ tenantId, mensagemPublicId: transitoria.public_id }),
@@ -249,12 +248,12 @@ descreverIntegracao('mensagens manuais de atendimento', () => {
     expect(
       (await prisma.mensagem.findUniqueOrThrow({ where: { id: transitoria.id } })).enviada_at,
     ).toBeNull();
-    erro = new ErroEnvioWhatsapp('META_HTTP_400', false);
+    erro = new ErroEvolutionApi('EVOLUTION_HTTP_400', false);
     await expect(
       processador.processar({ tenantId, mensagemPublicId: permanente.public_id }),
     ).resolves.toBe('FALHA');
     expect(await prisma.mensagem.findUniqueOrThrow({ where: { id: permanente.id } })).toMatchObject(
-      { status_entrega: 'FALHA', erro_codigo: 'META_HTTP_400' },
+      { status_entrega: 'FALHA', erro_codigo: 'EVOLUTION_HTTP_400' },
     );
   });
 });

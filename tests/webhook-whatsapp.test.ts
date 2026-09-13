@@ -1,57 +1,66 @@
 import './configurar-ambiente.js';
 
-import { createHmac } from 'node:crypto';
-
 import request from 'supertest';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { criarAplicacao } from '../src/app.js';
 import { WebhookWhatsappController } from '../src/controllers/webhook-whatsapp.controller.js';
-import type { WebhookWhatsappEntrada } from '../src/dtos/webhook-whatsapp.dto.js';
+import type { WebhookEvolutionEntrada } from '../src/dtos/webhook-whatsapp.dto.js';
+import type { GerenciadorConexoesTenant } from '../src/database/gerenciador-conexoes-tenant.js';
 import type { EnfileiradorMensagem } from '../src/services/enfileirador-mensagem.service.js';
+import type { CriptografiaService } from '../src/services/criptografia.service.js';
 import { WebhookWhatsappService } from '../src/services/webhook-whatsapp.service.js';
 import type { JobMensagemRecebida } from '../src/types/jobs.js';
 
-const appSecret = process.env.WEBHOOK_WHATSAPP_APP_SECRET ?? '';
-const verifyToken = process.env.WEBHOOK_WHATSAPP_VERIFY_TOKEN ?? '';
-
-const corpo: WebhookWhatsappEntrada = {
-  object: 'whatsapp_business_account',
-  entry: [
-    {
-      id: 'waba-1',
-      changes: [
-        {
-          field: 'messages',
-          value: {
-            messaging_product: 'whatsapp',
-            metadata: {
-              display_phone_number: '5511999999999',
-              phone_number_id: 'numero-tenant-a',
-            },
-            messages: [
-              {
-                id: 'wamid.mensagem-1',
-                from: '5511888888888',
-                timestamp: '1785360000',
-                type: 'text',
-                text: { body: 'Olá' },
-              },
-            ],
-          },
-        },
-      ],
-    },
-  ],
-};
-
-function assinatura(payload: string): string {
-  return `sha256=${createHmac('sha256', appSecret).update(payload).digest('hex')}`;
+interface ContaFixture {
+  id: number;
+  tenantId: number;
+  tenantPublicId: string;
+  instanceName: string;
+  apiKey: string;
+  status: 'CONECTANDO' | 'CONECTADO' | 'DESCONECTADO';
 }
 
-describe('webhook do WhatsApp', () => {
+const contaA: ContaFixture = {
+  id: 1,
+  tenantId: 101,
+  tenantPublicId: '11111111-1111-4111-8111-111111111111',
+  instanceName: 'instancia-tenant-a',
+  apiKey: 'apikey-tenant-a',
+  status: 'CONECTANDO',
+};
+const contaB: ContaFixture = {
+  id: 2,
+  tenantId: 102,
+  tenantPublicId: '22222222-2222-4222-8222-222222222222',
+  instanceName: 'instancia-tenant-b',
+  apiKey: 'apikey-tenant-b',
+  status: 'CONECTANDO',
+};
+const contas = [contaA, contaB];
+
+function corpoMensagem(
+  instance: ContaFixture,
+  apikeyInformada = instance.apiKey,
+): WebhookEvolutionEntrada {
+  return {
+    event: 'messages.upsert',
+    instance: instance.instanceName,
+    apikey: apikeyInformada,
+    data: {
+      key: { id: 'wamid.mensagem-1', remoteJid: '5511888888888@s.whatsapp.net', fromMe: false },
+      pushName: 'Cliente',
+      messageTimestamp: 1_785_360_000,
+      message: { conversation: 'Olá' },
+    },
+  };
+}
+
+describe('webhook do WhatsApp (Evolution API)', () => {
   const chaves = new Set<string>();
   const jobs: { dados: JobMensagemRecebida; chave: string }[] = [];
+  const atualizacoesStatus: { id: number; status: string }[] = [];
+
   const idempotencia = {
     reservar: (chave: string) => Promise.resolve(chaves.size !== chaves.add(chave).size),
     liberar: (chave: string) => {
@@ -66,138 +75,153 @@ describe('webhook do WhatsApp', () => {
     },
   };
   const roteamentos = {
-    buscarTenantAtivo: (phoneNumberId: string) =>
-      Promise.resolve({
+    buscarTenantAtivo: (instanceName: string) => {
+      const conta = contas.find((item) => item.instanceName === instanceName);
+      if (!conta) return Promise.resolve(null);
+      return Promise.resolve({
         tenant: {
-          public_id:
-            phoneNumberId === 'numero-tenant-a'
-              ? '11111111-1111-4111-8111-111111111111'
-              : '22222222-2222-4222-8222-222222222222',
+          id: conta.tenantId,
+          public_id: conta.tenantPublicId,
           status: 'ATIVO',
+          string_conexao_encrypted: `conexao-${conta.instanceName}`,
           deletado_at: null,
         },
-      }),
+      });
+    },
   };
-  const controller = new WebhookWhatsappController(
-    new WebhookWhatsappService(roteamentos, idempotencia, enfileirador, 60),
-    verifyToken,
-  );
-  const aplicacao = criarAplicacao({
-    webhookWhatsapp: { controller, appSecret },
-  });
+  const prismaTenantFalso = {
+    contaWhatsapp: {
+      findFirst: (argumentos: { where: { instance_name: string } }) => {
+        const conta = contas.find((item) => item.instanceName === argumentos.where.instance_name);
+        if (!conta) return Promise.resolve(null);
+        return Promise.resolve({
+          id: conta.id,
+          public_id: `conta-${String(conta.id)}`,
+          instance_name: conta.instanceName,
+          api_key_encrypted: conta.apiKey,
+          status: conta.status,
+        });
+      },
+      update: (argumentos: { where: { id: number }; data: { status: string } }) => {
+        atualizacoesStatus.push({ id: argumentos.where.id, status: argumentos.data.status });
+        return Promise.resolve({ id: argumentos.where.id, status: argumentos.data.status });
+      },
+    },
+  };
+  const conexoes = {
+    obter: () => Promise.resolve(prismaTenantFalso),
+  };
+  const criptografiaIdentidade = { descriptografar: (valor: string) => valor };
+
+  function criarServico(enfileiradorMensagem: EnfileiradorMensagem = enfileirador) {
+    return new WebhookWhatsappService(
+      roteamentos,
+      conexoes as unknown as GerenciadorConexoesTenant,
+      criptografiaIdentidade as unknown as CriptografiaService,
+      criptografiaIdentidade as unknown as CriptografiaService,
+      idempotencia,
+      enfileiradorMensagem,
+      60,
+    );
+  }
+
+  const controller = new WebhookWhatsappController(criarServico());
+  const aplicacao = criarAplicacao({ webhookWhatsapp: { controller } });
 
   beforeEach(() => {
     chaves.clear();
     jobs.length = 0;
+    atualizacoesStatus.length = 0;
   });
 
-  it('responde o challenge quando o token de verificação confere', async () => {
-    const resposta = await request(aplicacao).get('/api/v1/webhook/whatsapp').query({
-      'hub.mode': 'subscribe',
-      'hub.verify_token': verifyToken,
-      'hub.challenge': 'desafio-123',
-    });
-
-    expect(resposta.status).toBe(200);
-    expect(resposta.text).toBe('desafio-123');
-  });
-
-  it('aceita assinatura válida, preserva o corpo bruto e enfileira com tenant', async () => {
-    const payload = JSON.stringify(corpo);
+  it('aceita evento válido, responde rápido e enfileira com o tenant correto', async () => {
     const inicio = performance.now();
     const resposta = await request(aplicacao)
       .post('/api/v1/webhook/whatsapp')
-      .set('Content-Type', 'application/json')
-      .set('X-Hub-Signature-256', assinatura(payload))
-      .send(payload);
+      .send(corpoMensagem(contaA));
     const duracaoMs = performance.now() - inicio;
 
     expect(resposta.status, JSON.stringify(resposta.body as unknown)).toBe(200);
     expect(duracaoMs).toBeLessThan(1_000);
-    expect(resposta.body as unknown).toEqual({ recebidas: 1, duplicadas: 0 });
+    expect(resposta.body as unknown).toEqual({ processado: true, recebidas: 1, duplicadas: 0 });
     expect(jobs[0]).toMatchObject({
       dados: {
-        tenantId: '11111111-1111-4111-8111-111111111111',
+        tenantId: contaA.tenantPublicId,
+        instanceName: contaA.instanceName,
         mensagemId: 'wamid.mensagem-1',
         texto: 'Olá',
       },
-      chave: 'tenant:11111111-1111-4111-8111-111111111111:webhook:mensagem:wamid.mensagem-1',
+      chave: `tenant:${contaA.tenantPublicId}:webhook:mensagem:wamid.mensagem-1`,
     });
   });
 
-  it('rejeita assinatura inválida antes de enfileirar', async () => {
+  it('rejeita apikey que não confere com a instância antes de enfileirar', async () => {
     const resposta = await request(aplicacao)
       .post('/api/v1/webhook/whatsapp')
-      .set('X-Hub-Signature-256', 'sha256=incorreta')
-      .send(corpo);
+      .send(corpoMensagem(contaA, 'apikey-errada'));
 
     expect(resposta.status).toBe(403);
-    expect(resposta.body as unknown).toMatchObject({
-      erro: { codigo: 'ACESSO_NEGADO' },
-    });
+    expect(resposta.body as unknown).toMatchObject({ erro: { codigo: 'ACESSO_NEGADO' } });
     expect(jobs).toHaveLength(0);
   });
 
   it('não cria um segundo job para o mesmo evento', async () => {
-    const payload = JSON.stringify(corpo);
     const enviar = () =>
-      request(aplicacao)
-        .post('/api/v1/webhook/whatsapp')
-        .set('Content-Type', 'application/json')
-        .set('X-Hub-Signature-256', assinatura(payload))
-        .send(payload);
+      request(aplicacao).post('/api/v1/webhook/whatsapp').send(corpoMensagem(contaA));
 
-    expect((await enviar()).body as unknown).toEqual({ recebidas: 1, duplicadas: 0 });
-    expect((await enviar()).body as unknown).toEqual({ recebidas: 0, duplicadas: 1 });
+    expect((await enviar()).body as unknown).toEqual({
+      processado: true,
+      recebidas: 1,
+      duplicadas: 0,
+    });
+    expect((await enviar()).body as unknown).toEqual({
+      processado: true,
+      recebidas: 0,
+      duplicadas: 1,
+    });
     expect(jobs).toHaveLength(1);
   });
 
   it('isola a chave da mesma mensagem entre tenants', async () => {
-    const servico = new WebhookWhatsappService(roteamentos, idempotencia, enfileirador, 60);
-    await servico.receber(corpo);
-    const corpoTenantB = structuredClone(corpo);
-    const alteracao = corpoTenantB.entry.at(0)?.changes.at(0);
-    if (!alteracao) throw new Error('Fixture do webhook sem alteração');
-    alteracao.value.metadata.phone_number_id = 'numero-tenant-b';
-    await servico.receber(corpoTenantB);
+    const servico = criarServico();
+    await servico.receber(corpoMensagem(contaA));
+    await servico.receber(corpoMensagem(contaB));
 
     expect(jobs).toHaveLength(2);
     expect(jobs[0]?.chave).not.toBe(jobs[1]?.chave);
   });
 
-  it('enfileira atualizações de entrega sem criar mensagem recebida', async () => {
-    const statusEnfileirados: unknown[] = [];
-    const servico = new WebhookWhatsappService(roteamentos, idempotencia, enfileirador, 60, {
-      adicionar: (dados) => {
-        statusEnfileirados.push(dados);
-        return Promise.resolve();
-      },
-    });
-    const entrada: WebhookWhatsappEntrada = {
-      object: 'whatsapp_business_account',
-      entry: [
-        {
-          id: 'waba',
-          changes: [
-            {
-              field: 'messages',
-              value: {
-                messaging_product: 'whatsapp',
-                metadata: { phone_number_id: 'numero-tenant-a' },
-                statuses: [{ id: 'wamid.saida', status: 'delivered', timestamp: '1785360000' }],
-              },
-            },
-          ],
-        },
-      ],
+  it('atualiza o status da conta em connection.update sem enfileirar mensagem', async () => {
+    const servico = criarServico();
+    const entrada: WebhookEvolutionEntrada = {
+      event: 'connection.update',
+      instance: contaA.instanceName,
+      apikey: contaA.apiKey,
+      data: { state: 'open' },
     };
+
     await expect(servico.receber(entrada)).resolves.toEqual({
+      processado: true,
       recebidas: 0,
       duplicadas: 0,
-      statusRecebidos: 1,
     });
-    expect(statusEnfileirados).toEqual([
-      expect.objectContaining({ mensagemId: 'wamid.saida', status: 'delivered' }),
-    ]);
+    expect(atualizacoesStatus).toEqual([{ id: contaA.id, status: 'CONECTADO' }]);
+    expect(jobs).toHaveLength(0);
+  });
+
+  it('ignora eventos desconhecidos sem falhar', async () => {
+    const servico = criarServico();
+    const entrada: WebhookEvolutionEntrada = {
+      event: 'presence.update',
+      instance: contaA.instanceName,
+      apikey: contaA.apiKey,
+      data: {},
+    };
+
+    await expect(servico.receber(entrada)).resolves.toEqual({
+      processado: false,
+      recebidas: 0,
+      duplicadas: 0,
+    });
   });
 });

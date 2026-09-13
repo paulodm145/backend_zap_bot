@@ -48,7 +48,7 @@ descreverIntegracao('retry de worker com backoff', () => {
     const inicio = performance.now();
     const job = await fila.add('processar-mensagem-recebida', {
       tenantId: '11111111-1111-4111-8111-111111111111',
-      phoneNumberId: 'numero-1',
+      instanceName: 'instancia-1',
       mensagemId: 'mensagem-retry',
       remetente: '5511888888888',
       timestamp: '1785360000',

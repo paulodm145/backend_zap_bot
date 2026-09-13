@@ -36,9 +36,8 @@ descreverIntegracao('direcionamento de atendimento', () => {
     const conta = await prisma.contaWhatsapp.create({
       data: {
         nome: 'Conta Atendimento',
-        phone_number_id: 'phone-atendimento',
-        waba_id: 'waba-atendimento',
-        token_encrypted: 'segredo',
+        instance_name: 'instance-atendimento',
+        api_key_encrypted: 'segredo',
       },
     });
     const setor = await prisma.setor.create({

@@ -32,9 +32,8 @@ descreverIntegracao('histórico de conversas', () => {
     const conta = await prisma.contaWhatsapp.create({
       data: {
         nome: 'Principal',
-        phone_number_id: 'phone-historico',
-        waba_id: 'waba-historico',
-        token_encrypted: 'segredo',
+        instance_name: 'instance-historico',
+        api_key_encrypted: 'segredo',
         ativo: true,
       },
     });
@@ -131,7 +130,7 @@ descreverIntegracao('histórico de conversas', () => {
     const repositorio = new HistoricoRepository(prisma);
     const job = {
       tenantId: crypto.randomUUID(),
-      phoneNumberId: 'phone-historico',
+      instanceName: 'instance-historico',
       mensagemId: 'wamid-unica',
       remetente: '55 (11) 98888-7777',
       timestamp: '1785585600',
@@ -161,7 +160,7 @@ descreverIntegracao('histórico de conversas', () => {
     await repositorio.persistirRecebida(
       {
         tenantId: crypto.randomUUID(),
-        phoneNumberId: 'phone-historico',
+        instanceName: 'instance-historico',
         mensagemId: 'wamid-janela',
         remetente: contato.telefone,
         timestamp: '1785585600',

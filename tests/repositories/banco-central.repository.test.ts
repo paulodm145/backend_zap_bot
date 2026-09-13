@@ -81,19 +81,19 @@ descreverIntegracao('repositories do banco central', () => {
     expect(encontrado?.id).toBe(criado.id);
   });
 
-  it('resolve tenant ativo pelo phone_number_id central', async () => {
+  it('resolve tenant ativo pela instância central', async () => {
     const tenant = await prisma.tenant.create({
       data: { nome: 'Empresa com WhatsApp', status: 'ATIVO' },
     });
     await prisma.roteamentoWhatsapp.create({
       data: {
         tenant_id: tenant.id,
-        phone_number_id: 'numero-central-teste',
+        instance_name: 'instancia-central-teste',
       },
     });
 
     const encontrado = await new RoteamentoWhatsappRepository(prisma).buscarTenantAtivo(
-      'numero-central-teste',
+      'instancia-central-teste',
     );
 
     expect(encontrado?.tenant).toMatchObject({
@@ -117,7 +117,7 @@ descreverIntegracao('repositories do banco central', () => {
     expect(nomes).toContain('tenants_nome_trgm_idx');
     expect(nomes).toContain('assinaturas_tenant_id_status_idx');
     expect(nomes).toContain('refresh_tokens_expira_at_idx');
-    expect(nomes).toContain('roteamentos_whatsapp_phone_number_id_key');
+    expect(nomes).toContain('roteamentos_whatsapp_instance_name_key');
     expect(nomes).toContain('roteamentos_whatsapp_tenant_id_idx');
     expect(nomes).toContain('estados_nome_normalizado_idx');
     expect(nomes).toContain('municipios_estado_id_nome_normalizado_idx');
