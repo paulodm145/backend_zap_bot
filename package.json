@@ -30,7 +30,8 @@
     "db:tenant:migrate:todos": "tsx scripts/migrar-tenants.ts",
     "catalogo:geografia:importar": "tsx scripts/importar-geografia.ts",
     "auth:limpar-refresh": "tsx scripts/limpar-refresh-tokens.ts",
-    "admin:criar": "tsx scripts/criar-super-admin.ts"
+    "admin:criar": "tsx scripts/criar-super-admin.ts",
+    "admin:criar-tenant-demo": "tsx scripts/criar-tenant-demo.ts"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^9.1.0",
