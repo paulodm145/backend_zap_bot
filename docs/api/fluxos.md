@@ -149,7 +149,7 @@ implementadas no backend e publicadas no OpenAPI.
 
 ## Simulador
 
-A simulação sempre usa uma versão publicada e não chama a Cloud API. Na
+A simulação sempre usa uma versão publicada e não chama a Evolution API. Na
 primeira chamada envie:
 
 ```json

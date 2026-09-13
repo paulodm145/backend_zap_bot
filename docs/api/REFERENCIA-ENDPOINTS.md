@@ -86,17 +86,16 @@ dependem do cookie HttpOnly. Uma implementação sugerida do cliente HTTP está 
 | POST   | `/api/v1/contas-whatsapp`                        | Admin do tenant                   | Cadastrar conta WhatsApp                  |
 | GET    | `/api/v1/contas-whatsapp/{contaId}`              | Admin do tenant                   | Detalhar conta WhatsApp                   |
 | PUT    | `/api/v1/contas-whatsapp/{contaId}`              | Admin do tenant                   | Atualizar conta WhatsApp                  |
-| PATCH  | `/api/v1/contas-whatsapp/{contaId}/token`        | Admin do tenant                   | Rotacionar token                          |
 | PATCH  | `/api/v1/contas-whatsapp/{contaId}/status`       | Admin do tenant                   | Ativar ou desativar conta                 |
-| POST   | `/api/v1/contas-whatsapp/{contaId}/testar`       | Admin do tenant                   | Testar credencial na Meta                 |
+| POST   | `/api/v1/contas-whatsapp/{contaId}/reconectar`   | Admin do tenant                   | Gerar novo QR code de pareamento          |
+| POST   | `/api/v1/contas-whatsapp/{contaId}/desconectar`  | Admin do tenant                   | Encerrar sessão pareada da instância      |
 | GET    | `/api/v1/usuarios`                               | Admin ou gestor                   | Listar usuários                           |
 | POST   | `/api/v1/usuarios`                               | Admin ou gestor                   | Cadastrar usuário                         |
 | GET    | `/api/v1/usuarios/{usuarioId}`                   | Admin ou gestor                   | Detalhar usuário                          |
 | PUT    | `/api/v1/usuarios/{usuarioId}`                   | Admin ou gestor                   | Editar usuário                            |
 | PATCH  | `/api/v1/usuarios/{usuarioId}/status`            | Admin ou gestor                   | Ativar ou desativar usuário               |
 | DELETE | `/api/v1/usuarios/{usuarioId}`                   | Admin ou gestor                   | Excluir usuário                           |
-| GET    | `/api/v1/webhook/whatsapp`                       | Token de verificação Meta         | Confirmar cadastro do webhook             |
-| POST   | `/api/v1/webhook/whatsapp`                       | Assinatura HMAC Meta              | Receber e enfileirar eventos              |
+| POST   | `/api/v1/webhook/whatsapp`                       | Apikey da instância Evolution     | Receber e enfileirar eventos              |
 
 ## Infraestrutura e documentação
 
@@ -278,22 +277,17 @@ refaça o detalhe porque não há alterações pendentes.
 
 Na primeira chamada envie `{ "maxPassos": 50 }`. Renderize `saidas`; se houver
 captura, devolva o `estado` integral com a próxima `mensagem`. Não envie nada à
-Cloud API. Contratos completos: [Fluxos e editor](fluxos.md) e
+Evolution API. Contratos completos: [Fluxos e editor](fluxos.md) e
 [Schema JSON](../schemas/fluxo-json.md).
 
 ## Webhook do WhatsApp
 
-### `GET /api/v1/webhook/whatsapp`
-
-É consumido pela Meta, não pelo frontend. Recebe `hub.mode`,
-`hub.verify_token` e `hub.challenge`; devolve o challenge em texto quando o
-token confere.
-
 ### `POST /api/v1/webhook/whatsapp`
 
-É consumido pela Meta e exige `X-Hub-Signature-256`. Valida o corpo bruto,
-resolve o tenant por `phone_number_id`, deduplica mensagens no Redis e cria
-jobs. O frontend não deve chamar essa rota. Consulte
+É consumido pela Evolution API, não pelo frontend. Valida a `apikey` da
+instância presente no corpo do evento, resolve o tenant pelo nome da
+instância, deduplica mensagens no Redis e cria jobs. O frontend não deve
+chamar essa rota. Consulte
 [Webhook do WhatsApp](../eventos/webhook-whatsapp.md).
 
 ## Regras de cache e sessão
