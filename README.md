@@ -244,7 +244,12 @@ token nos logs. Jobs concluídos são removidos imediatamente do Redis.
 ## Ambiente local com containers
 
 Pré-requisitos: Docker Engine com Compose v2 e portas 3000, 5432 e 6379
-disponíveis. Prepare o ambiente:
+disponíveis. Se alguma já estiver em uso por um serviço nativo (por exemplo um
+PostgreSQL ou Redis instalado direto na máquina), não é preciso pará-lo:
+publique o Compose em outras portas de host definindo `POSTGRES_PORT`,
+`REDIS_PORT` e/ou `API_PORT` no `.env` — a comunicação interna entre os
+serviços do Compose usa sempre `postgres:5432` e `redis:6379` e não muda.
+Prepare o ambiente:
 
 ```bash
 cp .env.example .env
@@ -282,6 +287,38 @@ docker compose -f docker-compose.dev.yml exec \
   -e SUPER_ADMIN_EMAIL="admin@empresa.com" \
   -e SUPER_ADMIN_SENHA="uma-senha-forte-e-unica" \
   api npm run admin:criar
+```
+
+Crie um tenant de demonstração com um administrador pronto para uso — é o
+mesmo caminho de código de `POST /api/v1/interno/tenants`, então já cria o
+banco físico do tenant e aplica as migrations do schema de tenant. O comando é
+idempotente por padrão: rodá-lo de novo sem argumentos reaproveita o mesmo
+tenant em vez de duplicar.
+
+```bash
+docker compose -f docker-compose.dev.yml exec \
+  -e DEMO_TENANT_ADMIN_EMAIL="admin@tenant.local" \
+  -e DEMO_TENANT_ADMIN_SENHA="uma-senha-forte-e-unica" \
+  api npm run admin:criar-tenant-demo
+```
+
+Use `DEMO_TENANT_NOME`, `DEMO_TENANT_PLANO`, `DEMO_TENANT_ADMIN_NOME` (ou os
+equivalentes `--nome`, `--plano`, `--admin-nome`, `--admin-email`,
+`--admin-senha`) para outro cenário, e `DEMO_TENANT_CHAVE`/`--chave` com um
+UUID novo para criar um segundo tenant em vez de reaproveitar o padrão.
+
+Valide os dois logins do contrato de autenticação:
+
+```bash
+# super admin do painel interno
+curl -s -X POST http://localhost:3000/api/v1/interno/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"admin@empresa.com","senha":"uma-senha-forte-e-unica"}'
+
+# administrador do tenant de demonstração
+curl -s -X POST http://localhost:3000/api/v1/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"admin@tenant.local","senha":"uma-senha-forte-e-unica"}'
 ```
 
 Execute verificações dentro do container:
@@ -344,28 +381,29 @@ npm run format
 
 Todos os scripts são executados com `npm run <nome>`.
 
-| Script                        | Finalidade                                                  |
-| ----------------------------- | ----------------------------------------------------------- |
-| `dev`                         | Inicia a API em modo watch.                                 |
-| `build`                       | Gera os dois clients Prisma e compila o TypeScript.         |
-| `start`                       | Executa a saída compilada em `dist/`.                       |
-| `lint` / `lint:fix`           | Verifica ou corrige regras estáticas.                       |
-| `format` / `format:check`     | Aplica ou verifica o Prettier.                              |
-| `typecheck`                   | Valida tipos sem emitir arquivos.                           |
-| `test` / `test:watch`         | Executa testes uma vez ou em observação.                    |
-| `test:coverage`               | Executa testes com limites de cobertura.                    |
-| `prisma:generate`             | Gera os clients central e tenant.                           |
-| `prisma:central:generate`     | Gera somente o client do banco central/admin.               |
-| `prisma:tenant:generate`      | Gera somente o client dos bancos de tenant.                 |
-| `db:central:migrate:dev`      | Cria/aplica migration central em desenvolvimento.           |
-| `db:central:migrate:deploy`   | Aplica migrations centrais pendentes.                       |
-| `db:central:seed`             | Cadastra ou atualiza os planos iniciais.                    |
-| `db:tenant:migrate:dev`       | Cria migration no schema separado de tenant.                |
-| `db:tenant:migrate:deploy`    | Atualiza um banco de tenant específico.                     |
-| `db:tenant:migrate:todos`     | Atualiza todos os tenants ativos, tolerando falha isolada.  |
-| `catalogo:geografia:importar` | Importa estados e municípios da BrasilAPI no banco central. |
-| `auth:limpar-refresh`         | Remove refresh tokens expirados do banco central.           |
-| `admin:criar`                 | Cadastra um `super_admin` sem senha padrão.                 |
+| Script                        | Finalidade                                                                   |
+| ----------------------------- | ---------------------------------------------------------------------------- |
+| `dev`                         | Inicia a API em modo watch.                                                  |
+| `build`                       | Gera os dois clients Prisma e compila o TypeScript.                          |
+| `start`                       | Executa a saída compilada em `dist/`.                                        |
+| `lint` / `lint:fix`           | Verifica ou corrige regras estáticas.                                        |
+| `format` / `format:check`     | Aplica ou verifica o Prettier.                                               |
+| `typecheck`                   | Valida tipos sem emitir arquivos.                                            |
+| `test` / `test:watch`         | Executa testes uma vez ou em observação.                                     |
+| `test:coverage`               | Executa testes com limites de cobertura.                                     |
+| `prisma:generate`             | Gera os clients central e tenant.                                            |
+| `prisma:central:generate`     | Gera somente o client do banco central/admin.                                |
+| `prisma:tenant:generate`      | Gera somente o client dos bancos de tenant.                                  |
+| `db:central:migrate:dev`      | Cria/aplica migration central em desenvolvimento.                            |
+| `db:central:migrate:deploy`   | Aplica migrations centrais pendentes.                                        |
+| `db:central:seed`             | Cadastra ou atualiza os planos iniciais.                                     |
+| `db:tenant:migrate:dev`       | Cria migration no schema separado de tenant.                                 |
+| `db:tenant:migrate:deploy`    | Atualiza um banco de tenant específico.                                      |
+| `db:tenant:migrate:todos`     | Atualiza todos os tenants ativos, tolerando falha isolada.                   |
+| `catalogo:geografia:importar` | Importa estados e municípios da BrasilAPI no banco central.                  |
+| `auth:limpar-refresh`         | Remove refresh tokens expirados do banco central.                            |
+| `admin:criar`                 | Cadastra um `super_admin` sem senha padrão.                                  |
+| `admin:criar-tenant-demo`     | Provisiona um tenant de demonstração com administrador pronto (idempotente). |
 
 Exemplos de infraestrutura central:
 
@@ -401,6 +439,13 @@ SUPER_ADMIN_NOME="Administrador" \
 SUPER_ADMIN_EMAIL=admin@empresa.com \
 SUPER_ADMIN_SENHA='uma-senha-forte-e-unica' \
 npm run admin:criar
+
+CENTRAL_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/zapbot_central \
+POSTGRES_ADMIN_URL=postgresql://postgres:postgres@127.0.0.1:5432/postgres \
+TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE=<64-hex> \
+DEMO_TENANT_ADMIN_EMAIL=admin@tenant.local \
+DEMO_TENANT_ADMIN_SENHA='uma-senha-forte-e-unica' \
+npm run admin:criar-tenant-demo
 ```
 
 Importação completa e idempotente do catálogo geográfico:
