@@ -21,7 +21,7 @@ export class HistoricoRepository {
             )
               return 'DUPLICADA';
             const conta = await transacao.contaWhatsapp.findFirstOrThrow({
-              where: { phone_number_id: job.phoneNumberId, ativo: true, deletado_at: null },
+              where: { instance_name: job.instanceName, ativo: true, deletado_at: null },
             });
             const telefone = normalizarTelefone(job.remetente);
             if (!telefone) throw new Error('Telefone de remetente inválido');

@@ -5,8 +5,9 @@
 O `central_db` contém somente dados globais necessários para autenticação,
 provisionamento, planos, assinaturas, refresh tokens e auditoria interna. Dados
 operacionais de conversas e fluxos permanecem nos bancos físicos dos tenants.
-O índice `roteamentos_whatsapp` guarda somente a associação técnica entre
-`phone_number_id` e tenant para resolver webhooks sem varrer todos os bancos.
+O índice `roteamentos_whatsapp` guarda somente a associação técnica entre o
+nome da instância na Evolution API (`instance_name`) e o tenant, para
+resolver webhooks sem varrer todos os bancos.
 
 ## Requisitos
 
@@ -96,12 +97,13 @@ revogação.
 
 ## Roteamento de contas WhatsApp
 
-Cada número recebido no webhook precisa de um registro único em
-`roteamentos_whatsapp`. A associação referencia o `id` inteiro do tenant e é
-removida em cascata se o tenant for excluído.
+Cada instância criada na Evolution API precisa de um registro único em
+`roteamentos_whatsapp`, indexado por `instance_name`. A associação referencia
+o `id` inteiro do tenant e é removida em cascata se o tenant for excluído.
 
-Access token, WABA e demais configurações da conta não são duplicados no banco
-central. Eles continuam criptografados em `contas_whatsapp`, no banco físico
-correspondente. O onboarding da conta deve atualizar os dois lados na mesma
-jornada operacional e tratar uma falha parcial como pendência de
-sincronização.
+A `apikey` da instância e demais configurações da conta não são duplicadas no
+banco central. Elas continuam criptografadas em `contas_whatsapp`, no banco
+físico correspondente. O provisionamento da conta (`ContaWhatsappService`)
+atualiza os dois lados na mesma jornada operacional e trata uma falha parcial
+como pendência de sincronização, desfazendo o registro do banco de tenant
+quando a sincronização central falha.

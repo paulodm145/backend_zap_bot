@@ -3,14 +3,16 @@ import type { PrismaClient } from '../generated/prisma/client.js';
 export class RoteamentoWhatsappRepository {
   public constructor(private readonly prisma: PrismaClient) {}
 
-  public buscarTenantAtivo(phoneNumberId: string) {
+  public buscarTenantAtivo(instanceName: string) {
     return this.prisma.roteamentoWhatsapp.findUnique({
-      where: { phone_number_id: phoneNumberId },
+      where: { instance_name: instanceName },
       select: {
         tenant: {
           select: {
+            id: true,
             public_id: true,
             status: true,
+            string_conexao_encrypted: true,
             deletado_at: true,
           },
         },
@@ -18,21 +20,21 @@ export class RoteamentoWhatsappRepository {
     });
   }
 
-  public buscar(phoneNumberId: string) {
-    return this.prisma.roteamentoWhatsapp.findUnique({ where: { phone_number_id: phoneNumberId } });
+  public buscar(instanceName: string) {
+    return this.prisma.roteamentoWhatsapp.findUnique({ where: { instance_name: instanceName } });
   }
 
-  public sincronizar(tenantId: number, phoneNumberId: string) {
+  public sincronizar(tenantId: number, instanceName: string) {
     return this.prisma.roteamentoWhatsapp.upsert({
-      where: { phone_number_id: phoneNumberId },
-      create: { tenant_id: tenantId, phone_number_id: phoneNumberId },
+      where: { instance_name: instanceName },
+      create: { tenant_id: tenantId, instance_name: instanceName },
       update: { tenant_id: tenantId },
     });
   }
 
-  public remover(tenantId: number, phoneNumberId: string) {
+  public remover(tenantId: number, instanceName: string) {
     return this.prisma.roteamentoWhatsapp.deleteMany({
-      where: { tenant_id: tenantId, phone_number_id: phoneNumberId },
+      where: { tenant_id: tenantId, instance_name: instanceName },
     });
   }
 

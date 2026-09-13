@@ -4,7 +4,6 @@ declare global {
   namespace Express {
     interface Request {
       correlationId: string;
-      rawBody?: Buffer;
       usuarioInterno?: {
         id: string;
         email: string;

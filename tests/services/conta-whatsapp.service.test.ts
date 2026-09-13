@@ -4,19 +4,18 @@ import type { ContaWhatsappRepository } from '../../src/repositories/conta-whats
 import type { RoteamentoWhatsappRepository } from '../../src/repositories/roteamento-whatsapp.repository.js';
 import { ContaWhatsappService } from '../../src/services/conta-whatsapp.service.js';
 import { CriptografiaService } from '../../src/services/criptografia.service.js';
-import type { WhatsappGraphApiService } from '../../src/services/whatsapp-graph-api.service.js';
+import type { EvolutionApiService } from '../../src/services/evolution-api.service.js';
 
 const conta = {
   id: 1,
   public_id: '40ca22c9-5435-4bb7-81a2-27ee3dfb6277',
   nome: 'Principal',
-  phone_number_id: '123456',
-  waba_id: '654321',
+  instance_name: 'tenant-10-gerado',
+  instance_id: 'evo-instance-1',
   numero_exibicao: null,
-  versao_graph_api: 'v23.0',
-  token_encrypted: 'payload-criptografado',
-  status: 'PENDENTE' as const,
-  ultima_validacao_at: null,
+  api_key_encrypted: 'payload-criptografado',
+  status: 'CONECTANDO' as const,
+  ultima_sincronizacao_at: null,
   ultimo_erro_codigo: null,
   ultimo_erro_mensagem: null,
   ativo: true,
@@ -39,35 +38,40 @@ function dependencias() {
   const criptografia = new CriptografiaService(
     '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
   );
-  const graphApi = {};
+  const evolution = {
+    criarInstancia: vi.fn().mockResolvedValue({
+      instanceId: 'evo-instance-1',
+      apiKey: 'apikey-bruta-da-evolution',
+      qrCodeBase64: 'data:image/png;base64,QRCODE',
+    }),
+    excluirInstancia: vi.fn().mockResolvedValue(undefined),
+    desconectar: vi.fn().mockResolvedValue(undefined),
+  };
   const service = new ContaWhatsappService(
     contas as unknown as ContaWhatsappRepository,
     roteamentos as unknown as RoteamentoWhatsappRepository,
     criptografia,
-    graphApi as WhatsappGraphApiService,
+    evolution as unknown as EvolutionApiService,
   );
-  return { service, contas, roteamentos };
+  return { service, contas, roteamentos, evolution };
 }
 
 describe('ContaWhatsappService', () => {
-  const entrada = {
-    nome: 'Principal',
-    phoneNumberId: '123456',
-    wabaId: '654321',
-    versaoGraphApi: 'v23.0',
-    accessToken: 'token-com-tamanho-suficiente',
-  };
+  const entrada = { nome: 'Principal' };
   const contexto = { tenantId: 10, autorUsuarioId: '40ca22c9-5435-4bb7-81a2-27ee3dfb6277' };
 
-  it('criptografa, sincroniza e nunca devolve o token', async () => {
-    const { service, contas, roteamentos } = dependencias();
+  it('cria a instância na Evolution API, criptografa a apikey e nunca a devolve', async () => {
+    const { service, contas, roteamentos, evolution } = dependencias();
     const resultado = await service.criar(entrada, contexto);
     const argumentoCriacao = contas.criar.mock.calls[0]?.[0] as unknown as {
-      tokenEncrypted: string;
+      instanceName: string;
+      apiKeyEncrypted: string;
     };
-    expect(argumentoCriacao.tokenEncrypted).not.toContain(entrada.accessToken);
-    expect(roteamentos.sincronizar).toHaveBeenCalledWith(10, '123456');
-    expect(resultado).not.toHaveProperty('token_encrypted');
+    expect(evolution.criarInstancia).toHaveBeenCalledWith(argumentoCriacao.instanceName);
+    expect(argumentoCriacao.apiKeyEncrypted).not.toContain('apikey-bruta-da-evolution');
+    expect(roteamentos.sincronizar).toHaveBeenCalledWith(10, argumentoCriacao.instanceName);
+    expect(resultado.conta).not.toHaveProperty('api_key_encrypted');
+    expect(resultado.qrCodeBase64).toBe('data:image/png;base64,QRCODE');
   });
 
   it('impede cadastro acima do limite do plano', async () => {
@@ -76,16 +80,21 @@ describe('ContaWhatsappService', () => {
     await expect(service.criar(entrada, contexto)).rejects.toMatchObject({ codigo: 'VALIDACAO' });
   });
 
-  it('impede phone_number_id pertencente a outro tenant', async () => {
+  it('impede instância pertencente a outro tenant', async () => {
     const { service, roteamentos } = dependencias();
     roteamentos.buscar.mockResolvedValue({ tenant_id: 99 });
     await expect(service.criar(entrada, contexto)).rejects.toMatchObject({ codigo: 'CONFLITO' });
   });
 
-  it('compensa a criação tenant se o índice central falhar', async () => {
-    const { service, contas, roteamentos } = dependencias();
+  it('compensa a criação tenant e remove a instância se o índice central falhar', async () => {
+    const { service, contas, roteamentos, evolution } = dependencias();
     roteamentos.sincronizar.mockRejectedValue(new Error('central indisponível'));
     await expect(service.criar(entrada, contexto)).rejects.toThrow('central indisponível');
+    const instanceName = evolution.criarInstancia.mock.calls[0]?.[0] as string;
     expect(contas.excluirCriacaoCompensatoria).toHaveBeenCalledWith(1);
+    expect(evolution.excluirInstancia).toHaveBeenCalledWith(
+      instanceName,
+      'apikey-bruta-da-evolution',
+    );
   });
 });

@@ -44,7 +44,6 @@ import {
   contaWhatsappIdSchema,
   criarContaWhatsappSchema,
   listarContasWhatsappSchema,
-  rotacionarTokenWhatsappSchema,
 } from '../dtos/conta-whatsapp.dto.js';
 import {
   alterarStatusUsuarioTenantSchema,
@@ -62,7 +61,7 @@ import {
   tenantPublicIdSchema,
 } from '../dtos/tenant-interno.dto.js';
 import { estadoInternoSchema, verificarTotpInternoSchema } from '../dtos/totp-interno.dto.js';
-import { challengeWhatsappSchema, webhookWhatsappSchema } from '../dtos/webhook-whatsapp.dto.js';
+import { webhookEvolutionSchema } from '../dtos/webhook-whatsapp.dto.js';
 import { z } from './zod-openapi.js';
 
 const erroSchema = z
@@ -133,14 +132,9 @@ const loginRespostaSchema = z
   .openapi('LoginResposta');
 
 const refreshRespostaSchema = z.object({ accessToken: z.string() }).openapi('RefreshResposta');
-const assinaturaWebhookSchema = z.object({
-  'x-hub-signature-256': z
-    .string()
-    .startsWith('sha256=')
-    .openapi({ example: 'sha256=hexadecimal-calculado-sobre-o-corpo-bruto' }),
-});
 const webhookRespostaSchema = z
   .object({
+    processado: z.boolean(),
     recebidas: z.number().int().nonnegative(),
     duplicadas: z.number().int().nonnegative(),
   })
@@ -233,17 +227,24 @@ const enderecoCepSchema = z.object({
 const contaWhatsappSchema = z.object({
   public_id: z.uuid(),
   nome: z.string(),
-  phone_number_id: z.string(),
-  waba_id: z.string(),
+  instance_name: z.string(),
+  instance_id: z.string().nullable(),
   numero_exibicao: z.string().nullable(),
-  versao_graph_api: z.string(),
-  status: z.enum(['PENDENTE', 'VALIDADA', 'INVALIDA']),
-  ultima_validacao_at: z.iso.datetime().nullable(),
+  status: z.enum(['CONECTANDO', 'CONECTADO', 'DESCONECTADO']),
+  ultima_sincronizacao_at: z.iso.datetime().nullable(),
   ultimo_erro_codigo: z.string().nullable(),
   ultimo_erro_mensagem: z.string().nullable(),
   ativo: z.boolean(),
   created_at: z.iso.datetime(),
   updated_at: z.iso.datetime(),
+});
+const criarContaWhatsappRespostaSchema = z.object({
+  conta: contaWhatsappSchema,
+  qrCodeBase64: z.string().optional(),
+});
+const reconectarContaWhatsappRespostaSchema = z.object({
+  conta: contaWhatsappSchema,
+  qrCodeBase64: z.string().optional(),
 });
 const paginaContasWhatsappSchema = z.object({
   dados: z.array(contaWhatsappSchema),
@@ -1072,7 +1073,7 @@ function criarRegistro(): OpenAPIRegistry {
     method: 'post',
     path: '/api/v1/contas-whatsapp',
     tags: ['Contas WhatsApp'],
-    summary: 'Cadastra uma conta e sincroniza seu roteamento central',
+    summary: 'Cria a instância na Evolution API e sincroniza o roteamento central',
     security: [{ bearerAuth: [] }],
     request: {
       body: {
@@ -1082,11 +1083,11 @@ function criarRegistro(): OpenAPIRegistry {
     },
     responses: {
       201: {
-        description: 'Conta cadastrada sem retornar o token.',
-        content: { 'application/json': { schema: contaWhatsappSchema } },
+        description: 'Conta cadastrada com o QR code inicial para pareamento.',
+        content: { 'application/json': { schema: criarContaWhatsappRespostaSchema } },
       },
       409: {
-        description: 'Número vinculado a outro tenant.',
+        description: 'Instância vinculada a outro tenant.',
         content: { 'application/json': { schema: erroSchema } },
       },
       422: {
@@ -1117,7 +1118,7 @@ function criarRegistro(): OpenAPIRegistry {
     method: 'put',
     path: '/api/v1/contas-whatsapp/{contaId}',
     tags: ['Contas WhatsApp'],
-    summary: 'Atualiza metadados e roteamento da conta',
+    summary: 'Atualiza o nome de exibição da conta',
     security: [{ bearerAuth: [] }],
     request: {
       params: contaWhatsappIdSchema,
@@ -1131,29 +1132,9 @@ function criarRegistro(): OpenAPIRegistry {
         description: 'Conta atualizada.',
         content: { 'application/json': { schema: contaWhatsappSchema } },
       },
-      409: {
-        description: 'Número vinculado a outro tenant.',
+      404: {
+        description: 'Conta não encontrada.',
         content: { 'application/json': { schema: erroSchema } },
-      },
-    },
-  });
-  registro.registerPath({
-    method: 'patch',
-    path: '/api/v1/contas-whatsapp/{contaId}/token',
-    tags: ['Contas WhatsApp'],
-    summary: 'Rotaciona a credencial criptografada',
-    security: [{ bearerAuth: [] }],
-    request: {
-      params: contaWhatsappIdSchema,
-      body: {
-        required: true,
-        content: { 'application/json': { schema: rotacionarTokenWhatsappSchema } },
-      },
-    },
-    responses: {
-      200: {
-        description: 'Token substituído; o valor nunca é retornado.',
-        content: { 'application/json': { schema: contaWhatsappSchema } },
       },
     },
   });
@@ -1179,15 +1160,37 @@ function criarRegistro(): OpenAPIRegistry {
   });
   registro.registerPath({
     method: 'post',
-    path: '/api/v1/contas-whatsapp/{contaId}/testar',
+    path: '/api/v1/contas-whatsapp/{contaId}/reconectar',
     tags: ['Contas WhatsApp'],
-    summary: 'Testa a credencial diretamente na Graph API',
+    summary: 'Gera um novo QR code para parear a instância novamente',
     security: [{ bearerAuth: [] }],
     request: { params: contaWhatsappIdSchema },
     responses: {
       200: {
-        description: 'Resultado persistido sem dados secretos.',
+        description: 'Novo QR code, quando a instância ainda não estiver conectada.',
+        content: { 'application/json': { schema: reconectarContaWhatsappRespostaSchema } },
+      },
+      404: {
+        description: 'Conta não encontrada.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'post',
+    path: '/api/v1/contas-whatsapp/{contaId}/desconectar',
+    tags: ['Contas WhatsApp'],
+    summary: 'Encerra a sessão do WhatsApp pareado, mantendo a instância',
+    security: [{ bearerAuth: [] }],
+    request: { params: contaWhatsappIdSchema },
+    responses: {
+      200: {
+        description: 'Conta marcada como desconectada.',
         content: { 'application/json': { schema: contaWhatsappSchema } },
+      },
+      404: {
+        description: 'Conta não encontrada.',
+        content: { 'application/json': { schema: erroSchema } },
       },
     },
   });
@@ -1255,37 +1258,14 @@ function criarRegistro(): OpenAPIRegistry {
   });
 
   registro.registerPath({
-    method: 'get',
-    path: '/api/v1/webhook/whatsapp',
-    tags: ['Webhook WhatsApp'],
-    summary: 'Confirma a configuração do webhook para a Meta',
-    request: { query: challengeWhatsappSchema },
-    responses: {
-      200: {
-        description: 'Challenge devolvido como text/plain.',
-        content: { 'text/plain': { schema: z.string() } },
-      },
-      403: {
-        description: 'Token de verificação inválido.',
-        content: { 'application/json': { schema: erroSchema } },
-      },
-      422: {
-        description: 'Parâmetros de challenge inválidos.',
-        content: { 'application/json': { schema: erroSchema } },
-      },
-    },
-  });
-
-  registro.registerPath({
     method: 'post',
     path: '/api/v1/webhook/whatsapp',
     tags: ['Webhook WhatsApp'],
-    summary: 'Valida e enfileira mensagens recebidas da Meta',
+    summary: 'Recebe eventos da Evolution API e enfileira mensagens',
     request: {
-      headers: assinaturaWebhookSchema,
       body: {
         required: true,
-        content: { 'application/json': { schema: webhookWhatsappSchema } },
+        content: { 'application/json': { schema: webhookEvolutionSchema } },
       },
     },
     responses: {
@@ -1294,11 +1274,11 @@ function criarRegistro(): OpenAPIRegistry {
         content: { 'application/json': { schema: webhookRespostaSchema } },
       },
       403: {
-        description: 'Assinatura HMAC inválida ou ausente.',
+        description: 'Apikey do evento não confere com a instância resolvida.',
         content: { 'application/json': { schema: erroSchema } },
       },
       404: {
-        description: 'phone_number_id não vinculado a um tenant ativo.',
+        description: 'Instância não vinculada a um tenant ativo.',
         content: { 'application/json': { schema: erroSchema } },
       },
       422: {

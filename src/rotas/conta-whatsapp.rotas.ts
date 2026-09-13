@@ -7,7 +7,6 @@ import {
   contaWhatsappIdSchema,
   criarContaWhatsappSchema,
   listarContasWhatsappSchema,
-  rotacionarTokenWhatsappSchema,
 } from '../dtos/conta-whatsapp.dto.js';
 import { tratarAsync } from '../middlewares/async.middleware.js';
 import { exigirAdminTenant } from '../middlewares/autorizacao-tenant.middleware.js';
@@ -30,21 +29,20 @@ export function criarRotasContasWhatsapp(controller: ContaWhatsappController): R
     tratarAsync(controller.atualizar),
   );
   rotas.patch(
-    '/:contaId/token',
-    validar(contaWhatsappIdSchema, 'params'),
-    validar(rotacionarTokenWhatsappSchema),
-    tratarAsync(controller.rotacionarToken),
-  );
-  rotas.patch(
     '/:contaId/status',
     validar(contaWhatsappIdSchema, 'params'),
     validar(alterarStatusContaWhatsappSchema),
     tratarAsync(controller.alterarStatus),
   );
   rotas.post(
-    '/:contaId/testar',
+    '/:contaId/reconectar',
     validar(contaWhatsappIdSchema, 'params'),
-    tratarAsync(controller.testar),
+    tratarAsync(controller.reconectar),
+  );
+  rotas.post(
+    '/:contaId/desconectar',
+    validar(contaWhatsappIdSchema, 'params'),
+    tratarAsync(controller.desconectar),
   );
   return rotas;
 }

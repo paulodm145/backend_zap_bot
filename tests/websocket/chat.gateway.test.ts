@@ -44,9 +44,8 @@ descreverIntegracao('chat websocket', () => {
     const conta = await prisma.contaWhatsapp.create({
       data: {
         nome: 'Socket',
-        phone_number_id: 'phone-socket',
-        waba_id: 'waba-socket',
-        token_encrypted: 'token',
+        instance_name: 'instance-socket',
+        api_key_encrypted: 'token',
       },
     });
     const setor = await prisma.setor.create({

@@ -11,13 +11,13 @@ import { ContaWhatsappRepository } from '../repositories/conta-whatsapp.reposito
 import type { RoteamentoWhatsappRepository } from '../repositories/roteamento-whatsapp.repository.js';
 import { ContaWhatsappService } from '../services/conta-whatsapp.service.js';
 import type { CriptografiaService } from '../services/criptografia.service.js';
-import type { WhatsappGraphApiService } from '../services/whatsapp-graph-api.service.js';
+import type { EvolutionApiService } from '../services/evolution-api.service.js';
 
 export class ContaWhatsappController {
   public constructor(
     private readonly roteamentos: RoteamentoWhatsappRepository,
     private readonly criptografia: CriptografiaService,
-    private readonly graphApi: WhatsappGraphApiService,
+    private readonly evolution: EvolutionApiService,
   ) {}
 
   public listar = async (requisicao: Request, resposta: Response): Promise<void> => {
@@ -37,11 +37,11 @@ export class ContaWhatsappController {
   };
 
   public criar = async (requisicao: Request, resposta: Response): Promise<void> => {
-    const conta = await this.service(requisicao).criar(
+    const resultado = await this.service(requisicao).criar(
       requisicao.body as CriarContaWhatsappEntrada,
       this.contexto(requisicao),
     );
-    resposta.status(201).json(conta);
+    resposta.status(201).json(resultado);
   };
 
   public atualizar = async (requisicao: Request, resposta: Response): Promise<void> => {
@@ -53,14 +53,12 @@ export class ContaWhatsappController {
     resposta.status(200).json(conta);
   };
 
-  public rotacionarToken = async (requisicao: Request, resposta: Response): Promise<void> => {
-    const corpo = requisicao.body as { accessToken: string };
-    const conta = await this.service(requisicao).rotacionarToken(
-      this.contaId(requisicao),
-      corpo.accessToken,
-      this.usuarioId(requisicao),
-    );
-    resposta.status(200).json(conta);
+  public reconectar = async (requisicao: Request, resposta: Response): Promise<void> => {
+    resposta.status(200).json(await this.service(requisicao).reconectar(this.contaId(requisicao)));
+  };
+
+  public desconectar = async (requisicao: Request, resposta: Response): Promise<void> => {
+    resposta.status(200).json(await this.service(requisicao).desconectar(this.contaId(requisicao)));
   };
 
   public alterarStatus = async (requisicao: Request, resposta: Response): Promise<void> => {
@@ -73,10 +71,6 @@ export class ContaWhatsappController {
     resposta.status(200).json(conta);
   };
 
-  public testar = async (requisicao: Request, resposta: Response): Promise<void> => {
-    resposta.status(200).json(await this.service(requisicao).testar(this.contaId(requisicao)));
-  };
-
   private repository(requisicao: Request) {
     return new ContaWhatsappRepository(this.prisma(requisicao));
   }
@@ -86,7 +80,7 @@ export class ContaWhatsappController {
       this.repository(requisicao),
       this.roteamentos,
       this.criptografia,
-      this.graphApi,
+      this.evolution,
     );
   }
 

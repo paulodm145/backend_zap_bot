@@ -9,6 +9,7 @@ services:
       - '${POSTGRES_PORT:-5432}:5432'
     volumes:
       - postgres_dados:/var/lib/postgresql/data
+      - ./docker/postgres-initdb:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test:
         [
@@ -33,6 +34,32 @@ services:
       interval: 5s
       timeout: 3s
       retries: 12
+    restart: unless-stopped
+
+  evolution-api:
+    image: evoapicloud/evolution-api:v2.3.7
+    environment:
+      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY:?Defina EVOLUTION_API_KEY no arquivo .env}
+      DATABASE_ENABLED: 'true'
+      DATABASE_PROVIDER: postgresql
+      DATABASE_CONNECTION_URI: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/zapbot_evolution?schema=public
+      DATABASE_SAVE_DATA_INSTANCE: 'true'
+      CACHE_REDIS_ENABLED: 'false'
+      CACHE_LOCAL_ENABLED: 'true'
+      SERVER_URL: ${EVOLUTION_WEBHOOK_URL_BASE:-http://api:3000}
+    ports:
+      - '${EVOLUTION_PORT:-8081}:8080'
+    volumes:
+      - evolution_dados:/evolution/instances
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:8080/ || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
     restart: unless-stopped
 
   api:
@@ -77,5 +104,6 @@ services:
 volumes:
   postgres_dados:
   redis_dados:
+  evolution_dados:
   api_node_modules:
   api_prisma_gerado:

@@ -27,11 +27,8 @@ import { EnfileiradorEmailBullMqService } from './services/enfileirador-email.se
 import { criarEnviadorEmail } from './services/fabrica-enviador-email.service.js';
 import { ProcessadorEmailService } from './services/processador-email.service.js';
 import { TemplateEmailService } from './services/template-email.service.js';
-import { WhatsappGraphApiService } from './services/whatsapp-graph-api.service.js';
-import {
-  EnfileiradorStatusWhatsappBullMqService,
-  ProcessadorStatusWhatsappService,
-} from './services/status-whatsapp.service.js';
+import { EvolutionApiService } from './services/evolution-api.service.js';
+import { ProcessadorStatusWhatsappService } from './services/status-whatsapp.service.js';
 import {
   jobMensagemRecebidaSchema,
   jobMensagemSaidaSchema,
@@ -55,9 +52,7 @@ const filaMensagens = recursosMensageria.registrar(
 const filaMensagensSaida = recursosMensageria.registrar(
   criarFila<JobMensagemSaida>(NOMES_FILAS.mensagensWhatsapp, redis),
 );
-const filaStatusWhatsapp = recursosMensageria.registrar(
-  criarFila<JobStatusWhatsapp>(NOMES_FILAS.statusWhatsapp, redis),
-);
+recursosMensageria.registrar(criarFila<JobStatusWhatsapp>(NOMES_FILAS.statusWhatsapp, redis));
 const filaEmails = recursosMensageria.registrar(
   criarFila<JobEmail>(NOMES_FILAS.emailsTransacionais, redis, {
     defaultJobOptions: OPCOES_EMAIL_JOB,
@@ -69,12 +64,17 @@ const processadorMensagens = new ProcessadorMensagemRecebidaService(
   new CriptografiaService(ambiente.TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE),
   obterGerenciadorConexoesTenant(),
 );
+const evolutionApi = new EvolutionApiService(
+  ambiente.EVOLUTION_API_URL,
+  ambiente.EVOLUTION_API_KEY,
+  `${ambiente.EVOLUTION_WEBHOOK_URL_BASE}/api/v1/webhook/whatsapp`,
+);
 const processadorMensagensSaida = new ProcessadorMensagemSaidaService(
   tenantsRepository,
   new CriptografiaService(ambiente.TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE),
   new CriptografiaService(ambiente.WHATSAPP_CREDENCIAIS_CRIPTOGRAFIA_CHAVE),
   obterGerenciadorConexoesTenant(),
-  new WhatsappGraphApiService(ambiente.WHATSAPP_GRAPH_API_URL),
+  evolutionApi,
 );
 const processadorStatusWhatsapp = new ProcessadorStatusWhatsappService(
   tenantsRepository,
@@ -124,12 +124,13 @@ recursosMensageria.registrar(
 const webhookWhatsappController = new WebhookWhatsappController(
   new WebhookWhatsappService(
     new RoteamentoWhatsappRepository(prismaCentral),
+    obterGerenciadorConexoesTenant(),
+    new CriptografiaService(ambiente.TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE),
+    new CriptografiaService(ambiente.WHATSAPP_CREDENCIAIS_CRIPTOGRAFIA_CHAVE),
     new IdempotenciaRedisRepository(redis),
     new EnfileiradorMensagemBullMqService(filaMensagens),
     ambiente.WEBHOOK_IDEMPOTENCIA_SEGUNDOS,
-    new EnfileiradorStatusWhatsappBullMqService(filaStatusWhatsapp),
   ),
-  ambiente.WEBHOOK_WHATSAPP_VERIFY_TOKEN,
 );
 const aplicacao = criarAplicacao({
   prismaCentral,
@@ -139,7 +140,6 @@ const aplicacao = criarAplicacao({
   ],
   webhookWhatsapp: {
     controller: webhookWhatsappController,
-    appSecret: ambiente.WEBHOOK_WHATSAPP_APP_SECRET,
   },
   enfileiradorMensagemSaida: new EnfileiradorMensagemSaidaBullMqService(filaMensagensSaida),
   enfileiradorEmail: new EnfileiradorEmailBullMqService(filaEmails),

@@ -74,9 +74,8 @@ descreverIntegracao('isolamento físico e cache LRU dos tenants', () => {
     await clienteA.contaWhatsapp.create({
       data: {
         nome: 'Conta A',
-        phone_number_id: '551100000001',
-        waba_id: '991100000001',
-        token_encrypted: 'somente-banco-a',
+        instance_name: 'instancia-a-551100000001',
+        api_key_encrypted: 'somente-banco-a',
       },
     });
     expect(await clienteA.contaWhatsapp.count()).toBe(1);
