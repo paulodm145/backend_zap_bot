@@ -23,7 +23,14 @@ const fluxoPublicadoSchema = z.object({ versao: z.number().int() });
 const definicao = {
   schemaVersao: 1,
   noInicial: 'inicio',
-  nos: [{ id: 'inicio', tipo: 'mensagem', dados: { texto: 'Olá pelo fluxo' } }],
+  nos: [
+    {
+      id: 'inicio',
+      tipo: 'mensagem',
+      dados: { texto: 'Olá pelo fluxo' },
+      posicao: { x: 120, y: 60 },
+    },
+  ],
 };
 
 const injetarTenant: RequestHandler = (requisicao, _resposta, proximo) => {
@@ -84,6 +91,11 @@ descreverIntegracao('API de fluxos', () => {
     const detalhe = await request(aplicacao).get(`/api/v1/fluxos/${fluxoId}`);
     expect(detalhe.status).toBe(200);
     expect(detalhe.body).toMatchObject({ public_id: fluxoId, versao: 1, ativo: true });
+    // A posição do bloco no canvas é preservada pelo round-trip: o backend só
+    // guarda e devolve, nunca reposiciona.
+    expect(detalhe.body).toMatchObject({
+      definicao: { nos: [{ id: 'inicio', posicao: { x: 120, y: 60 } }] },
+    });
 
     expect((await request(aplicacao).delete(`/api/v1/fluxos/${fluxoId}`)).status).toBe(204);
     expect((await request(aplicacao).get(`/api/v1/fluxos/${fluxoId}`)).status).toBe(404);
