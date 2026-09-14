@@ -13,6 +13,11 @@ O projeto está na fase de construção da estrutura base. Consulte:
 - [Banco central](docs/banco-central.md)
 - [Operação multi-tenant](docs/multitenancy.md)
 
+> **Só quer ver o projeto rodando?** Vá direto para
+> [Ambiente local com containers](#ambiente-local-com-containers) — é o
+> caminho mais rápido (só exige Docker) e já deixa a API, o Postgres, o Redis
+> e a Evolution API (WhatsApp) no ar.
+
 ## Requisitos
 
 - Node.js `20.19.0` ou superior;
@@ -258,7 +263,33 @@ cp .env.example .env
 ```
 
 Troque todos os segredos, especialmente `POSTGRES_PASSWORD`, chaves JWT e
-chaves hexadecimais de criptografia. Nenhum segredo é definido no Compose.
+chaves hexadecimais de criptografia. Nenhum segredo é definido no Compose. Em
+vez de editar cada valor manualmente, gere tudo de uma vez com `openssl`
+(requer `openssl` e `sed` — já vêm no Linux e no macOS):
+
+```bash
+sed -i \
+  -e "s#^POSTGRES_PASSWORD=.*#POSTGRES_PASSWORD=$(openssl rand -hex 24)#" \
+  -e "s#^JWT_TENANT_SECRET=.*#JWT_TENANT_SECRET=$(openssl rand -hex 32)#" \
+  -e "s#^JWT_INTERNO_SECRET=.*#JWT_INTERNO_SECRET=$(openssl rand -hex 32)#" \
+  -e "s#^TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE=.*#TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE=$(openssl rand -hex 32)#" \
+  -e "s#^WHATSAPP_CREDENCIAIS_CRIPTOGRAFIA_CHAVE=.*#WHATSAPP_CREDENCIAIS_CRIPTOGRAFIA_CHAVE=$(openssl rand -hex 32)#" \
+  -e "s#^TOTP_CRIPTOGRAFIA_CHAVE=.*#TOTP_CRIPTOGRAFIA_CHAVE=$(openssl rand -hex 32)#" \
+  -e "s#^EVOLUTION_API_KEY=.*#EVOLUTION_API_KEY=$(openssl rand -hex 24)#" \
+  -e "s#^TOTP_INTERNO_OBRIGATORIO=.*#TOTP_INTERNO_OBRIGATORIO=false#" \
+  .env
+```
+
+Em macOS com o `sed` do BSD (não o do Homebrew), use `sed -i ''` no lugar de
+`sed -i`. O último `sed` desativa a exigência de segundo fator do painel
+interno só para facilitar a avaliação local — nunca faça isso em produção
+(`AGENTS.md` também trata essa regra como inegociável). `CENTRAL_DATABASE_URL`,
+`TENANT_DATABASE_URL` e `POSTGRES_ADMIN_URL` continuam com o valor de exemplo:
+o Compose já monta as duas primeiras a partir de `POSTGRES_USER`/
+`POSTGRES_PASSWORD` para o container da API (ver `environment:` do serviço
+`api` em `docker-compose.dev.yml`) e o provisionamento de cada tenant usa
+`POSTGRES_ADMIN_URL`, também sobrescrita pelo Compose — nenhuma das três é lida
+do `.env` neste fluxo.
 
 Suba PostgreSQL, Redis e API:
 
@@ -322,6 +353,14 @@ curl -s -X POST http://localhost:3000/api/v1/auth/login \
   -H 'Content-Type: application/json' \
   -d '{"email":"admin@tenant.local","senha":"uma-senha-forte-e-unica"}'
 ```
+
+Com `TOTP_INTERNO_OBRIGATORIO=false`, o primeiro login já retorna `accessToken`
+diretamente, sem etapa de segundo fator. Para explorar a API pelo navegador,
+abra `http://localhost:3000/api/v1/docs/`, cole um dos `accessToken` acima no
+botão **Authorize** e siga a
+["Ordem recomendada do primeiro teste"](#ordem-recomendada-do-primeiro-teste)
+— os mesmos passos valem tanto para este ambiente em containers quanto para o
+fluxo com serviços nativos descrito acima.
 
 ### WhatsApp via Evolution API
 
