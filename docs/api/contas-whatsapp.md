@@ -19,6 +19,17 @@ Os planos permitem: Free uma conta, Starter uma conta e Pro três contas. O
 backend valida o limite; o frontend deve tratar `422 VALIDACAO` ao cadastrar ou
 reativar acima do plano.
 
+Cada conta pode ter um **fluxo de entrada** associado (`fluxoPublicoId` na
+criação, campo `fluxo` na resposta): é o fluxo publicado que responde
+automaticamente às mensagens recebidas neste número. Enquanto a conversa
+estiver com `status: BOT` e a conta tiver um fluxo ativo, toda mensagem
+recebida executa o fluxo e a resposta do bot é enviada pelo mesmo canal de
+envio dos atendentes. Sem fluxo associado (`fluxo: null`), a mensagem apenas
+fica registrada aguardando atribuição manual (`reatribuir`). A associação só
+pode ser definida na criação da conta; para trocar o fluxo de uma conta já
+existente, exclua e recrie a conta, ou aguarde um endpoint dedicado de
+atualização.
+
 > **Risco herdado da decisão de arquitetura:** por não ser um canal oficial,
 > o número pareado está sujeito aos termos de uso do WhatsApp para automação
 > não aprovada — oriente o usuário sobre boas práticas (volume moderado,
@@ -68,11 +79,20 @@ reativar acima do plano.
 
 ## Composição das telas
 
-**Formulário de criação** — um único campo:
+**Formulário de criação** — nome obrigatório e fluxo de entrada opcional
+(`fluxoPublicoId`, `public_id` de um fluxo já publicado — ver
+`docs/api/fluxos.md`):
 
 ```json
-{ "nome": "Número principal" }
+{
+  "nome": "Número principal",
+  "fluxoPublicoId": "7c2a6f7e-2f3d-4e9a-9d0c-9a1a2b3c4d5e"
+}
 ```
+
+Omitir `fluxoPublicoId` cria a conta sem fluxo de entrada (`fluxo: null`).
+Informar um `public_id` que não corresponda a um fluxo publicado do tenant
+retorna `422 VALIDACAO`.
 
 **Resposta da criação** (`201`) — guarde `qrCodeBase64` só em memória/estado de
 tela; não é necessário persisti-lo, ele expira:
@@ -90,6 +110,7 @@ tela; não é necessário persisti-lo, ele expira:
     "ultimo_erro_codigo": null,
     "ultimo_erro_mensagem": null,
     "ativo": true,
+    "fluxo": { "public_id": "7c2a6f7e-2f3d-4e9a-9d0c-9a1a2b3c4d5e", "nome": "Atendimento inicial" },
     "created_at": "2026-09-13T17:37:10.175Z",
     "updated_at": "2026-09-13T17:37:10.175Z"
   },

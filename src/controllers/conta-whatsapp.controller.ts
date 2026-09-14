@@ -8,6 +8,7 @@ import type {
 import { NaoEncontradoError, ValidacaoError } from '../erros/erro-aplicacao.js';
 import type { PrismaClient } from '../generated/prisma-tenant/client.js';
 import { ContaWhatsappRepository } from '../repositories/conta-whatsapp.repository.js';
+import { FluxoRepository } from '../repositories/fluxo.repository.js';
 import type { RoteamentoWhatsappRepository } from '../repositories/roteamento-whatsapp.repository.js';
 import { ContaWhatsappService } from '../services/conta-whatsapp.service.js';
 import type { CriptografiaService } from '../services/criptografia.service.js';
@@ -81,6 +82,7 @@ export class ContaWhatsappController {
       this.roteamentos,
       this.criptografia,
       this.evolution,
+      new FluxoRepository(this.prisma(requisicao)),
     );
   }
 

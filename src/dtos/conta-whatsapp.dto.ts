@@ -10,6 +10,10 @@ export const contaWhatsappIdSchema = z.object({ contaId: z.uuid() }).strict();
 export const criarContaWhatsappSchema = z
   .object({
     nome: z.string().trim().min(2).max(120),
+    fluxoPublicoId: z
+      .uuid()
+      .optional()
+      .openapi({ description: 'Fluxo publicado que responde às mensagens recebidas neste número' }),
   })
   .strict()
   .openapi('CriarContaWhatsappEntrada');

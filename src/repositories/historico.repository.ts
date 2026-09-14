@@ -88,6 +88,26 @@ export class HistoricoRepository {
     return 'DUPLICADA';
   }
 
+  /** Cria uma mensagem de saída gerada pelo motor de fluxo, pronta para ser enfileirada. */
+  public async criarMensagemBot(
+    conversaId: number,
+    texto: string,
+  ): Promise<{ id: number; public_id: string }> {
+    return this.prisma.mensagem.create({
+      data: {
+        conversa_id: conversaId,
+        tipo: 'TEXTO',
+        direcao: 'SAIDA',
+        autor: 'BOT',
+        status_entrega: 'PENDENTE',
+        recebida: false,
+        ocorreu_at: new Date(),
+        conteudo: { texto },
+      },
+      select: { id: true, public_id: true },
+    });
+  }
+
   private erroConcorrencia(erro: unknown): boolean {
     return typeof erro === 'object' && erro !== null && 'code' in erro && erro.code === 'P2034';
   }

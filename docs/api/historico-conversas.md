@@ -26,6 +26,21 @@ Cada mensagem informa direção, autor, entrega, conteúdo, mídia/erro quando e
 
 O webhook reserva no Redis e o worker persiste no PostgreSQL físico do tenant. Contato e conversa são reaproveitados dentro da janela de 24 horas; janela expirada é encerrada antes de outra conversa. A unicidade de `whatsapp_message_id` protege contra reentrega após a expiração do Redis.
 
+## Execução automática do fluxo (bot)
+
+Depois de persistir a mensagem recebida, se a conversa estiver em `status: BOT`
+e a conta Whatsapp de origem tiver um fluxo de entrada associado (ver
+`docs/api/contas-whatsapp.md`), o worker executa o fluxo publicado (mesmo motor
+usado na simulação do editor) e envia as respostas do bot pelo canal normal de
+saída — elas aparecem na timeline com `autor: BOT`. O estado da conversa no
+fluxo (nó atual, respostas capturadas) fica salvo no Redis e é usado a cada
+nova mensagem, até o fluxo direcionar a um setor (`direcionar_setor`), quando a
+conversa muda para `AGUARDANDO_ATENDENTE` e passa a valer a seção seguinte
+("Fila, claim e transferência") — novas mensagens do contato deixam de
+reacionar o fluxo enquanto a conversa não voltar para `BOT`. Contas sem fluxo
+associado apenas registram as mensagens recebidas, aguardando atribuição
+manual via `reatribuir`.
+
 ## Fila, claim e transferência
 
 Ao clicar em **Assumir**, envie `POST /api/v1/conversas/{conversaId}/assumir` sem corpo. O backend valida o vínculo com o setor e faz o claim atômico. Em `409 CONFLITO`, remova a conversa da fila e informe que outro atendente a assumiu; não repita automaticamente.
