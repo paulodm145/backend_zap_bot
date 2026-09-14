@@ -111,6 +111,43 @@ describe('EvolutionApiService', () => {
     await expect(servico.excluirInstancia('tenant-1', 'apikey-1')).resolves.toBeUndefined();
   });
 
+  // Reproduz o 500 relatado ao clicar em "Desconectar": a sessão já tinha
+  // caído sozinha (ex.: WhatsApp derrubou remotamente) e a Evolution responde
+  // 400 "instance is not connected" a um logout redundante. O estado desejado
+  // já foi alcançado, então isso deve ser sucesso, não erro.
+  it('trata 400 "instance is not connected" como sucesso ao desconectar', async () => {
+    const executarFetch = vi
+      .fn()
+      .mockResolvedValue(
+        resposta(
+          { status: 400, error: 'Bad Request', response: { message: ['not connected'] } },
+          400,
+        ),
+      );
+    const servico = new EvolutionApiService(
+      'https://evolution.test',
+      'g',
+      'http://api.test',
+      executarFetch,
+    );
+
+    await expect(servico.desconectar('tenant-1', 'apikey-1')).resolves.toBeUndefined();
+  });
+
+  it('propaga 400 de outra causa ao excluir a instância', async () => {
+    const executarFetch = vi.fn().mockResolvedValue(resposta({}, 400));
+    const servico = new EvolutionApiService(
+      'https://evolution.test',
+      'g',
+      'http://api.test',
+      executarFetch,
+    );
+
+    await expect(servico.excluirInstancia('tenant-1', 'apikey-1')).rejects.toBeInstanceOf(
+      ErroEvolutionApi,
+    );
+  });
+
   it('envia texto e mídia usando o apikey da instância', async () => {
     const chamadas: { url: string; corpo: unknown }[] = [];
     const executarFetch: typeof fetch = (entrada, opcoes) => {

@@ -118,14 +118,18 @@ export class EvolutionApiService {
   public async desconectar(instanceName: string, apiKey: string): Promise<void> {
     await this.requisitar(`/instance/logout/${encodeURIComponent(instanceName)}`, apiKey, {
       method: 'DELETE',
-      ignorarNaoEncontrado: true,
+      // A Evolution responde 400 "instance is not connected" quando a sessão já
+      // caiu sozinha (ex.: WhatsApp derrubou remotamente) antes do clique em
+      // "Desconectar" — o estado desejado (desconectado) já foi alcançado, então
+      // isso é sucesso, não erro. 404 é a instância nem existir mais na Evolution.
+      ignorarStatus: [400, 404],
     });
   }
 
   public async excluirInstancia(instanceName: string, apiKey: string): Promise<void> {
     await this.requisitar(`/instance/delete/${encodeURIComponent(instanceName)}`, apiKey, {
       method: 'DELETE',
-      ignorarNaoEncontrado: true,
+      ignorarStatus: [404],
     });
   }
 
@@ -183,7 +187,7 @@ export class EvolutionApiService {
   private async requisitar(
     caminho: string,
     apiKey: string,
-    opcoes: { method: string; body?: unknown; ignorarNaoEncontrado?: boolean },
+    opcoes: { method: string; body?: unknown; ignorarStatus?: number[] },
   ): Promise<Response> {
     let resposta: Response;
     try {
@@ -199,7 +203,7 @@ export class EvolutionApiService {
     } catch {
       throw new ErroEvolutionApi('EVOLUTION_INDISPONIVEL', true);
     }
-    if (resposta.status === 404 && opcoes.ignorarNaoEncontrado) {
+    if (opcoes.ignorarStatus?.includes(resposta.status)) {
       return resposta;
     }
     if (!resposta.ok) {
