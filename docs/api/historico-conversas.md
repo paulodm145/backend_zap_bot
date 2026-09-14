@@ -22,6 +22,8 @@ Nunca deduplique por horário: mensagens podem compartilhar timestamp. Use `publ
 
 Cada mensagem informa direção, autor, entrega, conteúdo, mídia/erro quando existentes e referência respondida. Atualize itens existentes pelo `public_id` em vez de acrescentar duplicatas.
 
+`conteudo` é o JSON bruto persistido e o formato varia por `tipo`/`autor` — nunca renderize o objeto direto. Para `tipo: "TEXTO"` (`autor` `CONTATO`/`BOT`/`ATENDENTE`), é `{ "texto": "..." }`. Para `tipo: "SISTEMA"` (`autor: "SISTEMA"`, `direcao: "INTERNA"` — nota automática de handoff/fluxo), é `{ "acao": "ASSUMIU" | "REATRIBUIU" | "DEVOLVEU_AO_BOT" | "ENCERROU" | "DIRECIONOU_FLUXO", "motivo": "texto ou null" }`. O campo de status de entrega da mensagem é `status_entrega`, não `status`.
+
 ## Persistência de entrada
 
 O webhook reserva no Redis e o worker persiste no PostgreSQL físico do tenant. Contato e conversa são reaproveitados dentro da janela de 24 horas; janela expirada é encerrada antes de outra conversa. A unicidade de `whatsapp_message_id` protege contra reentrega após a expiração do Redis.
