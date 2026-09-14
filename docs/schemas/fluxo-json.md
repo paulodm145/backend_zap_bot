@@ -16,6 +16,13 @@ publicada é controlada separadamente pelo backend.
 IDs de nós começam com letra e aceitam letras, números, `_` e `-`, com até 64
 caracteres. Devem ser únicos dentro do fluxo.
 
+Todo nó aceita opcionalmente `"posicao": { "x": number, "y": number }` —
+coordenada do bloco no canvas do editor. É puramente visual: o motor de
+execução nunca lê esse campo, só o backend guarda e devolve para que o editor
+restaure cada bloco exatamente onde o usuário o deixou. Fluxos salvos antes
+deste campo existir simplesmente não o têm; o editor usa um layout inicial só
+nesse caso.
+
 ## Nó de mensagem
 
 ```json
@@ -110,7 +117,8 @@ trecho automatizado e produz uma saída de direcionamento.
       "id": "inicio",
       "tipo": "mensagem",
       "dados": { "texto": "Escolha 1 para Fiscal" },
-      "proximo": "capturar"
+      "proximo": "capturar",
+      "posicao": { "x": 120, "y": 60 }
     },
     {
       "id": "capturar",

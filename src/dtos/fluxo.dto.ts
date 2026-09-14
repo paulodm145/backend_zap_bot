@@ -20,6 +20,20 @@ const variavelFluxoSchema = z
   .regex(/^[A-Za-z_][A-Za-z0-9_.]{0,79}$/)
   .openapi({ example: 'cliente.opcao' });
 
+/**
+ * Coordenada do bloco no canvas do editor. Puramente visual: o motor de
+ * execução nunca lê este campo, apenas o repassa ao salvar/carregar a
+ * definição para que o editor preserve a posição em que o usuário deixou
+ * cada bloco na tela.
+ */
+const posicaoNoSchema = z
+  .object({
+    x: z.number(),
+    y: z.number(),
+  })
+  .strict()
+  .openapi('PosicaoNo');
+
 export const noMensagemSchema = z
   .object({
     id: identificadorNoSchema,
@@ -30,6 +44,7 @@ export const noMensagemSchema = z
       })
       .strict(),
     proximo: identificadorNoSchema.optional(),
+    posicao: posicaoNoSchema.optional(),
   })
   .strict()
   .openapi('NoMensagem');
@@ -45,6 +60,7 @@ export const noCapturaSchema = z
       })
       .strict(),
     proximo: identificadorNoSchema.optional(),
+    posicao: posicaoNoSchema.optional(),
   })
   .strict()
   .openapi('NoCapturaResposta');
@@ -66,6 +82,7 @@ export const noCondicaoSchema = z
         padrao: identificadorNoSchema,
       })
       .strict(),
+    posicao: posicaoNoSchema.optional(),
   })
   .strict()
   .openapi('NoCondicao');
@@ -79,6 +96,7 @@ export const noDirecionamentoSchema = z
         setorId: z.uuid(),
       })
       .strict(),
+    posicao: posicaoNoSchema.optional(),
   })
   .strict()
   .openapi('NoDirecionarSetor');
