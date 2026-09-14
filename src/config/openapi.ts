@@ -235,6 +235,10 @@ const contaWhatsappSchema = z.object({
   ultimo_erro_codigo: z.string().nullable(),
   ultimo_erro_mensagem: z.string().nullable(),
   ativo: z.boolean(),
+  fluxo: z
+    .object({ public_id: z.uuid(), nome: z.string() })
+    .nullable()
+    .openapi({ description: 'Fluxo publicado que responde às mensagens recebidas neste número' }),
   created_at: z.iso.datetime(),
   updated_at: z.iso.datetime(),
 });

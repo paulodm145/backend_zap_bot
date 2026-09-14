@@ -15,18 +15,29 @@ interface ContextoContaWhatsapp {
   autorUsuarioId: string;
 }
 
+interface LeitorFluxoPublicado {
+  buscarIdPublicadoPorPublicId(publicId: string): Promise<number | null>;
+}
+
 export class ContaWhatsappService {
   public constructor(
     private readonly contas: ContaWhatsappRepository,
     private readonly roteamentos: RoteamentoWhatsappRepository,
     private readonly criptografia: CriptografiaService,
     private readonly evolution: EvolutionApiService,
+    private readonly fluxos: LeitorFluxoPublicado,
   ) {}
 
   public async criar(entrada: CriarContaWhatsappEntrada, contexto: ContextoContaWhatsapp) {
     const limite = await this.roteamentos.obterLimiteDoTenant(contexto.tenantId);
     if ((await this.contas.contarAtivas()) >= limite) {
       throw new ValidacaoError(`O plano permite no máximo ${String(limite)} conta(s) WhatsApp`);
+    }
+
+    let fluxoId: number | null = null;
+    if (entrada.fluxoPublicoId) {
+      fluxoId = await this.fluxos.buscarIdPublicadoPorPublicId(entrada.fluxoPublicoId);
+      if (fluxoId === null) throw new ValidacaoError('Fluxo publicado não encontrado');
     }
 
     const instanceName = this.gerarNomeInstancia(contexto.tenantId);
@@ -47,6 +58,7 @@ export class ContaWhatsappService {
       instanceName,
       instanceId: instancia.instanceId,
       apiKeyEncrypted: this.criptografia.criptografar(instancia.apiKey),
+      fluxoId,
       autorUsuarioId: contexto.autorUsuarioId,
     });
 

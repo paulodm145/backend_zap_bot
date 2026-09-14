@@ -9,6 +9,7 @@ export const selecaoContaWhatsappSegura = {
   instance_id: true,
   numero_exibicao: true,
   status: true,
+  fluxo: { select: { public_id: true, nome: true } },
   ultima_sincronizacao_at: true,
   ultimo_erro_codigo: true,
   ultimo_erro_mensagem: true,
@@ -78,6 +79,7 @@ export class ContaWhatsappRepository {
     instanceName: string;
     instanceId: string;
     apiKeyEncrypted: string;
+    fluxoId: number | null;
     autorUsuarioId: string;
   }) {
     return this.prisma.$transaction(async (transacao) => {
@@ -87,8 +89,10 @@ export class ContaWhatsappRepository {
           instance_name: entrada.instanceName,
           instance_id: entrada.instanceId,
           api_key_encrypted: entrada.apiKeyEncrypted,
+          fluxo_id: entrada.fluxoId,
           status: 'CONECTANDO',
         },
+        select: { ...selecaoContaWhatsappSegura, id: true, api_key_encrypted: true },
       });
       await this.auditar(transacao, conta.id, conta.public_id, entrada.autorUsuarioId, 'CRIAR');
       return conta;

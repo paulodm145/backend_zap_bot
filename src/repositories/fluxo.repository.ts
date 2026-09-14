@@ -117,6 +117,14 @@ export class FluxoRepository {
     });
   }
 
+  public async buscarIdPublicadoPorPublicId(publicId: string): Promise<number | null> {
+    const fluxo = await this.prisma.fluxo.findFirst({
+      where: { public_id: publicId, ativo: true, deletado_at: null },
+      select: { id: true },
+    });
+    return fluxo?.id ?? null;
+  }
+
   public buscarVersaoPorPublicId(publicId: string) {
     return this.prisma.fluxoVersao.findUnique({
       where: { public_id: publicId },
