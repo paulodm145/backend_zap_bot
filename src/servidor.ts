@@ -136,6 +136,7 @@ const webhookWhatsappController = new WebhookWhatsappController(
     new IdempotenciaRedisRepository(redis),
     new EnfileiradorMensagemBullMqService(filaMensagens),
     ambiente.WEBHOOK_IDEMPOTENCIA_SEGUNDOS,
+    evolutionApi,
   ),
 );
 const aplicacao = criarAplicacao({

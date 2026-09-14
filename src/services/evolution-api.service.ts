@@ -53,6 +53,19 @@ const respostaEnvioTextoSchema = z.object({
   key: z.object({ id: z.string().min(1) }),
 });
 
+/**
+ * `GET /instance/fetchInstances` é quem traz o número pareado (`ownerJid`,
+ * formato `5511999999999@s.whatsapp.net`) — o webhook `connection.update` só
+ * informa o estado da conexão, nunca a identidade. Verificado manualmente
+ * contra uma instância conectada de verdade: `number` do próprio Baileys
+ * fica `null`, só `ownerJid` tem o valor.
+ */
+const respostaFetchInstanciaSchema = z.array(
+  z.object({
+    ownerJid: z.string().nullable().optional(),
+  }),
+);
+
 export interface InstanciaCriada {
   instanceId: string;
   apiKey: string;
@@ -113,6 +126,18 @@ export class EvolutionApiService {
     );
     const dados = respostaEstadoConexaoSchema.parse(await resposta.json());
     return { estado: dados.instance.state };
+  }
+
+  /** Devolve o JID (com o `@s.whatsapp.net` já removido) do número pareado, ou `null` se ainda não houver um. */
+  public async obterNumeroPareado(instanceName: string, apiKey: string): Promise<string | null> {
+    const resposta = await this.requisitar(
+      `/instance/fetchInstances?instanceName=${encodeURIComponent(instanceName)}`,
+      apiKey,
+      { method: 'GET' },
+    );
+    const dados = respostaFetchInstanciaSchema.parse(await resposta.json());
+    const ownerJid = dados[0]?.ownerJid;
+    return ownerJid ? (ownerJid.split('@')[0] ?? null) : null;
   }
 
   public async desconectar(instanceName: string, apiKey: string): Promise<void> {

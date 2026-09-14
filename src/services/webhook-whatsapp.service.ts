@@ -6,9 +6,14 @@ import {
 } from '../dtos/webhook-whatsapp.dto.js';
 import { AcessoNegadoError, NaoEncontradoError } from '../erros/erro-aplicacao.js';
 import { criarChaveIdempotenciaMensagem } from '../helpers/chave-redis.helper.js';
+import { normalizarTelefone } from '../helpers/telefone.helper.js';
 import { ContaWhatsappRepository } from '../repositories/conta-whatsapp.repository.js';
 import type { CriptografiaService } from './criptografia.service.js';
 import type { EnfileiradorMensagem } from './enfileirador-mensagem.service.js';
+
+interface LeitorNumeroPareado {
+  obterNumeroPareado(instanceName: string, apiKey: string): Promise<string | null>;
+}
 
 interface RoteamentoWhatsapp {
   buscarTenantAtivo(instanceName: string): Promise<{
@@ -48,6 +53,7 @@ export class WebhookWhatsappService {
     private readonly idempotencia: RepositorioIdempotencia,
     private readonly enfileirador: EnfileiradorMensagem,
     private readonly expiracaoIdempotenciaSegundos: number,
+    private readonly evolution: LeitorNumeroPareado,
   ) {}
 
   public async receber(entrada: WebhookEvolutionEntrada): Promise<ResultadoWebhookWhatsapp> {
@@ -80,8 +86,19 @@ export class WebhookWhatsappService {
     if (entrada.event === 'connection.update') {
       const dados = dadosConexaoWhatsappSchema.safeParse(entrada.data);
       if (dados.success) {
+        // O próprio evento connection.update não traz o número — só o estado
+        // da conexão. Ao abrir, busca o JID pareado à parte; falha ali não
+        // impede a atualização de status (o número só fica pendente).
+        const numeroExibicao =
+          dados.data.state === 'open'
+            ? await this.evolution
+                .obterNumeroPareado(entrada.instance, apiKeyEsperada)
+                .then((jid) => (jid ? (normalizarTelefone(jid) ?? undefined) : undefined))
+                .catch(() => undefined)
+            : undefined;
         await contas.registrarEstadoConexao(conta.id, {
           status: STATUS_POR_ESTADO[dados.data.state],
+          ...(numeroExibicao ? { numeroExibicao } : {}),
         });
       }
       return { processado: true, recebidas: 0, duplicadas: 0 };
