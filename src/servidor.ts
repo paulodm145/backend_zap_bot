@@ -23,6 +23,8 @@ import { CriptografiaService } from './services/criptografia.service.js';
 import { ProcessadorMensagemRecebidaService } from './services/processador-mensagem-recebida.service.js';
 import { ProcessadorMensagemSaidaService } from './services/processador-mensagem-saida.service.js';
 import { EnfileiradorMensagemSaidaBullMqService } from './services/enfileirador-mensagem-saida.service.js';
+import { EstadoFluxoRedisRepository } from './repositories/estado-fluxo-redis.repository.js';
+import { MotorFluxoService } from './services/motor-fluxo.service.js';
 import { EnfileiradorEmailBullMqService } from './services/enfileirador-email.service.js';
 import { criarEnviadorEmail } from './services/fabrica-enviador-email.service.js';
 import { ProcessadorEmailService } from './services/processador-email.service.js';
@@ -59,10 +61,14 @@ const filaEmails = recursosMensageria.registrar(
   }),
 );
 const tenantsRepository = new TenantCentralRepository(prismaCentral);
+const enfileiradorMensagemSaida = new EnfileiradorMensagemSaidaBullMqService(filaMensagensSaida);
 const processadorMensagens = new ProcessadorMensagemRecebidaService(
   tenantsRepository,
   new CriptografiaService(ambiente.TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE),
   obterGerenciadorConexoesTenant(),
+  new EstadoFluxoRedisRepository(redis),
+  new MotorFluxoService(),
+  enfileiradorMensagemSaida,
 );
 const evolutionApi = new EvolutionApiService(
   ambiente.EVOLUTION_API_URL,
@@ -141,7 +147,7 @@ const aplicacao = criarAplicacao({
   webhookWhatsapp: {
     controller: webhookWhatsappController,
   },
-  enfileiradorMensagemSaida: new EnfileiradorMensagemSaidaBullMqService(filaMensagensSaida),
+  enfileiradorMensagemSaida,
   enfileiradorEmail: new EnfileiradorEmailBullMqService(filaEmails),
 });
 
