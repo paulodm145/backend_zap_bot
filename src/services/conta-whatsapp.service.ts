@@ -99,6 +99,21 @@ export class ContaWhatsappService {
     return this.contas.registrarEstadoConexao(conta.id, { status: 'DESCONECTADO' });
   }
 
+  /**
+   * Exclusão definitiva (soft delete): desfaz a instância na Evolution API e
+   * marca deletado_at, preservando conversas/mensagens/auditorias já
+   * vinculadas à conta para consulta futura. Falha na Evolution não bloqueia
+   * a exclusão — o registro no tenant é a fonte de verdade para o usuário.
+   */
+  public async excluir(publicId: string, contexto: ContextoContaWhatsapp): Promise<void> {
+    const conta = await this.contas.buscar(publicId, true);
+    if (!conta) throw new NaoEncontradoError('Conta WhatsApp não encontrada');
+    const apiKey = this.criptografia.descriptografar(conta.api_key_encrypted);
+    await this.evolution.excluirInstancia(conta.instance_name, apiKey).catch(() => undefined);
+    const resultado = await this.contas.excluir(publicId, contexto.autorUsuarioId);
+    if (!resultado) throw new NaoEncontradoError('Conta WhatsApp não encontrada');
+  }
+
   public async alterarAtivo(publicId: string, ativo: boolean, contexto: ContextoContaWhatsapp) {
     const atual = await this.contas.buscar(publicId, true);
     if (!atual) throw new NaoEncontradoError('Conta WhatsApp não encontrada');
