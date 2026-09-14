@@ -47,13 +47,15 @@ function dependencias() {
     excluirInstancia: vi.fn().mockResolvedValue(undefined),
     desconectar: vi.fn().mockResolvedValue(undefined),
   };
+  const fluxos = { buscarIdPublicadoPorPublicId: vi.fn().mockResolvedValue(null) };
   const service = new ContaWhatsappService(
     contas as unknown as ContaWhatsappRepository,
     roteamentos as unknown as RoteamentoWhatsappRepository,
     criptografia,
     evolution as unknown as EvolutionApiService,
+    fluxos,
   );
-  return { service, contas, roteamentos, evolution };
+  return { service, contas, roteamentos, evolution, fluxos };
 }
 
 describe('ContaWhatsappService', () => {
@@ -72,6 +74,33 @@ describe('ContaWhatsappService', () => {
     expect(roteamentos.sincronizar).toHaveBeenCalledWith(10, argumentoCriacao.instanceName);
     expect(resultado.conta).not.toHaveProperty('api_key_encrypted');
     expect(resultado.qrCodeBase64).toBe('data:image/png;base64,QRCODE');
+  });
+
+  it('associa o fluxo publicado informado', async () => {
+    const { service, contas, fluxos } = dependencias();
+    fluxos.buscarIdPublicadoPorPublicId.mockResolvedValue(7);
+    await service.criar(
+      { nome: 'Principal', fluxoPublicoId: '11111111-1111-4111-8111-111111111111' },
+      contexto,
+    );
+    expect(fluxos.buscarIdPublicadoPorPublicId).toHaveBeenCalledWith(
+      '11111111-1111-4111-8111-111111111111',
+    );
+    const argumentoCriacao = contas.criar.mock.calls[0]?.[0] as unknown as {
+      fluxoId: number | null;
+    };
+    expect(argumentoCriacao.fluxoId).toBe(7);
+  });
+
+  it('rejeita fluxo inexistente ou não publicado', async () => {
+    const { service, fluxos } = dependencias();
+    fluxos.buscarIdPublicadoPorPublicId.mockResolvedValue(null);
+    await expect(
+      service.criar(
+        { nome: 'Principal', fluxoPublicoId: '11111111-1111-4111-8111-111111111111' },
+        contexto,
+      ),
+    ).rejects.toMatchObject({ codigo: 'VALIDACAO' });
   });
 
   it('impede cadastro acima do limite do plano', async () => {
