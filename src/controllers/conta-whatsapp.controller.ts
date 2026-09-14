@@ -62,6 +62,11 @@ export class ContaWhatsappController {
     resposta.status(200).json(await this.service(requisicao).desconectar(this.contaId(requisicao)));
   };
 
+  public excluir = async (requisicao: Request, resposta: Response): Promise<void> => {
+    await this.service(requisicao).excluir(this.contaId(requisicao), this.contexto(requisicao));
+    resposta.status(204).send();
+  };
+
   public alterarStatus = async (requisicao: Request, resposta: Response): Promise<void> => {
     const corpo = requisicao.body as { ativo: boolean };
     const conta = await this.service(requisicao).alterarAtivo(

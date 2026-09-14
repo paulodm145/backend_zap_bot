@@ -162,6 +162,22 @@ export class ContaWhatsappRepository {
     return this.prisma.contaWhatsapp.delete({ where: { id } });
   }
 
+  /** Soft delete: preserva conversas/mensagens/auditorias já vinculadas à conta. */
+  public async excluir(publicId: string, autorUsuarioId: string) {
+    const conta = await this.prisma.contaWhatsapp.findFirst({
+      where: { public_id: publicId, deletado_at: null },
+    });
+    if (!conta) return null;
+    return this.prisma.$transaction(async (transacao) => {
+      const excluida = await transacao.contaWhatsapp.update({
+        where: { id: conta.id },
+        data: { deletado_at: new Date(), ativo: false },
+      });
+      await this.auditar(transacao, conta.id, conta.public_id, autorUsuarioId, 'EXCLUIR');
+      return excluida;
+    });
+  }
+
   private auditar(
     transacao: Prisma.TransactionClient,
     contaId: number,

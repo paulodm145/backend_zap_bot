@@ -1198,6 +1198,23 @@ function criarRegistro(): OpenAPIRegistry {
       },
     },
   });
+  registro.registerPath({
+    method: 'delete',
+    path: '/api/v1/contas-whatsapp/{contaId}',
+    tags: ['Contas WhatsApp'],
+    summary: 'Exclui definitivamente a conta (soft delete)',
+    description:
+      'Desconecta e remove a instância na Evolution API (falha ali não bloqueia a exclusão) e marca a conta como excluída. Conversas, mensagens e auditorias já vinculadas são preservadas para consulta futura.',
+    security: [{ bearerAuth: [] }],
+    request: { params: contaWhatsappIdSchema },
+    responses: {
+      204: { description: 'Conta excluída.' },
+      404: {
+        description: 'Conta não encontrada.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
 
   registro.registerPath({
     method: 'get',

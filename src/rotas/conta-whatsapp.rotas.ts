@@ -44,5 +44,10 @@ export function criarRotasContasWhatsapp(controller: ContaWhatsappController): R
     validar(contaWhatsappIdSchema, 'params'),
     tratarAsync(controller.desconectar),
   );
+  rotas.delete(
+    '/:contaId',
+    validar(contaWhatsappIdSchema, 'params'),
+    tratarAsync(controller.excluir),
+  );
   return rotas;
 }

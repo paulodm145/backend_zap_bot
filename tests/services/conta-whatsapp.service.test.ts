@@ -6,6 +6,9 @@ import { ContaWhatsappService } from '../../src/services/conta-whatsapp.service.
 import { CriptografiaService } from '../../src/services/criptografia.service.js';
 import type { EvolutionApiService } from '../../src/services/evolution-api.service.js';
 
+const criptografiaFixture = new CriptografiaService(
+  '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+);
 const conta = {
   id: 1,
   public_id: '40ca22c9-5435-4bb7-81a2-27ee3dfb6277',
@@ -13,7 +16,8 @@ const conta = {
   instance_name: 'tenant-10-gerado',
   instance_id: 'evo-instance-1',
   numero_exibicao: null,
-  api_key_encrypted: 'payload-criptografado',
+  // Precisa ser um payload real: excluir() descriptografa para chamar a Evolution.
+  api_key_encrypted: criptografiaFixture.criptografar('apikey-existente-da-instancia'),
   status: 'CONECTANDO' as const,
   ultima_sincronizacao_at: null,
   ultimo_erro_codigo: null,
@@ -29,6 +33,8 @@ function dependencias() {
     contarAtivas: vi.fn().mockResolvedValue(0),
     criar: vi.fn().mockResolvedValue(conta),
     excluirCriacaoCompensatoria: vi.fn().mockResolvedValue(conta),
+    buscar: vi.fn().mockResolvedValue(conta),
+    excluir: vi.fn().mockResolvedValue({ ...conta, deletado_at: new Date(), ativo: false }),
   };
   const roteamentos = {
     obterLimiteDoTenant: vi.fn().mockResolvedValue(1),
@@ -125,5 +131,30 @@ describe('ContaWhatsappService', () => {
       instanceName,
       'apikey-bruta-da-evolution',
     );
+  });
+
+  it('exclui a instância na Evolution e marca a conta como excluída', async () => {
+    const { service, contas, evolution } = dependencias();
+    await service.excluir(conta.public_id, contexto);
+    expect(evolution.excluirInstancia).toHaveBeenCalledWith(
+      conta.instance_name,
+      expect.any(String),
+    );
+    expect(contas.excluir).toHaveBeenCalledWith(conta.public_id, contexto.autorUsuarioId);
+  });
+
+  it('exclui a conta mesmo quando a Evolution API falha', async () => {
+    const { service, contas, evolution } = dependencias();
+    evolution.excluirInstancia.mockRejectedValue(new Error('Evolution indisponível'));
+    await expect(service.excluir(conta.public_id, contexto)).resolves.toBeUndefined();
+    expect(contas.excluir).toHaveBeenCalledWith(conta.public_id, contexto.autorUsuarioId);
+  });
+
+  it('rejeita excluir conta inexistente', async () => {
+    const { service, contas } = dependencias();
+    contas.buscar.mockResolvedValue(null);
+    await expect(service.excluir('inexistente', contexto)).rejects.toMatchObject({
+      codigo: 'NAO_ENCONTRADO',
+    });
   });
 });

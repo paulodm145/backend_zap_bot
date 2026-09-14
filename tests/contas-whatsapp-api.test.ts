@@ -163,6 +163,21 @@ descreverIntegracao('API de contas WhatsApp', () => {
 
     await request(app()).patch(`/contas/${contaId}/status`).send({ ativo: false }).expect(200);
     expect(await tenant.auditoriaWhatsapp.count()).toBeGreaterThanOrEqual(2);
+
+    await request(app()).delete(`/contas/${contaId}`).expect(204);
+    await request(app()).get(`/contas/${contaId}`).expect(404);
+    const excluida = await tenant.contaWhatsapp.findUnique({
+      where: { public_id: contaId },
+    });
+    expect(excluida).toMatchObject({ ativo: false });
+    expect(excluida?.deletado_at).not.toBeNull();
+    expect(
+      await tenant.auditoriaWhatsapp.count({
+        where: { conta_public_id: contaId, acao: 'EXCLUIR' },
+      }),
+    ).toBe(1);
+    // Repetir a exclusão não encontra mais a conta ativa (soft delete já aplicado).
+    await request(app()).delete(`/contas/${contaId}`).expect(404);
   });
 
   it('valida payloads e conta inexistente', async () => {
