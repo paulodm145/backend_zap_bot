@@ -46,6 +46,8 @@ atualização.
    de ser escaneado, gera um novo QR sem recriar a conta.
 4. **Desconectar** — encerra a sessão pareada deliberadamente, mantendo o
    registro da conta (não é exclusão).
+5. **Excluir** — remove a conta definitivamente (soft delete): exige
+   confirmação explícita, já que não há como desfazer pela tela.
 
 ## Fluxo recomendado
 
@@ -64,6 +66,11 @@ atualização.
 4. Para desconectar deliberadamente, chame
    `POST /api/v1/contas-whatsapp/{contaId}/desconectar` — a conta permanece
    cadastrada com `status: DESCONECTADO` e pode ser reconectada depois.
+5. Para excluir definitivamente, chame
+   `DELETE /api/v1/contas-whatsapp/{contaId}` — sem corpo, sem confirmação de
+   senha (diferente da exclusão de tenant). Exija confirmação na tela antes de
+   chamar, pois a ação não tem desfazer: um novo número exigiria parear do
+   zero. Conversas e mensagens já trocadas continuam no histórico.
 
 ## Endpoints
 
@@ -76,6 +83,7 @@ atualização.
 | PATCH  | `/api/v1/contas-whatsapp/{contaId}/status`      | Ativar ou desativar                |
 | POST   | `/api/v1/contas-whatsapp/{contaId}/reconectar`  | Gerar novo QR code                 |
 | POST   | `/api/v1/contas-whatsapp/{contaId}/desconectar` | Encerrar sessão pareada            |
+| DELETE | `/api/v1/contas-whatsapp/{contaId}`             | Excluir definitivamente (204)      |
 
 ## Composição das telas
 
@@ -126,9 +134,11 @@ técnicos; não os exiba como informação relevante ao usuário final.
 Mostre nome, `numero_exibicao` (só populado após conexão bem-sucedida),
 `status` e `ativo`.
 
-**Reconectar/Desconectar** — não têm corpo de requisição. A resposta de
-`reconectar` é `{ conta, qrCodeBase64? }` (o campo pode faltar se a instância
-já estiver conectada); a de `desconectar` é a conta com `status: DESCONECTADO`.
+**Reconectar/Desconectar/Excluir** — não têm corpo de requisição. A resposta
+de `reconectar` é `{ conta, qrCodeBase64? }` (o campo pode faltar se a
+instância já estiver conectada); a de `desconectar` é a conta com
+`status: DESCONECTADO`; a de `excluir` é `204` sem corpo — remova a linha da
+lista localmente em vez de esperar um objeto de resposta.
 
 ## Estados da interface
 
