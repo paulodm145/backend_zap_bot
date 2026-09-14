@@ -98,6 +98,39 @@ describe('EvolutionApiService', () => {
     });
   });
 
+  // connection.update não traz o número pareado — só fetchInstances tem
+  // ownerJid. Verificado manualmente contra uma instância conectada de
+  // verdade: o campo `number` do próprio Baileys fica sempre null.
+  it('extrai o número pareado do ownerJid em fetchInstances', async () => {
+    const executarFetch = vi
+      .fn()
+      .mockResolvedValue(resposta([{ ownerJid: '5527998511410@s.whatsapp.net', number: null }]));
+    const servico = new EvolutionApiService(
+      'https://evolution.test',
+      'g',
+      'http://api.test',
+      executarFetch,
+    );
+
+    await expect(servico.obterNumeroPareado('tenant-1', 'apikey-1')).resolves.toBe('5527998511410');
+    expect(executarFetch).toHaveBeenCalledWith(
+      'https://evolution.test/instance/fetchInstances?instanceName=tenant-1',
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  it('devolve null quando a instância ainda não tem número pareado', async () => {
+    const executarFetch = vi.fn().mockResolvedValue(resposta([{ ownerJid: null }]));
+    const servico = new EvolutionApiService(
+      'https://evolution.test',
+      'g',
+      'http://api.test',
+      executarFetch,
+    );
+
+    await expect(servico.obterNumeroPareado('tenant-1', 'apikey-1')).resolves.toBeNull();
+  });
+
   it('trata 404 como sucesso ao desconectar ou excluir instância ausente', async () => {
     const executarFetch = vi.fn().mockResolvedValue(resposta({}, 404));
     const servico = new EvolutionApiService(

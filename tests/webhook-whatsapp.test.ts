@@ -59,7 +59,7 @@ function corpoMensagem(
 describe('webhook do WhatsApp (Evolution API)', () => {
   const chaves = new Set<string>();
   const jobs: { dados: JobMensagemRecebida; chave: string }[] = [];
-  const atualizacoesStatus: { id: number; status: string }[] = [];
+  const atualizacoesStatus: { id: number; status: string; numero_exibicao?: string }[] = [];
 
   const idempotencia = {
     reservar: (chave: string) => Promise.resolve(chaves.size !== chaves.add(chave).size),
@@ -102,8 +102,17 @@ describe('webhook do WhatsApp (Evolution API)', () => {
           status: conta.status,
         });
       },
-      update: (argumentos: { where: { id: number }; data: { status: string } }) => {
-        atualizacoesStatus.push({ id: argumentos.where.id, status: argumentos.data.status });
+      update: (argumentos: {
+        where: { id: number };
+        data: { status: string; numero_exibicao?: string };
+      }) => {
+        atualizacoesStatus.push({
+          id: argumentos.where.id,
+          status: argumentos.data.status,
+          ...(argumentos.data.numero_exibicao
+            ? { numero_exibicao: argumentos.data.numero_exibicao }
+            : {}),
+        });
         return Promise.resolve({ id: argumentos.where.id, status: argumentos.data.status });
       },
     },
@@ -112,8 +121,17 @@ describe('webhook do WhatsApp (Evolution API)', () => {
     obter: () => Promise.resolve(prismaTenantFalso),
   };
   const criptografiaIdentidade = { descriptografar: (valor: string) => valor };
+  // Padrão: não encontra o número pareado, igual ao comportamento de hoje sem
+  // essa busca — os testes que não mexem com connection.update 'open' nem
+  // notam a diferença.
+  const evolucaoSemNumero = { obterNumeroPareado: () => Promise.resolve(null) };
 
-  function criarServico(enfileiradorMensagem: EnfileiradorMensagem = enfileirador) {
+  function criarServico(
+    enfileiradorMensagem: EnfileiradorMensagem = enfileirador,
+    evolution: {
+      obterNumeroPareado: (instance: string, apiKey: string) => Promise<string | null>;
+    } = evolucaoSemNumero,
+  ) {
     return new WebhookWhatsappService(
       roteamentos,
       conexoes as unknown as GerenciadorConexoesTenant,
@@ -122,6 +140,7 @@ describe('webhook do WhatsApp (Evolution API)', () => {
       idempotencia,
       enfileiradorMensagem,
       60,
+      evolution,
     );
   }
 
@@ -207,6 +226,55 @@ describe('webhook do WhatsApp (Evolution API)', () => {
     });
     expect(atualizacoesStatus).toEqual([{ id: contaA.id, status: 'CONECTADO' }]);
     expect(jobs).toHaveLength(0);
+  });
+
+  // O connection.update em si não traz o número — só o estado. Ao abrir,
+  // busca o número pareado à parte e grava numero_exibicao. Sem isso, a
+  // tela mostra "Ainda não pareado" mesmo com a conexão já funcionando.
+  it('busca e grava o número pareado quando a conexão abre', async () => {
+    const evolucaoComNumero = {
+      obterNumeroPareado: () => Promise.resolve('5527998511410@s.whatsapp.net'),
+    };
+    const servico = criarServico(enfileirador, evolucaoComNumero);
+    const entrada: WebhookEvolutionEntrada = {
+      event: 'connection.update',
+      instance: contaA.instanceName,
+      apikey: contaA.apiKey,
+      data: { state: 'open' },
+    };
+
+    await servico.receber(entrada);
+
+    expect(atualizacoesStatus).toEqual([
+      { id: contaA.id, status: 'CONECTADO', numero_exibicao: '+5527998511410' },
+    ]);
+  });
+
+  it('não busca o número em connecting/close, e ignora falha na busca sem quebrar o status', async () => {
+    const evolucaoFalha = {
+      obterNumeroPareado: () => Promise.reject(new Error('Evolution indisponível')),
+    };
+    const servico = criarServico(enfileirador, evolucaoFalha);
+
+    await servico.receber({
+      event: 'connection.update',
+      instance: contaA.instanceName,
+      apikey: contaA.apiKey,
+      data: { state: 'connecting' },
+    });
+    await expect(
+      servico.receber({
+        event: 'connection.update',
+        instance: contaA.instanceName,
+        apikey: contaA.apiKey,
+        data: { state: 'open' },
+      }),
+    ).resolves.toEqual({ processado: true, recebidas: 0, duplicadas: 0 });
+
+    expect(atualizacoesStatus).toEqual([
+      { id: contaA.id, status: 'CONECTANDO' },
+      { id: contaA.id, status: 'CONECTADO' },
+    ]);
   });
 
   it('ignora eventos desconhecidos sem falhar', async () => {
