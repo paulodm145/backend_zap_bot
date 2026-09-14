@@ -83,7 +83,15 @@ Resposta:
 
 Atualiza o `status` da conta WhatsApp no banco do tenant (`CONECTANDO`,
 `CONECTADO` ou `DESCONECTADO`, espelhando os estados `connecting`/`open`/
-`close` do Baileys). Não cria job de mensagem:
+`close` do Baileys). Não cria job de mensagem.
+
+Quando `state` é `open`, o backend também busca o número pareado chamando
+`GET /instance/fetchInstances` na Evolution (o próprio evento não traz
+identidade, só estado) e grava em `numero_exibicao` — extraído do `ownerJid`
+(`5511999999999@s.whatsapp.net`), não do campo `number` da Evolution, que
+fica sempre `null` nas instâncias Baileys. Falha nessa busca não impede a
+atualização de `status`; `numero_exibicao` só fica pendente até o próximo
+`connection.update` com sucesso:
 
 ```json
 {
