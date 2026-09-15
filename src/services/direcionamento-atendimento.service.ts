@@ -9,6 +9,7 @@ import {
   ValidacaoError,
 } from '../erros/erro-aplicacao.js';
 import type { DirecionamentoAtendimentoRepository } from '../repositories/direcionamento-atendimento.repository.js';
+import type { EnfileiradorMensagemSaida } from './mensagem-atendimento.service.js';
 import { barramentoChat } from '../eventos/barramento-chat.js';
 
 interface ContextoAtendimento {
@@ -17,8 +18,18 @@ interface ContextoAtendimento {
   tenantId: string;
 }
 
+interface CriadorMensagemAutomatica {
+  criarMensagemBot(conversaId: number, texto: string): Promise<{ id: number; public_id: string }>;
+}
+
+const MENSAGEM_ENCERRAMENTO = 'Atendimento encerrado. Obrigado pelo contato!';
+
 export class DirecionamentoAtendimentoService {
-  public constructor(private readonly repositorio: DirecionamentoAtendimentoRepository) {}
+  public constructor(
+    private readonly repositorio: DirecionamentoAtendimentoRepository,
+    private readonly historico?: CriadorMensagemAutomatica,
+    private readonly enfileiradorSaida?: EnfileiradorMensagemSaida,
+  ) {}
 
   public async assumir(conversaPublicId: string, contexto: ContextoAtendimento) {
     const [conversa, atendente] = await Promise.all([
@@ -114,6 +125,17 @@ export class DirecionamentoAtendimentoService {
       ...(entrada.motivo ? { motivo: entrada.motivo } : {}),
       devolverAoBot: entrada.devolverAoBot,
     });
+    if (!entrada.devolverAoBot && this.historico && this.enfileiradorSaida) {
+      const mensagem = await this.historico.criarMensagemBot(conversa.id, MENSAGEM_ENCERRAMENTO);
+      await this.enfileiradorSaida.adicionar(contexto.tenantId, mensagem.public_id);
+      barramentoChat.publicar('conversa:mensagem_atualizada', {
+        tenantId: contexto.tenantId,
+        conversaId: conversa.public_id,
+        ...(conversa.setor ? { setorId: conversa.setor.public_id } : {}),
+        mensagemId: mensagem.public_id,
+        dados: { status: 'PENDENTE' },
+      });
+    }
     barramentoChat.publicar('conversa:atualizada', {
       tenantId: contexto.tenantId,
       conversaId: conversa.public_id,

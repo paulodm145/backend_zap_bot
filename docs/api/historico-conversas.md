@@ -49,6 +49,6 @@ Ao clicar em **Assumir**, envie `POST /api/v1/conversas/{conversaId}/assumir` se
 
 Admin e gestor podem usar `POST /api/v1/conversas/{conversaId}/reatribuir` com `{ "setorId": "uuid", "atendenteId": "uuid opcional", "motivo": "texto" }`. Sem `atendenteId`, a conversa volta à fila do setor. A tela deve confirmar a operação e exigir o motivo.
 
-`POST /api/v1/conversas/{conversaId}/encerrar` recebe `{ "motivo": "opcional", "devolverAoBot": false }`. Com `devolverAoBot: true`, o snapshot persistido é mantido/restaurado e a conversa volta ao estado `BOT`; sem snapshot, a API responde `422`.
+`POST /api/v1/conversas/{conversaId}/encerrar` recebe `{ "motivo": "opcional", "devolverAoBot": false }`. Com `devolverAoBot: true`, o snapshot persistido é mantido/restaurado e a conversa volta ao estado `BOT`; sem snapshot, a API responde `422`. Com `devolverAoBot: false` (encerramento efetivo), o backend também cria e enfileira automaticamente uma mensagem de texto fixa ("Atendimento encerrado. Obrigado pelo contato!", `autor: "BOT"`) para o contato pelo WhatsApp — a tela não precisa disparar nada além da chamada de encerrar.
 
 Atualize as listas após cada ação. As transferências guardam autor, atendentes/setores de origem e destino, motivo e data no banco do tenant.
