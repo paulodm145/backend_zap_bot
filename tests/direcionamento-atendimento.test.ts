@@ -222,8 +222,10 @@ descreverIntegracao('direcionamento de atendimento', () => {
       .send({ motivo: 'Atendimento concluído' })
       .expect(200);
     expect(chamadas).toHaveLength(1);
+    const [chamada] = chamadas;
+    if (!chamada) throw new Error('mensagem automática não foi enfileirada');
     const mensagemAutomatica = await prisma.mensagem.findFirstOrThrow({
-      where: { public_id: chamadas[0]?.mensagemPublicId },
+      where: { public_id: chamada.mensagemPublicId },
     });
     expect(mensagemAutomatica).toMatchObject({
       autor: 'BOT',
