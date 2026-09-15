@@ -80,6 +80,9 @@ descreverIntegracao('direcionamento de atendimento', () => {
   function app(
     usuarioCentralPublicId: string,
     papel: 'ADMIN_TENANT' | 'GESTOR' | 'ATENDENTE' = 'ATENDENTE',
+    enfileiradorMensagemSaida?: {
+      adicionar(tenantId: string, mensagemPublicId: string): Promise<void>;
+    },
   ) {
     const aplicacao = express();
     aplicacao.use(express.json());
@@ -95,7 +98,10 @@ descreverIntegracao('direcionamento de atendimento', () => {
     });
     aplicacao.use(
       '/conversas',
-      criarRotasConversas(new HistoricoController(), new DirecionamentoAtendimentoController()),
+      criarRotasConversas(
+        new HistoricoController(),
+        new DirecionamentoAtendimentoController(enfileiradorMensagemSaida),
+      ),
     );
     aplicacao.use(tratarErro);
     return aplicacao;
@@ -200,5 +206,46 @@ descreverIntegracao('direcionamento de atendimento', () => {
         where: { conversa: { public_id: conversaId }, tipo: 'SISTEMA' },
       }),
     ).toBe(3);
+  });
+
+  it('envia mensagem automática de encerramento ao contato quando não devolve ao bot', async () => {
+    const chamadas: { tenantId: string; mensagemPublicId: string }[] = [];
+    const enfileirador = {
+      adicionar: (tenantId: string, mensagemPublicId: string) => {
+        chamadas.push({ tenantId, mensagemPublicId });
+        return Promise.resolve();
+      },
+    };
+    await request(app(usuarioUm)).post(`/conversas/${conversaId}/assumir`).expect(200);
+    await request(app(usuarioUm, 'ATENDENTE', enfileirador))
+      .post(`/conversas/${conversaId}/encerrar`)
+      .send({ motivo: 'Atendimento concluído' })
+      .expect(200);
+    expect(chamadas).toHaveLength(1);
+    const mensagemAutomatica = await prisma.mensagem.findFirstOrThrow({
+      where: { public_id: chamadas[0]?.mensagemPublicId },
+    });
+    expect(mensagemAutomatica).toMatchObject({
+      autor: 'BOT',
+      direcao: 'SAIDA',
+      status_entrega: 'PENDENTE',
+      conteudo: { texto: 'Atendimento encerrado. Obrigado pelo contato!' },
+    });
+  });
+
+  it('não envia mensagem automática ao devolver a conversa ao bot', async () => {
+    const chamadas: string[] = [];
+    const enfileirador = {
+      adicionar: (_tenantId: string, mensagemPublicId: string) => {
+        chamadas.push(mensagemPublicId);
+        return Promise.resolve();
+      },
+    };
+    await request(app(usuarioUm)).post(`/conversas/${conversaId}/assumir`).expect(200);
+    await request(app(usuarioUm, 'ATENDENTE', enfileirador))
+      .post(`/conversas/${conversaId}/encerrar`)
+      .send({ devolverAoBot: true })
+      .expect(200);
+    expect(chamadas).toHaveLength(0);
   });
 });
