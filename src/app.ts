@@ -272,7 +272,7 @@ export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
     ),
     criarRotasConversas(
       new HistoricoController(),
-      new DirecionamentoAtendimentoController(),
+      new DirecionamentoAtendimentoController(opcoes.enfileiradorMensagemSaida),
       opcoes.enfileiradorMensagemSaida
         ? new MensagemAtendimentoController(opcoes.enfileiradorMensagemSaida)
         : undefined,

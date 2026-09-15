@@ -654,6 +654,8 @@ function criarRegistro(): OpenAPIRegistry {
     path: '/api/v1/conversas/{conversaId}/encerrar',
     tags: ['Atendimento'],
     summary: 'Encerra a conversa ou a devolve ao snapshot do bot',
+    description:
+      'Ao encerrar sem devolverAoBot, envia automaticamente uma mensagem fixa de encerramento ao contato pelo WhatsApp.',
     security: [{ bearerAuth: [] }],
     request: {
       params: conversaParametroSchema,
@@ -661,7 +663,8 @@ function criarRegistro(): OpenAPIRegistry {
     },
     responses: {
       200: {
-        description: 'Novo estado da conversa.',
+        description:
+          'Novo estado da conversa. Quando devolverAoBot é false, uma mensagem automática de encerramento é enviada ao contato.',
         content: { 'application/json': { schema: encerrarConversaRespostaSchema } },
       },
       403: {

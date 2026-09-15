@@ -6,9 +6,13 @@ import type {
 import { NaoEncontradoError, ValidacaoError } from '../erros/erro-aplicacao.js';
 import type { PrismaClient } from '../generated/prisma-tenant/client.js';
 import { DirecionamentoAtendimentoRepository } from '../repositories/direcionamento-atendimento.repository.js';
+import { HistoricoRepository } from '../repositories/historico.repository.js';
 import { DirecionamentoAtendimentoService } from '../services/direcionamento-atendimento.service.js';
+import type { EnfileiradorMensagemSaida } from '../services/mensagem-atendimento.service.js';
 
 export class DirecionamentoAtendimentoController {
+  public constructor(private readonly enfileiradorMensagemSaida?: EnfileiradorMensagemSaida) {}
+
   public assumir = async (requisicao: Request, resposta: Response): Promise<void> => {
     resposta
       .status(200)
@@ -60,8 +64,11 @@ export class DirecionamentoAtendimentoController {
   }
 
   private service(requisicao: Request) {
+    const prisma = this.prisma(requisicao);
     return new DirecionamentoAtendimentoService(
-      new DirecionamentoAtendimentoRepository(this.prisma(requisicao)),
+      new DirecionamentoAtendimentoRepository(prisma),
+      new HistoricoRepository(prisma),
+      this.enfileiradorMensagemSaida,
     );
   }
 
