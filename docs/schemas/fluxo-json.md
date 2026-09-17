@@ -95,6 +95,42 @@ quando nenhuma corresponde.
 `setorId` é o `public_id` UUID de um setor ativo do tenant. O nó encerra o
 trecho automatizado e produz uma saída de direcionamento.
 
+## Nó de integração HTTP
+
+```json
+{
+  "id": "consultar_pedido",
+  "tipo": "integracao_http",
+  "dados": {
+    "credencialId": "22222222-2222-4222-8222-222222222222",
+    "metodo": "GET",
+    "url": "https://api.erp-exemplo.com/v1/pedidos/{{cliente.pedido}}",
+    "mapeamentoResposta": { "pedido.status": "$.dados.status" }
+  },
+  "sucesso": "responder_status",
+  "falha": "transferir_humano"
+}
+```
+
+| Campo                | Regra                                                                                      |
+| -------------------- | ------------------------------------------------------------------------------------------ |
+| `credencialId`       | `public_id` de uma credencial ativa em `/api/v1/integracoes`                               |
+| `metodo`             | `GET`, `POST`, `PUT`, `PATCH` ou `DELETE`                                                  |
+| `url`                | Precisa começar pelo `base_url` da credencial; aceita `{{variavel}}` no caminho e na query |
+| `corpo`              | Opcional, até 4096 caracteres, também aceita `{{variavel}}`                                |
+| `mapeamentoResposta` | Até 20 pares `variavel` → caminho (`$.a.b[0].c`)                                           |
+| `sucesso` / `falha`  | Referências opcionais; ausentes, o fluxo conclui ali                                       |
+
+O motor **pausa** neste nó: a chamada é feita fora dele e o resultado é
+reaplicado, o que mantém o motor puro e sem I/O. Uma execução faz no máximo 5
+chamadas externas.
+
+A chamada segue por `falha` quando a credencial some ou é desativada, quando
+falta variável usada na URL ou no corpo, quando a URL sai da base autorizada,
+quando o host resolve para rede privada, em timeout, redirecionamento, status
+de erro, resposta não-JSON ou resposta acima de 256 KB. Campo mapeado que não
+existe na resposta apenas não vira variável — isso continua sendo sucesso.
+
 ## Regras semânticas
 
 - `noInicial` deve existir;
@@ -104,6 +140,8 @@ trecho automatizado e produz uma saída de direcionamento.
 - ciclos não são permitidos nesta versão determinística;
 - expressões de condição devem seguir a gramática segura;
 - setores referenciados devem existir e estar ativos;
+- credenciais de integração devem existir e estar ativas;
+- a URL do nó de integração deve caber no `base_url` da credencial;
 - cada execução é limitada a no máximo 100 passos.
 
 ## Exemplo completo

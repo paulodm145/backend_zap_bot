@@ -33,14 +33,17 @@ frontend deve aplicar `obrigatorio` e `validacao` antes de enviar o documento.
 `caminho` usa a mesma localização que aparecerá nos erros de validação, por
 exemplo `dados.texto` e `dados.setorId`. Os tipos iniciais de controle são:
 
-| Tipo              | Controle sugerido                   |
-| ----------------- | ----------------------------------- |
-| `texto_curto`     | input de uma linha                  |
-| `texto_longo`     | textarea com contador               |
-| `variavel`        | input validado pelo padrão recebido |
-| `lista_condicoes` | construtor ordenável de regras      |
-| `referencia_no`   | seletor de bloco do canvas          |
-| `seletor_setor`   | seletor remoto paginado             |
+| Tipo                 | Controle sugerido                             |
+| -------------------- | --------------------------------------------- |
+| `texto_curto`        | input de uma linha                            |
+| `texto_longo`        | textarea com contador                         |
+| `variavel`           | input validado pelo padrão recebido           |
+| `lista_condicoes`    | construtor ordenável de regras                |
+| `referencia_no`      | seletor de bloco do canvas                    |
+| `seletor_setor`      | seletor remoto paginado                       |
+| `selecao`            | select com as opções de `fonteOpcoes`         |
+| `seletor_credencial` | seletor remoto paginado de integrações        |
+| `mapa_extracao`      | lista de pares variável + caminho da resposta |
 
 Uma `fonteOpcoes` com `tipo=endpoint` deve ser consultada com o mesmo bearer
 token. Para setores, use os parâmetros fornecidos pelo catálogo e continue a
@@ -51,7 +54,12 @@ As fontes `nos_fluxo` e `variaveis_fluxo` são locais:
 
 - `nos_fluxo`: IDs dos demais blocos presentes no canvas;
 - `variaveis_fluxo`: valores de `dados.variavel` dos blocos
-  `captura_resposta` que podem alcançar a condição.
+  `captura_resposta` que podem alcançar a condição, mais as variáveis
+  declaradas em `dados.mapeamentoResposta` dos blocos `integracao_http`
+  anteriores.
+
+A fonte `lista_fixa` traz as opções prontas em `opcoes`, cada uma com `valor`
+(persistido) e `rotulo` (exibido). É o caso do método HTTP.
 
 ## Conexões e serialização
 
@@ -69,6 +77,8 @@ Mapeamento dos handles:
 | `condicao`         | `dados.regras[].entao`     | um por regra              |
 | `condicao`         | `dados.padrao`             | obrigatório               |
 | `direcionar_setor` | nenhum                     | encerra automação         |
+| `integracao_http`  | `sucesso`                  | opcional, no máximo um    |
+| `integracao_http`  | `falha`                    | opcional, no máximo um    |
 
 No construtor de condição, apresente separadamente variável, operador, valor e
 destino. Ao salvar, serialize cada regra no contrato atual:
@@ -91,7 +101,28 @@ string entre aspas.
   na variável; sem `proximo`, conclui depois da captura;
 - `condicao`: avalia regras na ordem e usa `padrao` se nenhuma corresponder;
 - `direcionar_setor`: emite o direcionamento, grava o setor e conclui a
-  automação para que o atendimento humano assuma.
+  automação para que o atendimento humano assuma;
+- `integracao_http`: pausa a execução, chama a API externa, grava os campos
+  mapeados em variáveis e segue por `sucesso` ou `falha`. Sem a saída
+  escolhida ligada, o fluxo conclui ali.
+
+### Montagem do bloco de integração
+
+`dados.credencialId` vem de `GET /api/v1/integracoes` (ver
+`docs/api/integracoes.md`). Só credenciais ativas aparecem, e o backend
+revalida na publicação.
+
+`dados.url` **precisa começar pelo `base_url` da credencial escolhida** — vale
+antecipar essa checagem no editor, prefixando o campo com o `base_url` em modo
+leitura, porque publicar com URL fora da base devolve
+`422` com `URL_FORA_DA_CREDENCIAL`. Dentro do caminho e da query é possível
+usar `{{variavel}}`; no host não, já que o prefixo é fixo.
+
+`dados.mapeamentoResposta` é um objeto `{ "variavel": "$.caminho.na.resposta" }`
+com no máximo 20 entradas. O caminho aceita chaves e índices
+(`$.dados.itens[0].status`). Apenas texto, número e booleano são extraíveis:
+objeto e array não viram variável. Campo não encontrado simplesmente não gera a
+variável — a chamada continua sendo sucesso.
 
 ## Ciclo recomendado da tela
 

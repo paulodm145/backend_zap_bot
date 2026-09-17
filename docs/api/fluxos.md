@@ -131,7 +131,10 @@ do fluxo. Códigos possíveis:
 - `NO_INALCANCAVEL`;
 - `CICLO_NAO_PERMITIDO`;
 - `CONDICAO_INVALIDA`;
-- `SETOR_INVALIDO`.
+- `SETOR_INVALIDO`;
+- `CREDENCIAL_INVALIDA`;
+- `URL_FORA_DA_CREDENCIAL`;
+- `INTEGRACAO_INDISPONIVEL`.
 
 Publicar novamente sem alterações retorna `409 CONFLITO`.
 
@@ -141,16 +144,28 @@ Invalide ou consulte novamente o detalhe após publicar.
 
 ## Tipos de nó disponíveis
 
-O contrato atual aceita e o motor executa somente `mensagem`,
-`captura_resposta`, `condicao` e `direcionar_setor`. Os tipos `ia` e
-`integracao_http` permanecem temporariamente indisponíveis; o editor deve
-ocultá-los até que validação, execução e segurança dessas integrações sejam
-implementadas no backend e publicadas no OpenAPI.
+O contrato atual aceita e o motor executa `mensagem`, `captura_resposta`,
+`condicao`, `direcionar_setor` e `integracao_http`. O tipo `ia` permanece
+indisponível; o editor deve ocultá-lo até que validação, execução e segurança
+sejam implementadas no backend e publicadas no OpenAPI.
+
+O bloco `integracao_http` depende de uma credencial cadastrada em
+`/api/v1/integracoes` (ver `docs/api/integracoes.md`), que define o endereço
+base autorizado e guarda o segredo. Detalhes de montagem estão em
+`docs/api/blocos-fluxo.md` e o contrato do nó em `docs/schemas/fluxo-json.md`.
 
 ## Simulador
 
-A simulação sempre usa uma versão publicada e não chama a Evolution API. Na
-primeira chamada envie:
+A simulação sempre usa uma versão publicada e não chama a Evolution API.
+
+> **Limitação atual:** o simulador também não executa chamadas externas. Ao
+> alcançar um bloco `integracao_http`, ele devolve a saída `integracao` e
+> `estado.aguardandoIntegracao`, e para ali — a simulação não prossegue por
+> `sucesso` nem por `falha`. Para exercitar o bloco de ponta a ponta, use uma
+> conversa real. Retomar a simulação informando um resultado fictício ainda não
+> é suportado.
+
+Na primeira chamada envie:
 
 ```json
 { "maxPassos": 50 }
