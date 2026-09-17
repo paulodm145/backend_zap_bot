@@ -36,6 +36,13 @@ nesse caso.
 
 `proximo` é opcional. Sem ele, a execução termina após emitir a mensagem.
 
+`dados.texto` aceita `{{variavel}}`, substituído por qualquer variável já
+capturada ou extraída no fluxo (mesmo parser de `integracao_http`, sem
+`eval`). Variável ausente no momento do envio **não** quebra a mensagem nem a
+esvazia: o texto sai como está, com `{{variavel}}` literal — sinal visível de
+que o fluxo referencia algo que ainda não existe naquele ponto, para o autor
+corrigir. Esta versão não valida essas referências na publicação.
+
 ## Nó de captura
 
 ```json
@@ -51,7 +58,8 @@ nesse caso.
 ```
 
 O motor pausa nesse nó. A mensagem recebida na execução seguinte é armazenada
-em `variaveis["menu.opcao"]`.
+em `variaveis["menu.opcao"]`. `dados.mensagem` também aceita `{{variavel}}`,
+com a mesma regra de fallback do nó de mensagem.
 
 ## Nó de condição
 
