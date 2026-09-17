@@ -23,6 +23,7 @@ const ambienteSchema = z
     REFRESH_TOKEN_EXPIRACAO_DIAS: z.coerce.number().int().positive().max(90).default(30),
     TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE: z.string().regex(/^[a-fA-F0-9]{64}$/),
     WHATSAPP_CREDENCIAIS_CRIPTOGRAFIA_CHAVE: z.string().regex(/^[a-fA-F0-9]{64}$/),
+    INTEGRACOES_CREDENCIAIS_CRIPTOGRAFIA_CHAVE: z.string().regex(/^[a-fA-F0-9]{64}$/),
     EVOLUTION_API_URL: z.url(),
     EVOLUTION_API_KEY: z.string().min(1),
     EVOLUTION_WEBHOOK_URL_BASE: z.url(),

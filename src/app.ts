@@ -19,6 +19,7 @@ import { EmpresaController } from './controllers/empresa.controller.js';
 import { ContaWhatsappController } from './controllers/conta-whatsapp.controller.js';
 import { UsuarioTenantController } from './controllers/usuario-tenant.controller.js';
 import { SetorController } from './controllers/setor.controller.js';
+import { CredencialIntegracaoController } from './controllers/credencial-integracao.controller.js';
 import { PerfilController } from './controllers/perfil.controller.js';
 import { HistoricoController } from './controllers/historico.controller.js';
 import { DirecionamentoAtendimentoController } from './controllers/direcionamento-atendimento.controller.js';
@@ -48,6 +49,7 @@ import { criarRotasEmpresa } from './rotas/empresa.rotas.js';
 import { criarRotasContasWhatsapp } from './rotas/conta-whatsapp.rotas.js';
 import { criarRotasUsuariosTenant } from './rotas/usuario-tenant.rotas.js';
 import { criarRotasSetores, criarRotaVinculosSetores } from './rotas/setor.rotas.js';
+import { criarRotasCredenciaisIntegracao } from './rotas/credencial-integracao.rotas.js';
 import { criarRotasPerfil } from './rotas/perfil.rotas.js';
 import { criarRotasContatos, criarRotasConversas } from './rotas/historico.rotas.js';
 import { AutenticacaoInternaService } from './services/autenticacao-interna.service.js';
@@ -297,6 +299,20 @@ export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
       obterGerenciadorConexoesTenant(),
     ),
     criarRotasSetores(new SetorController()),
+  );
+  aplicacao.use(
+    '/api/v1/integracoes',
+    criarAutenticacaoMiddleware(tokenTenant),
+    criarResolucaoTenantMiddleware(
+      tenantsRepository,
+      criptografiaConexaoTenant,
+      obterGerenciadorConexoesTenant(),
+    ),
+    criarRotasCredenciaisIntegracao(
+      new CredencialIntegracaoController(
+        new CriptografiaService(ambiente.INTEGRACOES_CREDENCIAIS_CRIPTOGRAFIA_CHAVE),
+      ),
+    ),
   );
   aplicacao.use(
     '/api/v1/usuarios',

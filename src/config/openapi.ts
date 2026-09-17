@@ -37,6 +37,13 @@ import {
   substituirSetoresUsuarioSchema,
   usuarioSetoresParametroSchema,
 } from '../dtos/setor.dto.js';
+import {
+  atualizarCredencialIntegracaoSchema,
+  credencialIntegracaoParametroSchema,
+  criarCredencialIntegracaoSchema,
+  listarCredenciaisIntegracaoSchema,
+  tipoAutenticacaoIntegracaoSchema,
+} from '../dtos/credencial-integracao.dto.js';
 import { atualizarEmpresaSchema, consultarCepSchema } from '../dtos/empresa.dto.js';
 import {
   alterarStatusContaWhatsappSchema,
@@ -282,6 +289,28 @@ const setorSchema = z.object({
 });
 const paginaSetoresSchema = z.object({
   dados: z.array(setorSchema),
+  total: z.number().int(),
+  skip: z.number().int(),
+  take: z.number().int(),
+});
+/**
+ * Resposta pública da credencial de integração: sem `configuracao_encrypted`
+ * e sem qualquer segredo em texto puro. Só `tipo_auth` e `base_url`, que o
+ * editor precisa para montar o bloco de integração.
+ */
+const credencialIntegracaoSchema = z
+  .object({
+    public_id: z.uuid(),
+    nome: z.string(),
+    tipo_auth: tipoAutenticacaoIntegracaoSchema,
+    base_url: z.string(),
+    ativo: z.boolean(),
+    created_at: z.iso.datetime(),
+    updated_at: z.iso.datetime(),
+  })
+  .openapi('CredencialIntegracao');
+const paginaCredenciaisIntegracaoSchema = z.object({
+  dados: z.array(credencialIntegracaoSchema),
   total: z.number().int(),
   skip: z.number().int(),
   take: z.number().int(),
@@ -864,6 +893,116 @@ function criarRegistro(): OpenAPIRegistry {
       204: { description: 'Excluído.' },
       409: {
         description: 'Usado por fluxo publicado ou conversa ativa.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'get',
+    path: '/api/v1/integracoes',
+    tags: ['Integrações'],
+    summary: 'Lista credenciais de integração',
+    description:
+      'Nenhuma resposta desta seção devolve o segredo da credencial: ele fica criptografado em repouso e só é usado pelo motor ao executar o bloco de integração.',
+    security: [{ bearerAuth: [] }],
+    request: { query: listarCredenciaisIntegracaoSchema },
+    responses: {
+      200: {
+        description: 'Lista paginada, sem segredos.',
+        content: { 'application/json': { schema: paginaCredenciaisIntegracaoSchema } },
+      },
+      403: {
+        description: 'Ação restrita a admin e gestor.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'post',
+    path: '/api/v1/integracoes',
+    tags: ['Integrações'],
+    summary: 'Cadastra credencial de integração',
+    description:
+      'A `baseUrl` precisa ser HTTPS e não pode apontar para host local ou rede privada: ela delimita os destinos que os fluxos deste tenant podem alcançar.',
+    security: [{ bearerAuth: [] }],
+    request: {
+      body: {
+        required: true,
+        content: { 'application/json': { schema: criarCredencialIntegracaoSchema } },
+      },
+    },
+    responses: {
+      201: {
+        description: 'Credencial criada.',
+        content: { 'application/json': { schema: credencialIntegracaoSchema } },
+      },
+      409: {
+        description: 'Já existe credencial com esse nome.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+      422: {
+        description: 'URL inválida ou autenticação incompleta.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'get',
+    path: '/api/v1/integracoes/{integracaoId}',
+    tags: ['Integrações'],
+    summary: 'Detalha credencial de integração',
+    security: [{ bearerAuth: [] }],
+    request: { params: credencialIntegracaoParametroSchema },
+    responses: {
+      200: {
+        description: 'Credencial, sem segredo.',
+        content: { 'application/json': { schema: credencialIntegracaoSchema } },
+      },
+      404: {
+        description: 'Não encontrada.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'put',
+    path: '/api/v1/integracoes/{integracaoId}',
+    tags: ['Integrações'],
+    summary: 'Atualiza credencial de integração',
+    description:
+      'Enviar `autenticacao` substitui o segredo inteiro; omitir o campo preserva o segredo já armazenado.',
+    security: [{ bearerAuth: [] }],
+    request: {
+      params: credencialIntegracaoParametroSchema,
+      body: {
+        required: true,
+        content: { 'application/json': { schema: atualizarCredencialIntegracaoSchema } },
+      },
+    },
+    responses: {
+      200: {
+        description: 'Credencial atualizada.',
+        content: { 'application/json': { schema: credencialIntegracaoSchema } },
+      },
+      404: {
+        description: 'Não encontrada.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+    },
+  });
+  registro.registerPath({
+    method: 'delete',
+    path: '/api/v1/integracoes/{integracaoId}',
+    tags: ['Integrações'],
+    summary: 'Desativa credencial de integração',
+    description:
+      'Desativação lógica: a credencial deixa de ser utilizável pelos fluxos, mas o registro permanece para auditoria.',
+    security: [{ bearerAuth: [] }],
+    request: { params: credencialIntegracaoParametroSchema },
+    responses: {
+      204: { description: 'Desativada.' },
+      404: {
+        description: 'Não encontrada ou já desativada.',
         content: { 'application/json': { schema: erroSchema } },
       },
     },
