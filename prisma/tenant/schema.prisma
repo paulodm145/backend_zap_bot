@@ -370,13 +370,15 @@ model CredencialIntegracao {
   id                    Int      @id @default(autoincrement())
   public_id             String   @unique @default(uuid()) @db.Uuid
   nome                  String   @db.VarChar(120)
+  nome_normalizado      String   @db.VarChar(120)
   tipo_auth             String   @db.VarChar(30)
+  base_url              String   @db.VarChar(300)
   configuracao_encrypted String
   ativo                 Boolean  @default(true)
   created_at            DateTime @default(now()) @db.Timestamptz(3)
   updated_at            DateTime @updatedAt @db.Timestamptz(3)
 
-  @@index([ativo, nome])
+  @@index([ativo, nome_normalizado])
   @@map("credenciais_integracao")
 }
 
