@@ -49,11 +49,13 @@ Documentos funcionais disponíveis:
 - [Cadastro da empresa](api/empresa.md)
 - [Contas WhatsApp do tenant](api/contas-whatsapp.md)
 - [Usuários e permissões](api/usuarios.md)
+- [Credenciais de integração externa](api/integracoes.md)
 - [Schema JSON dos fluxos](schemas/fluxo-json.md)
 - [Contribuição e checks de qualidade](CONTRIBUICAO.md)
 - [Tarefas dos recursos operacionais](TAREFAS-RECURSOS-OPERACIONAIS.md)
 - [Tarefas de e-mail transacional](TAREFAS-EMAIL-TRANSACIONAL.md)
 - [Tarefas de migração para Evolution API](TAREFAS-INTEGRACAO-EVOLUTION-API.md)
+- [Tarefas da integração HTTP no fluxo](TAREFAS-INTEGRACAO-HTTP-FLUXO.md)
 
 ## Swagger e Markdown
 

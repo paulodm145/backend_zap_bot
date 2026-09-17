@@ -47,6 +47,11 @@ dependem do cookie HttpOnly. Uma implementação sugerida do cliente HTTP está 
 | DELETE | `/api/v1/setores/{setorId}`                      | Admin/gestor tenant               | Excluir setor logicamente                 |
 | GET    | `/api/v1/setores/{setorId}/atendentes-elegiveis` | Admin/gestor tenant               | Listar atendentes vinculados ativos       |
 | PUT    | `/api/v1/usuarios/{usuarioId}/setores`           | Admin/gestor tenant               | Substituir vínculos N:N                   |
+| GET    | `/api/v1/integracoes`                            | Admin/gestor tenant               | Listar credenciais de integração          |
+| POST   | `/api/v1/integracoes`                            | Admin/gestor tenant               | Cadastrar credencial de integração        |
+| GET    | `/api/v1/integracoes/{integracaoId}`             | Admin/gestor tenant               | Detalhar credencial sem segredo           |
+| PUT    | `/api/v1/integracoes/{integracaoId}`             | Admin/gestor tenant               | Atualizar credencial de integração        |
+| DELETE | `/api/v1/integracoes/{integracaoId}`             | Admin/gestor tenant               | Desativar credencial logicamente          |
 | GET    | `/api/v1/me`                                     | Tenant autenticado                | Perfil, tenant, permissões e setores      |
 | PUT    | `/api/v1/me`                                     | Tenant autenticado                | Alterar nome do próprio perfil            |
 | PUT    | `/api/v1/me/senha`                               | Tenant autenticado                | Alterar senha com reautenticação          |
