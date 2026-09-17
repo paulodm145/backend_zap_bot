@@ -191,6 +191,116 @@ const catalogo: CatalogoBlocosFluxo = catalogoBlocosFluxoSchema.parse({
         dados: { setorId: '11111111-1111-4111-8111-111111111111' },
       },
     },
+    {
+      tipo: 'integracao_http',
+      nome: 'Consultar API externa',
+      descricao:
+        'Consulta uma API cadastrada em integrações, salva campos da resposta em variáveis e segue por sucesso ou falha.',
+      categoria: 'logica',
+      icone: 'integracao_http',
+      comportamento: { pausaExecucao: true, produzSaida: false, podeFinalizarFluxo: true },
+      campos: [
+        {
+          caminho: 'dados.credencialId',
+          rotulo: 'Integração',
+          descricao: 'Credencial ativa que autoriza o destino e assina a chamada.',
+          tipo: 'seletor_credencial',
+          obrigatorio: true,
+          valorInicial: '',
+          fonteOpcoes: {
+            tipo: 'endpoint',
+            metodo: 'GET',
+            caminho: '/api/v1/integracoes',
+            campoValor: 'public_id',
+            campoRotulo: 'nome',
+            query: { ativo: 'true', skip: '0', take: '100' },
+          },
+        },
+        {
+          caminho: 'dados.metodo',
+          rotulo: 'Método',
+          descricao: 'Verbo HTTP da chamada.',
+          tipo: 'selecao',
+          obrigatorio: true,
+          valorInicial: 'GET',
+          fonteOpcoes: {
+            tipo: 'lista_fixa',
+            opcoes: [
+              { valor: 'GET', rotulo: 'GET' },
+              { valor: 'POST', rotulo: 'POST' },
+              { valor: 'PUT', rotulo: 'PUT' },
+              { valor: 'PATCH', rotulo: 'PATCH' },
+              { valor: 'DELETE', rotulo: 'DELETE' },
+            ],
+          },
+        },
+        {
+          caminho: 'dados.url',
+          rotulo: 'URL',
+          descricao:
+            'Precisa começar pelo endereço base da integração escolhida. Aceita {{variavel}} no caminho e na query.',
+          tipo: 'texto_curto',
+          obrigatorio: true,
+          valorInicial: '',
+          validacao: { minimoCaracteres: 1, maximoCaracteres: 500 },
+          fonteOpcoes: { tipo: 'variaveis_fluxo' },
+        },
+        {
+          caminho: 'dados.corpo',
+          rotulo: 'Corpo',
+          descricao: 'JSON enviado nos métodos que aceitam corpo. Aceita {{variavel}}.',
+          tipo: 'texto_longo',
+          obrigatorio: false,
+          validacao: { maximoCaracteres: 4096 },
+          fonteOpcoes: { tipo: 'variaveis_fluxo' },
+        },
+        {
+          caminho: 'dados.mapeamentoResposta',
+          rotulo: 'Resposta em variáveis',
+          descricao:
+            'Cada item guarda um campo da resposta em uma variável, usando caminhos como $.dados.status.',
+          tipo: 'mapa_extracao',
+          obrigatorio: true,
+          valorInicial: {},
+          validacao: { maximoItens: 20, maximoCaracteres: 200 },
+          serializacao: '{ "{variavel}": "{caminho}" }',
+        },
+      ],
+      conexoes: {
+        aceitaEntrada: true,
+        saidas: [
+          {
+            chave: 'sucesso',
+            rotulo: 'Sucesso',
+            tipo: 'unica',
+            obrigatoria: false,
+            quantidadeMaxima: 1,
+          },
+          {
+            chave: 'falha',
+            rotulo: 'Falha',
+            tipo: 'unica',
+            obrigatoria: false,
+            quantidadeMaxima: 1,
+          },
+        ],
+      },
+      configuracaoInicial: {
+        dados: { credencialId: '', metodo: 'GET', url: '', mapeamentoResposta: {} },
+      },
+      exemplo: {
+        id: 'consultar_pedido',
+        tipo: 'integracao_http',
+        dados: {
+          credencialId: '22222222-2222-4222-8222-222222222222',
+          metodo: 'GET',
+          url: 'https://api.erp-exemplo.com/v1/pedidos/{{cliente.pedido}}',
+          mapeamentoResposta: { 'pedido.status': '$.dados.status' },
+        },
+        sucesso: 'responder_status',
+        falha: 'atendimento',
+      },
+    },
   ],
 });
 
