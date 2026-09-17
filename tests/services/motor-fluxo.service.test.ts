@@ -218,6 +218,88 @@ describe('motor determinístico de fluxo', () => {
     expect(resultado.saidas).toEqual([]);
   });
 
+  it('interpola variável capturada no texto da mensagem', () => {
+    const comVariavel = definicaoFluxoSchema.parse({
+      schemaVersao: 1,
+      noInicial: 'capturar',
+      nos: [
+        {
+          id: 'capturar',
+          tipo: 'captura_resposta',
+          dados: { variavel: 'nome' },
+          proximo: 'saudar',
+        },
+        { id: 'saudar', tipo: 'mensagem', dados: { texto: 'Olá, {{nome}}!' } },
+      ],
+    });
+    const pausa = motor.executar({
+      definicao: comVariavel,
+      fluxoVersaoId: versaoId,
+      maxPassos: 10,
+    });
+    const resultado = motor.executar({
+      definicao: comVariavel,
+      fluxoVersaoId: versaoId,
+      estado: pausa.estado,
+      mensagem: 'Ana',
+      maxPassos: 10,
+    });
+    expect(resultado.saidas).toEqual([
+      expect.objectContaining({ tipo: 'mensagem', texto: 'Olá, Ana!' }),
+    ]);
+  });
+
+  it('mantém o texto original quando falta variável para interpolar', () => {
+    const semVariavel = definicaoFluxoSchema.parse({
+      schemaVersao: 1,
+      noInicial: 'saudar',
+      nos: [{ id: 'saudar', tipo: 'mensagem', dados: { texto: 'Olá, {{nome}}!' } }],
+    });
+    const resultado = motor.executar({
+      definicao: semVariavel,
+      fluxoVersaoId: versaoId,
+      maxPassos: 10,
+    });
+    expect(resultado.saidas).toEqual([
+      expect.objectContaining({ tipo: 'mensagem', texto: 'Olá, {{nome}}!' }),
+    ]);
+  });
+
+  it('interpola a pergunta de captura antes de pausar', () => {
+    const comPergunta = definicaoFluxoSchema.parse({
+      schemaVersao: 1,
+      noInicial: 'capturar_nome',
+      nos: [
+        {
+          id: 'capturar_nome',
+          tipo: 'captura_resposta',
+          dados: { variavel: 'nome' },
+          proximo: 'capturar_idade',
+        },
+        {
+          id: 'capturar_idade',
+          tipo: 'captura_resposta',
+          dados: { variavel: 'idade', mensagem: 'Quantos anos você tem, {{nome}}?' },
+        },
+      ],
+    });
+    const primeiraPausa = motor.executar({
+      definicao: comPergunta,
+      fluxoVersaoId: versaoId,
+      maxPassos: 10,
+    });
+    const segundaPausa = motor.executar({
+      definicao: comPergunta,
+      fluxoVersaoId: versaoId,
+      estado: primeiraPausa.estado,
+      mensagem: 'Ana',
+      maxPassos: 10,
+    });
+    expect(segundaPausa.saidas).toEqual([
+      expect.objectContaining({ tipo: 'captura', mensagem: 'Quantos anos você tem, Ana?' }),
+    ]);
+  });
+
   it('trata tipo de nó desconhecido como erro de domínio', () => {
     const desconhecida = {
       schemaVersao: 1,
