@@ -21,6 +21,8 @@ descreverIntegracao('API de credenciais de integração', () => {
   const criptografia = new CriptografiaService(CHAVE);
 
   beforeEach(async () => {
+    await prisma.fluxoVersao.deleteMany();
+    await prisma.fluxo.deleteMany();
     await prisma.credencialIntegracao.deleteMany();
   });
 
@@ -161,6 +163,53 @@ descreverIntegracao('API de credenciais de integração', () => {
   it('nega acesso a quem não é gestão do tenant', async () => {
     await request(app('ATENDENTE')).get('/integracoes').expect(403);
     await request(app('ATENDENTE')).post('/integracoes').send(credencialValida).expect(403);
+  });
+
+  it('recusa desativar credencial usada por fluxo publicado', async () => {
+    const criada = await request(app()).post('/integracoes').send(credencialValida).expect(201);
+    const publicId = (criada.body as unknown as { public_id: string }).public_id;
+    const definicao = {
+      schemaVersao: 1,
+      noInicial: 'consultar',
+      nos: [
+        {
+          id: 'consultar',
+          tipo: 'integracao_http',
+          dados: {
+            credencialId: publicId,
+            metodo: 'GET',
+            url: 'https://api.erp-exemplo.com/v1/pedidos/1',
+            mapeamentoResposta: {},
+          },
+        },
+      ],
+    };
+    const fluxo = await prisma.fluxo.create({
+      data: { nome: 'Com integração', definicao, versao: 1, ativo: true },
+    });
+    await prisma.fluxoVersao.create({
+      data: { fluxo_id: fluxo.id, versao: 1, definicao },
+    });
+
+    await request(app()).delete(`/integracoes/${publicId}`).expect(409);
+    const registro = await prisma.credencialIntegracao.findUniqueOrThrow({
+      where: { public_id: publicId },
+    });
+    expect(registro.ativo).toBe(true);
+  });
+
+  it('permite desativar credencial que nenhum fluxo publicado usa', async () => {
+    const criada = await request(app()).post('/integracoes').send(credencialValida).expect(201);
+    const publicId = (criada.body as unknown as { public_id: string }).public_id;
+    await prisma.fluxo.create({
+      data: {
+        nome: 'Sem integração',
+        definicao: { schemaVersao: 1, noInicial: 'a', nos: [] },
+        versao: 1,
+        ativo: true,
+      },
+    });
+    await request(app()).delete(`/integracoes/${publicId}`).expect(204);
   });
 
   it('responde 404 para credencial inexistente', async () => {

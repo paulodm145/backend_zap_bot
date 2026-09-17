@@ -56,6 +56,11 @@ export class CredencialIntegracaoService {
   }
 
   public async desativar(publicId: string) {
+    if (await this.repositorio.usadaEmFluxoPublicado(publicId)) {
+      throw new ConflitoError(
+        'A credencial é usada por um fluxo publicado; ajuste o fluxo antes de desativar',
+      );
+    }
     const desativou = await this.repositorio.desativar(publicId);
     if (!desativou) throw new NaoEncontradoError('Credencial de integração não encontrada');
   }
