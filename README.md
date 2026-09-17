@@ -56,49 +56,50 @@ Substitua todos os valores de exemplo antes de executar a aplicação. O arquivo
 
 Variáveis disponíveis no scaffold atual:
 
-| Variável                                  | Finalidade                                                            |
-| ----------------------------------------- | --------------------------------------------------------------------- |
-| `NODE_ENV`                                | Ambiente: `development`, `test` ou `production`                       |
-| `PORTA`                                   | Porta HTTP da API                                                     |
-| `API_PORT`                                | Porta da API publicada pelo Docker Compose                            |
-| `LOG_LEVEL`                               | Nível dos logs estruturados                                           |
-| `POSTGRES_USER`                           | Usuário do PostgreSQL no Docker Compose                               |
-| `POSTGRES_PASSWORD`                       | Senha local do PostgreSQL no Docker Compose                           |
-| `POSTGRES_DB`                             | Banco central criado pelo Docker Compose                              |
-| `POSTGRES_PORT`                           | Porta do PostgreSQL publicada no host                                 |
-| `REDIS_URL`                               | Conexão Redis usada pela aplicação                                    |
-| `REDIS_PORT`                              | Porta do Redis publicada no host                                      |
-| `WEBHOOK_IDEMPOTENCIA_SEGUNDOS`           | Retenção da deduplicação de mensagens no Redis                        |
-| `ORIGENS_PERMITIDAS`                      | Origens CORS separadas por vírgula                                    |
-| `JWT_INTERNO_SECRET`                      | Segredo do JWT interno, mínimo de 32 caracteres                       |
-| `JWT_INTERNO_EXPIRACAO_SEGUNDOS`          | Duração do JWT interno em segundos                                    |
-| `TOTP_CRIPTOGRAFIA_CHAVE`                 | Chave AES de 32 bytes representada em 64 hex                          |
-| `TOTP_INTERNO_OBRIGATORIO`                | Exigência de TOTP; `false` só fora de produção                        |
-| `CENTRAL_DATABASE_URL`                    | Conexão do banco central/admin                                        |
-| `TENANT_DATABASE_URL`                     | Conexão de um tenant para comandos de migration                       |
-| `WHATSAPP_CREDENCIAIS_CRIPTOGRAFIA_CHAVE` | Chave hexadecimal exclusiva para a apikey das instâncias Evolution    |
-| `EVOLUTION_API_URL`                       | URL base da Evolution API (uso interno da aplicação)                  |
-| `EVOLUTION_API_KEY`                       | Chave global de administração de instâncias                           |
-| `EVOLUTION_WEBHOOK_URL_BASE`              | URL pela qual a Evolution API alcança esta API para entregar webhooks |
-| `EVOLUTION_PORT`                          | Porta do painel/API da Evolution publicada no host                    |
-| `TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE`       | Chave AES das conexões dos tenants                                    |
-| `TENANT_CLIENTES_CACHE_MAXIMO`            | Limite de clients de tenant mantidos no LRU                           |
-| `POSTGRES_ADMIN_URL`                      | Conexão administrativa para criar bancos físicos                      |
-| `HTTP_REQUEST_TIMEOUT_MS`                 | Limite para concluir uma requisição                                   |
-| `HTTP_HEADERS_TIMEOUT_MS`                 | Limite para receber os headers HTTP                                   |
-| `HTTP_KEEP_ALIVE_TIMEOUT_MS`              | Tempo de keep-alive de uma conexão                                    |
-| `HTTP_SHUTDOWN_TIMEOUT_MS`                | Limite do encerramento gracioso                                       |
-| `SWAGGER_USUARIO`                         | Usuário do Swagger em produção                                        |
-| `SWAGGER_SENHA`                           | Senha do Swagger em produção                                          |
-| `EMAIL_PROVEDOR`                          | `smtp`, `resend` ou `local` para suprimir                             |
-| `EMAIL_REMETENTE`                         | Remetente dos e-mails transacionais                                   |
-| `SMTP_HOST`                               | Host SMTP; MailHog local usa `127.0.0.1`                              |
-| `SMTP_PORTA`                              | Porta SMTP; MailHog usa `1025`                                        |
-| `SMTP_SEGURO`                             | Ativa TLS implícito no transporte SMTP                                |
-| `SMTP_USUARIO` / `SMTP_SENHA`             | Credenciais SMTP opcionais, sempre em conjunto                        |
-| `RESEND_API_KEY`                          | Chave obrigatória com provedor Resend                                 |
-| `FRONTEND_URL`                            | Base dos links enviados ao frontend                                   |
-| `RECUPERACAO_SENHA_EXPIRACAO_MINUTOS`     | Validade do token de recuperação                                      |
+| Variável                                     | Finalidade                                                            |
+| -------------------------------------------- | --------------------------------------------------------------------- |
+| `NODE_ENV`                                   | Ambiente: `development`, `test` ou `production`                       |
+| `PORTA`                                      | Porta HTTP da API                                                     |
+| `API_PORT`                                   | Porta da API publicada pelo Docker Compose                            |
+| `LOG_LEVEL`                                  | Nível dos logs estruturados                                           |
+| `POSTGRES_USER`                              | Usuário do PostgreSQL no Docker Compose                               |
+| `POSTGRES_PASSWORD`                          | Senha local do PostgreSQL no Docker Compose                           |
+| `POSTGRES_DB`                                | Banco central criado pelo Docker Compose                              |
+| `POSTGRES_PORT`                              | Porta do PostgreSQL publicada no host                                 |
+| `REDIS_URL`                                  | Conexão Redis usada pela aplicação                                    |
+| `REDIS_PORT`                                 | Porta do Redis publicada no host                                      |
+| `WEBHOOK_IDEMPOTENCIA_SEGUNDOS`              | Retenção da deduplicação de mensagens no Redis                        |
+| `ORIGENS_PERMITIDAS`                         | Origens CORS separadas por vírgula                                    |
+| `JWT_INTERNO_SECRET`                         | Segredo do JWT interno, mínimo de 32 caracteres                       |
+| `JWT_INTERNO_EXPIRACAO_SEGUNDOS`             | Duração do JWT interno em segundos                                    |
+| `TOTP_CRIPTOGRAFIA_CHAVE`                    | Chave AES de 32 bytes representada em 64 hex                          |
+| `TOTP_INTERNO_OBRIGATORIO`                   | Exigência de TOTP; `false` só fora de produção                        |
+| `CENTRAL_DATABASE_URL`                       | Conexão do banco central/admin                                        |
+| `TENANT_DATABASE_URL`                        | Conexão de um tenant para comandos de migration                       |
+| `WHATSAPP_CREDENCIAIS_CRIPTOGRAFIA_CHAVE`    | Chave hexadecimal exclusiva para a apikey das instâncias Evolution    |
+| `EVOLUTION_API_URL`                          | URL base da Evolution API (uso interno da aplicação)                  |
+| `EVOLUTION_API_KEY`                          | Chave global de administração de instâncias                           |
+| `EVOLUTION_WEBHOOK_URL_BASE`                 | URL pela qual a Evolution API alcança esta API para entregar webhooks |
+| `EVOLUTION_PORT`                             | Porta do painel/API da Evolution publicada no host                    |
+| `TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE`          | Chave AES das conexões dos tenants                                    |
+| `INTEGRACOES_CREDENCIAIS_CRIPTOGRAFIA_CHAVE` | Chave hexadecimal exclusiva das credenciais de integração externa     |
+| `TENANT_CLIENTES_CACHE_MAXIMO`               | Limite de clients de tenant mantidos no LRU                           |
+| `POSTGRES_ADMIN_URL`                         | Conexão administrativa para criar bancos físicos                      |
+| `HTTP_REQUEST_TIMEOUT_MS`                    | Limite para concluir uma requisição                                   |
+| `HTTP_HEADERS_TIMEOUT_MS`                    | Limite para receber os headers HTTP                                   |
+| `HTTP_KEEP_ALIVE_TIMEOUT_MS`                 | Tempo de keep-alive de uma conexão                                    |
+| `HTTP_SHUTDOWN_TIMEOUT_MS`                   | Limite do encerramento gracioso                                       |
+| `SWAGGER_USUARIO`                            | Usuário do Swagger em produção                                        |
+| `SWAGGER_SENHA`                              | Senha do Swagger em produção                                          |
+| `EMAIL_PROVEDOR`                             | `smtp`, `resend` ou `local` para suprimir                             |
+| `EMAIL_REMETENTE`                            | Remetente dos e-mails transacionais                                   |
+| `SMTP_HOST`                                  | Host SMTP; MailHog local usa `127.0.0.1`                              |
+| `SMTP_PORTA`                                 | Porta SMTP; MailHog usa `1025`                                        |
+| `SMTP_SEGURO`                                | Ativa TLS implícito no transporte SMTP                                |
+| `SMTP_USUARIO` / `SMTP_SENHA`                | Credenciais SMTP opcionais, sempre em conjunto                        |
+| `RESEND_API_KEY`                             | Chave obrigatória com provedor Resend                                 |
+| `FRONTEND_URL`                               | Base dos links enviados ao frontend                                   |
+| `RECUPERACAO_SENHA_EXPIRACAO_MINUTOS`        | Validade do token de recuperação                                      |
 
 A aplicação valida as variáveis com Zod durante a inicialização e falha
 imediatamente quando uma configuração obrigatória é inválida.
@@ -275,6 +276,7 @@ sed -i \
   -e "s#^TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE=.*#TENANT_CONEXAO_CRIPTOGRAFIA_CHAVE=$(openssl rand -hex 32)#" \
   -e "s#^WHATSAPP_CREDENCIAIS_CRIPTOGRAFIA_CHAVE=.*#WHATSAPP_CREDENCIAIS_CRIPTOGRAFIA_CHAVE=$(openssl rand -hex 32)#" \
   -e "s#^TOTP_CRIPTOGRAFIA_CHAVE=.*#TOTP_CRIPTOGRAFIA_CHAVE=$(openssl rand -hex 32)#" \
+  -e "s#^INTEGRACOES_CREDENCIAIS_CRIPTOGRAFIA_CHAVE=.*#INTEGRACOES_CREDENCIAIS_CRIPTOGRAFIA_CHAVE=$(openssl rand -hex 32)#" \
   -e "s#^EVOLUTION_API_KEY=.*#EVOLUTION_API_KEY=$(openssl rand -hex 24)#" \
   -e "s#^TOTP_INTERNO_OBRIGATORIO=.*#TOTP_INTERNO_OBRIGATORIO=false#" \
   .env

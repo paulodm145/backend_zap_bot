@@ -258,6 +258,20 @@ tenant_credentials (
   valor_criptografado TEXT,
   criado_em TIMESTAMP
 )
+-- Implementado como `credenciais_integracao`, com as diferenças abaixo
+-- registradas em docs/TAREFAS-INTEGRACAO-HTTP-FLUXO.md (etapa 1):
+--   * `id` inteiro + `public_id` UUID, conforme a regra de chaves do AGENTS.md;
+--   * `base_url` NOT NULL: delimita o destino que a credencial autoriza e
+--     funciona como allowlist por tenant para o nó `integracao_http`, que só
+--     pode montar URLs começando por ela. Exige HTTPS e recusa host loopback,
+--     rede privada, link-local e o metadata das nuvens;
+--   * `nome_normalizado` para busca e unicidade de nome sem depender de
+--     collation;
+--   * `tipo_auth` em VARCHAR com os valores NENHUMA, BEARER, API_KEY_HEADER e
+--     BASIC. `oauth2` não foi implementado por não ter uso concreto ainda;
+--   * segredo criptografado com chave própria
+--     (`INTEGRACOES_CREDENCIAIS_CRIPTOGRAFIA_CHAVE`), separada das chaves de
+--     conexão de tenant e de WhatsApp, e nunca devolvido pela API.
 
 usage_logs (
   id UUID PK,
@@ -630,7 +644,12 @@ Convenção geral: prefixo `/api/v1`, autenticação via JWT (header `Authorizat
 | Método | Rota | Descrição |
 |---|---|---|
 | GET / POST | `/api/v1/integracoes` | Lista / cadastra credenciais de integração (`tenant_credentials`) |
-| DELETE | `/api/v1/integracoes/:id` | Remove credencial |
+| GET / PUT | `/api/v1/integracoes/:id` | Detalha / atualiza credencial |
+| DELETE | `/api/v1/integracoes/:id` | Desativa credencial |
+
+Implementado. Toda a seção exige `ADMIN_TENANT` ou `GESTOR`, o `DELETE` é
+desativação lógica (`ativo = false`, sem exclusão física) e nenhuma resposta
+devolve o segredo. Contrato de uso em `docs/api/integracoes.md`.
 
 ### 14.6 Webhook (WhatsApp)
 
