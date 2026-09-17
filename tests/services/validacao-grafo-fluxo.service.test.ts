@@ -111,4 +111,99 @@ describe('validação do grafo de fluxo', () => {
       ]),
     );
   });
+
+  describe('nó de integração', () => {
+    const credencialValida = '33333333-3333-4333-8333-333333333333';
+    const baseUrl = 'https://api.erp-exemplo.com/v1';
+    const credenciais = {
+      buscarConfiguracao: (publicId: string) =>
+        Promise.resolve(
+          publicId === credencialValida ? { public_id: publicId, base_url: baseUrl } : null,
+        ),
+    };
+    const comCredenciais = new ValidacaoGrafoFluxoService(setores, credenciais);
+
+    function definicaoComIntegracao(dados: Record<string, unknown>): DefinicaoFluxo {
+      return definicaoFluxoSchema.parse({
+        schemaVersao: 1,
+        noInicial: 'consultar',
+        nos: [
+          {
+            id: 'consultar',
+            tipo: 'integracao_http',
+            dados: {
+              credencialId: credencialValida,
+              metodo: 'GET',
+              url: `${baseUrl}/pedidos/{{pedido}}`,
+              mapeamentoResposta: { status: '$.dados.status' },
+              ...dados,
+            },
+            sucesso: 'fim',
+          },
+          { id: 'fim', tipo: 'mensagem', dados: { texto: 'ok' } },
+        ],
+      });
+    }
+
+    it('aceita integração com credencial ativa e URL dentro da base', async () => {
+      await expect(comCredenciais.validar(definicaoComIntegracao({}))).resolves.toEqual([]);
+    });
+
+    it('recusa credencial inexistente ou inativa', async () => {
+      const erros = await comCredenciais.validar(
+        definicaoComIntegracao({ credencialId: '44444444-4444-4444-8444-444444444444' }),
+      );
+      expect(erros).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ codigo: 'CREDENCIAL_INVALIDA', campo: 'dados.credencialId' }),
+        ]),
+      );
+    });
+
+    it.each([
+      ['outro domínio', 'https://api.invasor.test/v1/pedidos/1'],
+      ['prefixo parecido', 'https://api.erp-exemplo.com.invasor.test/v1/pedidos/1'],
+      ['fora do caminho base', 'https://api.erp-exemplo.com/v2/pedidos/1'],
+    ])('recusa URL de %s', async (_nome, url) => {
+      const erros = await comCredenciais.validar(definicaoComIntegracao({ url }));
+      expect(erros).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ codigo: 'URL_FORA_DA_CREDENCIAL', campo: 'dados.url' }),
+        ]),
+      );
+    });
+
+    it('valida sucesso e falha como referências do grafo', async () => {
+      const definicao = definicaoFluxoSchema.parse({
+        schemaVersao: 1,
+        noInicial: 'consultar',
+        nos: [
+          {
+            id: 'consultar',
+            tipo: 'integracao_http',
+            dados: {
+              credencialId: credencialValida,
+              metodo: 'GET',
+              url: `${baseUrl}/pedidos/1`,
+              mapeamentoResposta: {},
+            },
+            sucesso: 'inexistente',
+          },
+        ],
+      });
+      const erros = await comCredenciais.validar(definicao);
+      expect(erros).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ codigo: 'REFERENCIA_INEXISTENTE', campo: 'sucesso' }),
+        ]),
+      );
+    });
+
+    it('sinaliza quando não há como validar a credencial', async () => {
+      const erros = await validador.validar(definicaoComIntegracao({}));
+      expect(erros).toEqual(
+        expect.arrayContaining([expect.objectContaining({ codigo: 'INTEGRACAO_INDISPONIVEL' })]),
+      );
+    });
+  });
 });

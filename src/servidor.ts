@@ -30,6 +30,7 @@ import { criarEnviadorEmail } from './services/fabrica-enviador-email.service.js
 import { ProcessadorEmailService } from './services/processador-email.service.js';
 import { TemplateEmailService } from './services/template-email.service.js';
 import { EvolutionApiService } from './services/evolution-api.service.js';
+import { IntegracaoHttpService } from './services/integracao-http.service.js';
 import { ProcessadorStatusWhatsappService } from './services/status-whatsapp.service.js';
 import {
   jobMensagemRecebidaSchema,
@@ -69,6 +70,10 @@ const processadorMensagens = new ProcessadorMensagemRecebidaService(
   new EstadoFluxoRedisRepository(redis),
   new MotorFluxoService(),
   enfileiradorMensagemSaida,
+  {
+    http: new IntegracaoHttpService(),
+    criptografia: new CriptografiaService(ambiente.INTEGRACOES_CREDENCIAIS_CRIPTOGRAFIA_CHAVE),
+  },
 );
 const evolutionApi = new EvolutionApiService(
   ambiente.EVOLUTION_API_URL,

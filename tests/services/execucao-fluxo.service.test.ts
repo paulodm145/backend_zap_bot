@@ -80,4 +80,140 @@ describe('execução persistida de fluxo', () => {
       expect.objectContaining({ concluido: true }),
     );
   });
+
+  describe('nó de integração', () => {
+    const credencialId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+    const definicaoIntegracao = {
+      schemaVersao: 1,
+      noInicial: 'consultar',
+      nos: [
+        {
+          id: 'consultar',
+          tipo: 'integracao_http',
+          dados: {
+            credencialId,
+            metodo: 'GET',
+            url: 'https://api.test/v1/pedidos/{{pedido}}',
+            mapeamentoResposta: { status: '$.dados.status' },
+          },
+          sucesso: 'ok',
+          falha: 'erro',
+        },
+        { id: 'ok', tipo: 'mensagem', dados: { texto: 'Consulta concluída' } },
+        { id: 'erro', tipo: 'mensagem', dados: { texto: 'Falhou' } },
+      ],
+    };
+
+    function ambiente(
+      http: { executar: ReturnType<typeof vi.fn> },
+      estadoSalvo: Record<string, string> = { pedido: '77' },
+    ) {
+      const estados = {
+        carregar: vi.fn().mockResolvedValue({
+          fluxoVersaoId: versao.public_id,
+          noAtualId: 'consultar',
+          variaveis: estadoSalvo,
+          concluido: false,
+          passosExecutados: 0,
+        }),
+        salvar: vi.fn().mockResolvedValue(undefined),
+      };
+      const fluxos = {
+        buscarVersaoPorPublicId: vi
+          .fn()
+          .mockResolvedValue({ public_id: versao.public_id, definicao: definicaoIntegracao }),
+        buscarVersaoPublicada: vi.fn(),
+      };
+      const credenciais = {
+        buscarConfiguracao: vi.fn().mockResolvedValue({
+          public_id: credencialId,
+          base_url: 'https://api.test/v1',
+          configuracao_encrypted: 'cifrado',
+        }),
+      };
+      const criptografia = {
+        criptografar: vi.fn(),
+        descriptografar: vi.fn().mockReturnValue(JSON.stringify({ tipo: 'NENHUMA' })),
+      };
+      const servico = new ExecucaoFluxoService(
+        fluxos,
+        estados,
+        new MotorFluxoService(),
+        undefined,
+        { credenciais, http, criptografia } as never,
+      );
+      return { servico, estados, credenciais, criptografia };
+    }
+
+    it('executa a chamada, grava variáveis e segue por sucesso', async () => {
+      const http = {
+        executar: vi
+          .fn()
+          .mockResolvedValue({ sucesso: true, status: 200, corpo: { dados: { status: 'PAGO' } } }),
+      };
+      const { servico, estados } = ambiente(http);
+      const resultado = await servico.executarConversa({
+        tenantId: 'tenant',
+        conversaId: 'conversa',
+        fluxoId: 'fluxo',
+      });
+
+      expect(http.executar).toHaveBeenCalledWith(
+        expect.objectContaining({
+          metodo: 'GET',
+          url: 'https://api.test/v1/pedidos/77',
+          baseUrlAutorizada: 'https://api.test/v1',
+        }),
+      );
+      expect(resultado.estado.variaveis.status).toBe('PAGO');
+      expect(resultado.saidas).toContainEqual(
+        expect.objectContaining({ tipo: 'mensagem', noId: 'ok' }),
+      );
+      expect(estados.salvar).toHaveBeenCalled();
+    });
+
+    it('segue por falha quando a chamada não tem sucesso', async () => {
+      const http = {
+        executar: vi.fn().mockResolvedValue({ sucesso: false, falha: 'STATUS_ERRO' }),
+      };
+      const { servico } = ambiente(http);
+      const resultado = await servico.executarConversa({
+        tenantId: 'tenant',
+        conversaId: 'conversa',
+        fluxoId: 'fluxo',
+      });
+      expect(resultado.saidas).toContainEqual(
+        expect.objectContaining({ tipo: 'mensagem', noId: 'erro' }),
+      );
+    });
+
+    it('segue por falha sem chamar a rede quando falta variável da URL', async () => {
+      const http = { executar: vi.fn() };
+      const { servico } = ambiente(http, {});
+      const resultado = await servico.executarConversa({
+        tenantId: 'tenant',
+        conversaId: 'conversa',
+        fluxoId: 'fluxo',
+      });
+      expect(http.executar).not.toHaveBeenCalled();
+      expect(resultado.saidas).toContainEqual(
+        expect.objectContaining({ tipo: 'mensagem', noId: 'erro' }),
+      );
+    });
+
+    it('segue por falha quando a credencial não está mais ativa', async () => {
+      const http = { executar: vi.fn() };
+      const { servico, credenciais } = ambiente(http);
+      credenciais.buscarConfiguracao.mockResolvedValue(null);
+      const resultado = await servico.executarConversa({
+        tenantId: 'tenant',
+        conversaId: 'conversa',
+        fluxoId: 'fluxo',
+      });
+      expect(http.executar).not.toHaveBeenCalled();
+      expect(resultado.saidas).toContainEqual(
+        expect.objectContaining({ tipo: 'mensagem', noId: 'erro' }),
+      );
+    });
+  });
 });

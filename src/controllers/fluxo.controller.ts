@@ -11,6 +11,7 @@ import { NaoEncontradoError, ValidacaoError } from '../erros/erro-aplicacao.js';
 import type { PrismaClient } from '../generated/prisma-tenant/client.js';
 import { FluxoRepository } from '../repositories/fluxo.repository.js';
 import { SetorRepository } from '../repositories/setor.repository.js';
+import { CredencialIntegracaoRepository } from '../repositories/credencial-integracao.repository.js';
 import { MotorFluxoService } from '../services/motor-fluxo.service.js';
 import { CatalogoBlocosFluxoService } from '../services/catalogo-blocos-fluxo.service.js';
 import { PublicacaoFluxoService } from '../services/publicacao-fluxo.service.js';
@@ -55,7 +56,10 @@ export class FluxoController {
     const repository = new FluxoRepository(prisma);
     const versao = await new PublicacaoFluxoService(
       repository,
-      new ValidacaoGrafoFluxoService(new SetorRepository(prisma)),
+      new ValidacaoGrafoFluxoService(
+        new SetorRepository(prisma),
+        new CredencialIntegracaoRepository(prisma),
+      ),
     ).publicar(this.fluxoId(requisicao));
     resposta.status(201).json(versao);
   };
