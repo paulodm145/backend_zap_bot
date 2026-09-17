@@ -96,9 +96,12 @@ string entre aspas.
 
 ## Comportamento mínimo por bloco
 
-- `mensagem`: emite o texto e avança; sem `proximo`, conclui o fluxo;
-- `captura_resposta`: pode emitir a pergunta, pausa e salva a próxima mensagem
-  na variável; sem `proximo`, conclui depois da captura;
+- `mensagem`: interpola `{{variavel}}` no texto, emite e avança; sem
+  `proximo`, conclui o fluxo. Variável ausente mantém o texto original, com
+  `{{variavel}}` visível — mostre esse caso no preview do editor;
+- `captura_resposta`: pode emitir a pergunta (também interpolada), pausa e
+  salva a próxima mensagem na variável; sem `proximo`, conclui depois da
+  captura;
 - `condicao`: avalia regras na ordem e usa `padrao` se nenhuma corresponder;
 - `direcionar_setor`: emite o direcionamento, grava o setor e conclui a
   automação para que o atendimento humano assuma;

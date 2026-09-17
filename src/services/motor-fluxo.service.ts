@@ -10,6 +10,7 @@ import {
   ValidacaoError,
 } from '../erros/erro-aplicacao.js';
 import { avaliarCondicao } from '../helpers/condicao-fluxo.helper.js';
+import { interpolarTemplate } from '../helpers/template-fluxo.helper.js';
 
 export type SaidaExecucaoFluxo =
   | { tipo: 'mensagem'; texto: string; noId: string }
@@ -111,7 +112,13 @@ export class MotorFluxoService {
       case 'mensagem':
         return {
           estado: this.avancar(estado, no.proximo),
-          saidas: [{ tipo: 'mensagem', texto: no.dados.texto, noId: no.id }],
+          saidas: [
+            {
+              tipo: 'mensagem',
+              texto: this.interpolarOuOriginal(no.dados.texto, estado),
+              noId: no.id,
+            },
+          ],
           pausar: false,
           consumiuMensagem: false,
           consumiuIntegracao: false,
@@ -151,7 +158,9 @@ export class MotorFluxoService {
               tipo: 'captura',
               variavel: no.dados.variavel,
               noId: no.id,
-              ...(no.dados.mensagem ? { mensagem: no.dados.mensagem } : {}),
+              ...(no.dados.mensagem
+                ? { mensagem: this.interpolarOuOriginal(no.dados.mensagem, estado) }
+                : {}),
             },
           ],
           pausar: true,
@@ -217,6 +226,18 @@ export class MotorFluxoService {
       default:
         return this.noDesconhecido(no);
     }
+  }
+
+  /**
+   * Interpola `{{variavel}}` com o que já foi capturado/extraído no fluxo.
+   * Variável ausente devolve o texto original, `{{...}}` visível — sinal
+   * claro de erro de autoria do fluxo, em vez de mensagem quebrada ou
+   * silenciosamente vazia. `mensagem`/`captura_resposta` não têm ramo de
+   * falha para desviar, diferente de `integracao_http`.
+   */
+  private interpolarOuOriginal(texto: string, estado: EstadoConversaFluxo): string {
+    const resultado = interpolarTemplate(texto, estado.variaveis);
+    return resultado.completo ? resultado.texto : texto;
   }
 
   private avancar(estado: EstadoConversaFluxo, proximo: string | undefined): EstadoConversaFluxo {

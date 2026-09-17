@@ -67,11 +67,12 @@ variáveis e seguir por `sucesso` ou `falha`.
 - [x] Documentar o bloco em `docs/api/blocos-fluxo.md` e `docs/api/fluxos.md`.
 - [x] Testar sucesso, falha, timeout, resposta inválida e host bloqueado.
 - [x] Executar formatação, lint, TypeScript, testes e build.
-- [ ] Criar commits semânticos, abrir PR e aguardar a CI.
-- [ ] Interpolar `{{variavel}}` no bloco `mensagem`.
-      Bloqueada: sem isso o fluxo consulta a API mas não consegue exibir o
-      resultado ao contato. Muda o comportamento de fluxos já publicados
-      cujo texto contenha `{{`, então depende de decisão do usuário.
+- [x] Criar commits semânticos, abrir PR e aguardar a CI.
+- [x] Interpolar `{{variavel}}` no bloco `mensagem` e na pergunta do
+      `captura_resposta`, com aprovação do usuário em 2026-09-17 para o efeito
+      colateral em fluxos publicados com `{{` literal no texto (nenhum fluxo
+      existente no ambiente de avaliação usa `{{` fora de contexto de
+      variável).
 
 Checklist de saída:
 
