@@ -124,6 +124,100 @@ describe('motor determinístico de fluxo', () => {
     ).toThrow('excedeu o limite');
   });
 
+  it('pausa no nó de integração sem executar I/O e retoma pelo resultado', () => {
+    const credencialId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+    const comIntegracao = definicaoFluxoSchema.parse({
+      schemaVersao: 1,
+      noInicial: 'consultar',
+      nos: [
+        {
+          id: 'consultar',
+          tipo: 'integracao_http',
+          dados: {
+            credencialId,
+            metodo: 'GET',
+            url: 'https://api.test/v1/pedidos/1',
+            mapeamentoResposta: { status: '$.dados.status' },
+          },
+          sucesso: 'deu_certo',
+          falha: 'deu_errado',
+        },
+        { id: 'deu_certo', tipo: 'mensagem', dados: { texto: 'Status {{status}}' } },
+        { id: 'deu_errado', tipo: 'mensagem', dados: { texto: 'Não consegui consultar' } },
+      ],
+    });
+
+    const pausa = motor.executar({
+      definicao: comIntegracao,
+      fluxoVersaoId: versaoId,
+      maxPassos: 10,
+    });
+    expect(pausa.saidas).toEqual([
+      expect.objectContaining({ tipo: 'integracao', noId: 'consultar' }),
+    ]);
+    expect(pausa.estado.aguardandoIntegracao).toEqual({ noId: 'consultar' });
+    expect(pausa.estado.concluido).toBe(false);
+
+    const sucesso = motor.executar({
+      definicao: comIntegracao,
+      fluxoVersaoId: versaoId,
+      estado: pausa.estado,
+      resultadoIntegracao: { noId: 'consultar', sucesso: true, variaveis: { status: 'APROVADO' } },
+      maxPassos: 10,
+    });
+    expect(sucesso.estado.variaveis.status).toBe('APROVADO');
+    expect(sucesso.estado.aguardandoIntegracao).toBeUndefined();
+    expect(sucesso.saidas).toEqual([
+      expect.objectContaining({ tipo: 'mensagem', noId: 'deu_certo' }),
+    ]);
+
+    const falha = motor.executar({
+      definicao: comIntegracao,
+      fluxoVersaoId: versaoId,
+      estado: pausa.estado,
+      resultadoIntegracao: { noId: 'consultar', sucesso: false, variaveis: {} },
+      maxPassos: 10,
+    });
+    expect(falha.saidas).toEqual([
+      expect.objectContaining({ tipo: 'mensagem', noId: 'deu_errado' }),
+    ]);
+  });
+
+  it('encerra o fluxo quando a saída escolhida da integração não está ligada', () => {
+    const semFalha = definicaoFluxoSchema.parse({
+      schemaVersao: 1,
+      noInicial: 'consultar',
+      nos: [
+        {
+          id: 'consultar',
+          tipo: 'integracao_http',
+          dados: {
+            credencialId: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+            metodo: 'GET',
+            url: 'https://api.test/v1/x',
+            mapeamentoResposta: {},
+          },
+          sucesso: 'fim',
+        },
+        { id: 'fim', tipo: 'mensagem', dados: { texto: 'ok' } },
+      ],
+    });
+    const pausa = motor.executar({
+      definicao: semFalha,
+      fluxoVersaoId: versaoId,
+      maxPassos: 10,
+    });
+    const resultado = motor.executar({
+      definicao: semFalha,
+      fluxoVersaoId: versaoId,
+      estado: pausa.estado,
+      resultadoIntegracao: { noId: 'consultar', sucesso: false, variaveis: {} },
+      maxPassos: 10,
+    });
+    expect(resultado.estado.concluido).toBe(true);
+    expect(resultado.saidas).toEqual([]);
+  });
+
   it('trata tipo de nó desconhecido como erro de domínio', () => {
     const desconhecida = {
       schemaVersao: 1,

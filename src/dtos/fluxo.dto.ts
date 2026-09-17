@@ -6,7 +6,10 @@ export const TIPOS_NO_FLUXO = [
   'captura_resposta',
   'condicao',
   'direcionar_setor',
+  'integracao_http',
 ] as const;
+
+export const METODOS_INTEGRACAO_HTTP = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as const;
 
 export const tipoNoFluxoSchema = z.enum(TIPOS_NO_FLUXO).openapi('TipoNoFluxo');
 
@@ -101,12 +104,50 @@ export const noDirecionamentoSchema = z
   .strict()
   .openapi('NoDirecionarSetor');
 
+/**
+ * Caminho de extração da resposta, no formato `$.pedido.itens[0].status`.
+ * Interpretado por parser próprio: sem `eval` e sem biblioteca de JSONPath,
+ * porque só a navegação por chave e índice é necessária.
+ */
+const caminhoExtracaoSchema = z
+  .string()
+  .trim()
+  .regex(/^\$(\.[A-Za-z_][A-Za-z0-9_]*|\[\d{1,4}\])+$/)
+  .max(200)
+  .openapi({ example: '$.dados.status' });
+
+export const noIntegracaoHttpSchema = z
+  .object({
+    id: identificadorNoSchema,
+    tipo: z.literal('integracao_http'),
+    dados: z
+      .object({
+        credencialId: z.uuid(),
+        metodo: z.enum(METODOS_INTEGRACAO_HTTP),
+        /** Aceita `{{variavel}}` no caminho e na query; o host vem da credencial. */
+        url: z.string().trim().min(1).max(500),
+        corpo: z.string().max(4_096).optional(),
+        mapeamentoResposta: z
+          .record(variavelFluxoSchema, caminhoExtracaoSchema)
+          .refine((valor) => Object.keys(valor).length <= 20, {
+            message: 'Use no máximo 20 variáveis de resposta',
+          }),
+      })
+      .strict(),
+    sucesso: identificadorNoSchema.optional(),
+    falha: identificadorNoSchema.optional(),
+    posicao: posicaoNoSchema.optional(),
+  })
+  .strict()
+  .openapi('NoIntegracaoHttp');
+
 export const noFluxoSchema = z
   .discriminatedUnion('tipo', [
     noMensagemSchema,
     noCapturaSchema,
     noCondicaoSchema,
     noDirecionamentoSchema,
+    noIntegracaoHttpSchema,
   ])
   .openapi('NoFluxo');
 
@@ -124,6 +165,15 @@ const fonteOpcoesCampoSchema = z
   .discriminatedUnion('tipo', [
     z.object({ tipo: z.literal('nos_fluxo') }).strict(),
     z.object({ tipo: z.literal('variaveis_fluxo') }).strict(),
+    z
+      .object({
+        tipo: z.literal('lista_fixa'),
+        opcoes: z
+          .array(z.object({ valor: z.string(), rotulo: z.string() }).strict())
+          .min(1)
+          .max(20),
+      })
+      .strict(),
     z
       .object({
         tipo: z.literal('endpoint'),
@@ -149,6 +199,9 @@ const campoBlocoFluxoSchema = z
       'lista_condicoes',
       'referencia_no',
       'seletor_setor',
+      'selecao',
+      'seletor_credencial',
+      'mapa_extracao',
     ]),
     obrigatorio: z.boolean(),
     valorInicial: z.unknown().optional(),
@@ -257,6 +310,11 @@ export const estadoConversaFluxoSchema = z
         proximo: identificadorNoSchema.optional(),
       })
       .optional(),
+    /**
+     * O motor pausa aqui para que o chamador execute a chamada HTTP e
+     * reentre com o resultado, preservando a pureza do motor.
+     */
+    aguardandoIntegracao: z.object({ noId: identificadorNoSchema }).optional(),
     setorId: z.uuid().optional(),
     concluido: z.boolean(),
     passosExecutados: z.number().int().nonnegative(),
@@ -275,6 +333,8 @@ export const simularFluxoSchema = z
 
 export type NoFluxo = z.infer<typeof noFluxoSchema>;
 export type NoCondicao = z.infer<typeof noCondicaoSchema>;
+export type NoIntegracaoHttp = z.infer<typeof noIntegracaoHttpSchema>;
+export type MetodoIntegracaoHttp = (typeof METODOS_INTEGRACAO_HTTP)[number];
 export type DefinicaoFluxo = z.infer<typeof definicaoFluxoSchema>;
 export type CriarFluxoEntrada = z.infer<typeof criarFluxoSchema>;
 export type AtualizarFluxoEntrada = z.infer<typeof atualizarFluxoSchema>;

@@ -996,13 +996,17 @@ function criarRegistro(): OpenAPIRegistry {
     tags: ['Integrações'],
     summary: 'Desativa credencial de integração',
     description:
-      'Desativação lógica: a credencial deixa de ser utilizável pelos fluxos, mas o registro permanece para auditoria.',
+      'Desativação lógica: a credencial deixa de ser utilizável pelos fluxos, mas o registro permanece para auditoria. Recusada se a versão publicada de um fluxo ativo ainda referenciar a credencial.',
     security: [{ bearerAuth: [] }],
     request: { params: credencialIntegracaoParametroSchema },
     responses: {
       204: { description: 'Desativada.' },
       404: {
         description: 'Não encontrada ou já desativada.',
+        content: { 'application/json': { schema: erroSchema } },
+      },
+      409: {
+        description: 'Usada pela versão publicada de um fluxo ativo.',
         content: { 'application/json': { schema: erroSchema } },
       },
     },

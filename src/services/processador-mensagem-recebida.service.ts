@@ -7,7 +7,9 @@ import type { TenantCentralRepository } from '../repositories/tenant-central.rep
 import type { JobMensagemRecebida } from '../types/jobs.js';
 import type { CriptografiaService } from './criptografia.service.js';
 import type { EstadoFluxoRepository } from '../repositories/estado-fluxo-redis.repository.js';
+import { CredencialIntegracaoRepository } from '../repositories/credencial-integracao.repository.js';
 import { ExecucaoFluxoService } from './execucao-fluxo.service.js';
+import type { IntegracaoHttpService } from './integracao-http.service.js';
 import type { MotorFluxoService } from './motor-fluxo.service.js';
 import type { EnfileiradorMensagemSaida } from './mensagem-atendimento.service.js';
 import { barramentoChat } from '../eventos/barramento-chat.js';
@@ -20,6 +22,10 @@ export class ProcessadorMensagemRecebidaService {
     private readonly estadosFluxo: EstadoFluxoRepository,
     private readonly motor: MotorFluxoService,
     private readonly enfileiradorSaida: EnfileiradorMensagemSaida,
+    private readonly integracoes?: {
+      http: IntegracaoHttpService;
+      criptografia: CriptografiaService;
+    },
   ) {}
 
   public async processar(job: JobMensagemRecebida): Promise<'CRIADA' | 'DUPLICADA'> {
@@ -85,6 +91,13 @@ export class ProcessadorMensagemRecebidaService {
       this.estadosFluxo,
       this.motor,
       new DirecionamentoAtendimentoRepository(prisma),
+      this.integracoes
+        ? {
+            credenciais: new CredencialIntegracaoRepository(prisma),
+            http: this.integracoes.http,
+            criptografia: this.integracoes.criptografia,
+          }
+        : undefined,
     );
     const resultado = await execucao.executarConversa({
       tenantId: job.tenantId,

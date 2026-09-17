@@ -107,6 +107,29 @@ export class CredencialIntegracaoRepository {
     return resultado.count === 1;
   }
 
+  /**
+   * Procura a credencial na última versão publicada de cada fluxo ativo. A
+   * varredura é recursiva sobre o JSON, como em `SetorRepository`, para não
+   * depender do formato exato do grafo.
+   */
+  public async usadaEmFluxoPublicado(publicId: string): Promise<boolean> {
+    const fluxos = await this.prisma.fluxo.findMany({
+      where: { ativo: true, deletado_at: null },
+      select: { versoes: { orderBy: { versao: 'desc' }, take: 1, select: { definicao: true } } },
+    });
+    return fluxos.some((fluxo) =>
+      fluxo.versoes.some((versao) => this.contemCredencial(versao.definicao, publicId)),
+    );
+  }
+
+  private contemCredencial(valor: unknown, publicId: string): boolean {
+    if (Array.isArray(valor)) return valor.some((item) => this.contemCredencial(item, publicId));
+    if (typeof valor !== 'object' || valor === null) return false;
+    const registro = valor as Record<string, unknown>;
+    if (registro.credencialId === publicId) return true;
+    return Object.values(registro).some((item) => this.contemCredencial(item, publicId));
+  }
+
   public async desativar(publicId: string) {
     const resultado = await this.prisma.credencialIntegracao.updateMany({
       where: { public_id: publicId, ativo: true },

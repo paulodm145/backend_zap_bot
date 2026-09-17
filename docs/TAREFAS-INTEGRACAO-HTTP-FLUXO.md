@@ -37,7 +37,7 @@ externas, com o segredo criptografado em repouso e nunca devolvido pela API.
       resposta.
 - [x] Testar recusa de `base_url` inválida e de host privado.
 - [x] Executar formatação, lint, TypeScript, testes e build.
-- [ ] Criar commits semânticos, abrir PR e aguardar a CI.
+- [x] Criar commits semânticos, abrir PR e aguardar a CI.
 
 Checklist de saída:
 
@@ -53,24 +53,28 @@ Branch: `feat/bloco-integracao-http` (depende da etapa 1 integrada)
 Objetivo: executar a chamada HTTP durante o fluxo, gravar o resultado em
 variáveis e seguir por `sucesso` ou `falha`.
 
-- [ ] Adicionar `integracao_http` aos tipos de nó e ao schema de definição.
-- [ ] Modelar `sucesso` e `falha` como referências validadas do grafo.
-- [ ] Fazer o motor pausar no nó, preservando sua pureza síncrona.
-- [ ] Implementar interpolação `{{variavel}}` na URL sem `eval`.
-- [ ] Implementar extração da resposta por caminho sem `eval`.
-- [ ] Implementar cliente HTTP com timeout, limite de tamanho e bloqueio de
+- [x] Adicionar `integracao_http` aos tipos de nó e ao schema de definição.
+- [x] Modelar `sucesso` e `falha` como referências validadas do grafo.
+- [x] Fazer o motor pausar no nó, preservando sua pureza síncrona.
+- [x] Implementar interpolação `{{variavel}}` na URL sem `eval`.
+- [x] Implementar extração da resposta por caminho sem `eval`.
+- [x] Implementar cliente HTTP com timeout, limite de tamanho e bloqueio de
       redirecionamento para host privado.
-- [ ] Executar a chamada no `ExecucaoFluxoService` e retomar o motor.
-- [ ] Validar na publicação que a `credencialId` existe e está ativa.
-- [ ] Impedir desativação de credencial usada em fluxo publicado.
-- [ ] Expor o bloco no catálogo consumido pelo editor.
-- [ ] Documentar o bloco em `docs/api/blocos-fluxo.md` e `docs/api/fluxos.md`.
-- [ ] Testar sucesso, falha, timeout, resposta inválida e host bloqueado.
-- [ ] Executar formatação, lint, TypeScript, testes e build.
+- [x] Executar a chamada no `ExecucaoFluxoService` e retomar o motor.
+- [x] Validar na publicação que a `credencialId` existe e está ativa.
+- [x] Impedir desativação de credencial usada em fluxo publicado.
+- [x] Expor o bloco no catálogo consumido pelo editor.
+- [x] Documentar o bloco em `docs/api/blocos-fluxo.md` e `docs/api/fluxos.md`.
+- [x] Testar sucesso, falha, timeout, resposta inválida e host bloqueado.
+- [x] Executar formatação, lint, TypeScript, testes e build.
 - [ ] Criar commits semânticos, abrir PR e aguardar a CI.
+- [ ] Interpolar `{{variavel}}` no bloco `mensagem`.
+      Bloqueada: sem isso o fluxo consulta a API mas não consegue exibir o
+      resultado ao contato. Muda o comportamento de fluxos já publicados
+      cujo texto contenha `{{`, então depende de decisão do usuário.
 
 Checklist de saída:
 
-- [ ] O motor continua puro e sem I/O.
-- [ ] Nenhuma execução de fluxo usa `eval` ou equivalente.
-- [ ] Segredo da credencial não aparece em log nem no histórico da conversa.
+- [x] O motor continua puro e sem I/O.
+- [x] Nenhuma execução de fluxo usa `eval` ou equivalente.
+- [x] Segredo da credencial não aparece em log nem no histórico da conversa.

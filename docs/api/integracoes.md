@@ -124,7 +124,8 @@ não pertence ao tipo escolhido resulta em `422`.
 
 `DELETE /api/v1/integracoes/{integracaoId}` responde `204` e marca
 `ativo: false`. O registro permanece para auditoria; não há exclusão física.
-Chamar sobre credencial já inativa responde `404`.
+Chamar sobre credencial já inativa responde `404`. Se a versão publicada de um
+fluxo ativo ainda referenciar a credencial, a resposta é `409 CONFLITO`.
 
 ## Estados de tela
 
@@ -139,12 +140,12 @@ Chamar sobre credencial já inativa responde `404`.
 
 ## Erros
 
-| Status | Código           | Situação                                |
-| ------ | ---------------- | --------------------------------------- |
-| `403`  | `ACESSO_NEGADO`  | Usuário sem papel de gestão             |
-| `404`  | `NAO_ENCONTRADO` | Credencial inexistente ou já desativada |
-| `409`  | `CONFLITO`       | Já existe credencial com o mesmo nome   |
-| `422`  | `VALIDACAO`      | URL recusada ou autenticação incompleta |
+| Status | Código           | Situação                                                 |
+| ------ | ---------------- | -------------------------------------------------------- |
+| `403`  | `ACESSO_NEGADO`  | Usuário sem papel de gestão                              |
+| `404`  | `NAO_ENCONTRADO` | Credencial inexistente ou já desativada                  |
+| `409`  | `CONFLITO`       | Nome duplicado, ou credencial em uso por fluxo publicado |
+| `422`  | `VALIDACAO`      | URL recusada ou autenticação incompleta                  |
 
 ## Tempo real
 
@@ -154,6 +155,12 @@ listagem.
 ## Relação com o fluxo
 
 Estas credenciais são consumidas pelo bloco `integracao_http` do editor de
-fluxos, entregue na etapa seguinte
-(`docs/TAREFAS-INTEGRACAO-HTTP-FLUXO.md`). Enquanto o bloco não existir, o
-cadastro é útil apenas para preparar os destinos autorizados.
+fluxos. O nó referencia a credencial por `public_id`, e sua URL precisa começar
+pelo `base_url` dela — a publicação recusa o contrário com
+`URL_FORA_DA_CREDENCIAL`. Contrato do nó em `docs/schemas/fluxo-json.md`,
+montagem no editor em `docs/api/blocos-fluxo.md`.
+
+Desativar uma credencial usada pela versão publicada de um fluxo ativo é
+recusado com `409 CONFLITO` — ajuste o fluxo e publique antes de desativar. Se
+a credencial for removida do fluxo por outro caminho e ficar inativa, as
+execuções seguintes passam a sair pelo `falha` do nó em vez de quebrar.

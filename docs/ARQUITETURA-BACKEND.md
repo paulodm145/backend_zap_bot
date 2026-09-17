@@ -738,7 +738,23 @@ Estrutura de grafo (nós + conexões), interpretada pelo `FlowEngineService`:
 - Todo nó referenciado em `proximo`/`sucesso`/`falha`/`entao`/`padrao` deve existir em `nos`.
 - Não pode haver nó órfão (inalcançável a partir de `noInicial`).
 - Nós do tipo `integracao_http` devem referenciar uma `credencialId` existente no tenant.
+- Nós do tipo `integracao_http` devem ter `url` começando pelo `base_url` da credencial: é o que
+  impede um fluxo publicado de alcançar destino não autorizado.
 - Nós do tipo `direcionar_setor` devem referenciar um `setorId` existente no tenant.
+
+**Execução do nó `integracao_http`**: o `MotorFluxoService` é puro e síncrono,
+e continua assim. Ao alcançar o nó, ele registra `aguardandoIntegracao` no
+estado, emite uma saída `integracao` e **pausa** — o mesmo mecanismo já usado
+pelo `captura_resposta`. Quem executa a chamada é o `ExecucaoFluxoService`, que
+reentra no motor com o resultado e deixa o motor escolher entre `sucesso` e
+`falha`. O motor nunca conhece `fetch`, o que mantém sua testabilidade sem
+rede. O teto é de 5 chamadas externas por execução.
+
+A chamada em si tem três camadas de contenção: a URL precisa ser HTTPS válida,
+precisa caber no `base_url` da credencial e o host precisa resolver para IP
+público (checagem de DNS no momento da requisição, que a validação sintática do
+cadastro não alcança). Redirecionamento não é seguido, porque o destino final
+não passaria por nenhuma dessas camadas.
 
 O registro `fluxos.definicao` é o rascunho editável. Cada publicação cria,
 transacionalmente, uma linha imutável em `fluxo_versoes`, com número sequencial
