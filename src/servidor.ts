@@ -55,7 +55,9 @@ const filaMensagens = recursosMensageria.registrar(
 const filaMensagensSaida = recursosMensageria.registrar(
   criarFila<JobMensagemSaida>(NOMES_FILAS.mensagensWhatsapp, redis),
 );
-recursosMensageria.registrar(criarFila<JobStatusWhatsapp>(NOMES_FILAS.statusWhatsapp, redis));
+const filaStatusWhatsapp = recursosMensageria.registrar(
+  criarFila<JobStatusWhatsapp>(NOMES_FILAS.statusWhatsapp, redis),
+);
 const filaEmails = recursosMensageria.registrar(
   criarFila<JobEmail>(NOMES_FILAS.emailsTransacionais, redis, {
     defaultJobOptions: OPCOES_EMAIL_JOB,
@@ -155,6 +157,7 @@ const aplicacao = criarAplicacao({
   },
   enfileiradorMensagemSaida,
   enfileiradorEmail: new EnfileiradorEmailBullMqService(filaEmails),
+  filasMonitoradas: [filaMensagens, filaMensagensSaida, filaStatusWhatsapp, filaEmails],
 });
 
 const servidor = createServer(aplicacao);

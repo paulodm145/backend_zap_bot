@@ -36,6 +36,7 @@ dependem do cookie HttpOnly. Uma implementação sugerida do cliente HTTP está 
 | GET    | `/api/v1/prontidao`                              | Público                           | Diagnóstico de PostgreSQL e Redis         |
 | GET    | `/api/v1/docs/`                                  | Público em dev; Basic em produção | Interface Swagger                         |
 | GET    | `/api/v1/openapi.json`                           | Público em dev; Basic em produção | Geração de cliente e consulta do contrato |
+| GET    | `/admin/queues`                                  | Público em dev; Basic em produção | Bull Board — painel das filas BullMQ      |
 | POST   | `/api/v1/auth/login`                             | Público                           | Iniciar sessão de tenant                  |
 | POST   | `/api/v1/auth/refresh`                           | Cookie HttpOnly                   | Renovar access token                      |
 | POST   | `/api/v1/auth/esqueci-senha`                     | Público                           | Solicitar recuperação sem enumerar contas |
@@ -130,6 +131,18 @@ falha:
 Não fazem parte das telas do produto. Use o JSON para geração de tipos ou
 clientes. Em produção, envie autenticação HTTP Basic configurada por
 `SWAGGER_USUARIO` e `SWAGGER_SENHA`; em desenvolvimento não há Basic.
+
+### `GET /admin/queues`
+
+Painel de operação, não faz parte das telas do produto. Mostra as filas
+BullMQ compartilhadas entre tenants (`mensagens-recebidas`,
+`mensagens-whatsapp`, `status-whatsapp`, `emails-transacionais`) — jobs em
+espera, ativos, concluídos e falhos, com detalhe de payload e retry manual.
+Como o job carrega o `tenantId` no próprio payload (seção de arquitetura
+sobre isolamento no Redis), o painel também serve para inspecionar rapidamente
+qual tenant é dono de um job específico. Mesma autenticação HTTP Basic do
+Swagger, configurada por `BULL_BOARD_USUARIO`/`BULL_BOARD_SENHA` e exigida só
+em produção.
 
 ## Sessão de tenant
 

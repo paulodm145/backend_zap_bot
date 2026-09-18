@@ -836,6 +836,5 @@ atômicas quando a estrutura base estiver estável:
 - Socket.io e presença de atendentes;
 - métricas de uso por tenant;
 - cobrança e webhook do gateway;
-- Bull Board protegido;
 - backup e estratégia de restauração;
 - deploy de produção e observabilidade externa.

@@ -1,5 +1,9 @@
+import { createBullBoard } from '@bull-board/api';
+import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
+import { ExpressAdapter } from '@bull-board/express';
+import type { Queue } from 'bullmq';
 import cors from 'cors';
-import express, { type Express } from 'express';
+import express, { type Express, type Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { pinoHttp } from 'pino-http';
@@ -30,7 +34,7 @@ import { obterPrismaCentral } from './database/prisma-central.js';
 import type { PrismaClient } from './generated/prisma/client.js';
 import { MuitasRequisicoesError } from './erros/erro-aplicacao.js';
 import { adicionarCorrelacao } from './middlewares/correlacao.middleware.js';
-import { protegerDocumentacao } from './middlewares/documentacao.middleware.js';
+import { protegerBullBoard, protegerDocumentacao } from './middlewares/documentacao.middleware.js';
 import { tratarErro } from './middlewares/erro.middleware.js';
 import { criarAutenticacaoMiddleware } from './middlewares/autenticacao.middleware.js';
 import { criarResolucaoTenantMiddleware } from './middlewares/resolucao-tenant.middleware.js';
@@ -86,6 +90,8 @@ interface OpcoesAplicacao {
   };
   enfileiradorMensagemSaida?: EnfileiradorMensagemSaida;
   enfileiradorEmail?: EnfileiradorEmail;
+  /** Filas monitoradas no Bull Board (`/admin/queues`). Sem isso, a rota não é montada. */
+  filasMonitoradas?: readonly Queue[];
   exclusorBancoTenant?: ExclusorBancoTenant;
   encerradorConexaoTenant?: EncerradorConexaoTenant;
 }
@@ -194,6 +200,20 @@ export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
     swaggerUi.serve,
     swaggerUi.setup(documentoOpenApi),
   );
+  if (opcoes.filasMonitoradas && opcoes.filasMonitoradas.length > 0) {
+    const painelFilas = new ExpressAdapter();
+    painelFilas.setBasePath('/admin/queues');
+    createBullBoard({
+      queues: opcoes.filasMonitoradas.map((fila) => new BullMQAdapter(fila)),
+      serverAdapter: painelFilas,
+    });
+    aplicacao.use(
+      '/admin/queues',
+      protegerBullBoard,
+      helmet({ contentSecurityPolicy: false }),
+      painelFilas.getRouter() as Router,
+    );
+  }
   aplicacao.use(helmet());
   aplicacao.use(express.json({ limit: '1mb' }));
   if (opcoes.webhookWhatsapp) {
