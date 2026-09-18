@@ -1,8 +1,4 @@
-import type {
-  ListarContatosEntrada,
-  ListarConversasEntrada,
-  ListarMensagensEntrada,
-} from '../dtos/historico.dto.js';
+import type { ListarConversasEntrada, ListarMensagensEntrada } from '../dtos/historico.dto.js';
 import { NaoEncontradoError, ValidacaoError } from '../erros/erro-aplicacao.js';
 import {
   codificarCursorTemporal,
@@ -17,9 +13,6 @@ interface ContextoConsulta {
 
 export class ConsultaHistoricoService {
   public constructor(private readonly historico: ConsultaHistoricoRepository) {}
-  public listarContatos(entrada: ListarContatosEntrada, contexto: ContextoConsulta) {
-    return this.historico.listarContatos(entrada, this.escopo(contexto));
-  }
   public listarConversas(entrada: ListarConversasEntrada, contexto: ContextoConsulta) {
     return this.historico.listarConversas(entrada, this.escopo(contexto));
   }

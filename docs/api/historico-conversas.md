@@ -1,6 +1,8 @@
-# Histórico de contatos e conversas
+# Histórico de conversas
 
-`GET /api/v1/contatos?skip=0&take=20&busca=maria` retorna contatos com paginação server-side. A busca considera nome normalizado e telefone. Atendentes recebem apenas contatos com conversas nos seus setores.
+O cadastro de contatos (CRUD, busca e como iniciar uma conversa direta a
+partir de um contato) tem documento próprio: `docs/api/contatos.md`. Esta
+página cobre apenas a leitura e o ciclo de vida de conversas já existentes.
 
 ## Lista de conversas
 

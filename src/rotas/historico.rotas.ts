@@ -9,7 +9,6 @@ import {
 } from '../dtos/direcionamento-atendimento.dto.js';
 import {
   conversaParametroSchema,
-  listarContatosSchema,
   listarConversasSchema,
   listarMensagensSchema,
 } from '../dtos/historico.dto.js';
@@ -17,11 +16,6 @@ import { tratarAsync } from '../middlewares/async.middleware.js';
 import { exigirGestaoTenant } from '../middlewares/autorizacao-tenant.middleware.js';
 import { validar } from '../middlewares/validar.middleware.js';
 
-export function criarRotasContatos(controller: HistoricoController): Router {
-  const rotas = Router();
-  rotas.get('/', validar(listarContatosSchema, 'query'), tratarAsync(controller.listarContatos));
-  return rotas;
-}
 export function criarRotasConversas(
   controller: HistoricoController,
   direcionamento?: DirecionamentoAtendimentoController,

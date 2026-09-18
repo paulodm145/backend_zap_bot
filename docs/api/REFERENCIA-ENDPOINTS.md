@@ -56,7 +56,12 @@ dependem do cookie HttpOnly. Uma implementação sugerida do cliente HTTP está 
 | PUT    | `/api/v1/me`                                     | Tenant autenticado                | Alterar nome do próprio perfil            |
 | PUT    | `/api/v1/me/senha`                               | Tenant autenticado                | Alterar senha com reautenticação          |
 | PUT    | `/api/v1/me/email`                               | Tenant autenticado                | Alterar e-mail em fluxo separado          |
-| GET    | `/api/v1/contatos`                               | Tenant autenticado                | Listar contatos visíveis                  |
+| GET    | `/api/v1/contatos`                               | Tenant autenticado                | Listar contatos do tenant                 |
+| POST   | `/api/v1/contatos`                               | Admin/gestor tenant               | Cadastrar contato                         |
+| GET    | `/api/v1/contatos/{contatoId}`                   | Tenant autenticado                | Detalhar contato                          |
+| PUT    | `/api/v1/contatos/{contatoId}`                   | Admin/gestor tenant               | Atualizar contato                         |
+| DELETE | `/api/v1/contatos/{contatoId}`                   | Admin/gestor tenant               | Excluir contato logicamente               |
+| POST   | `/api/v1/contatos/{contatoId}/conversas`         | Tenant autenticado                | Iniciar/reivindicar conversa direta       |
 | GET    | `/api/v1/conversas`                              | Tenant autenticado                | Listar e filtrar conversas                |
 | GET    | `/api/v1/conversas/{conversaId}`                 | Tenant autenticado                | Detalhar conversa                         |
 | GET    | `/api/v1/conversas/{conversaId}/mensagens`       | Tenant autenticado                | Timeline reversa com cursor estável       |
