@@ -41,6 +41,8 @@
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^9.1.0",
+    "@bull-board/api": "^9.10.1",
+    "@bull-board/express": "^9.10.1",
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "@socket.io/redis-adapter": "^8.3.0",

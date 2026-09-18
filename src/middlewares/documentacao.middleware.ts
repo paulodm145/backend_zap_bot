@@ -8,6 +8,7 @@ interface ConfiguracaoDocumentacao {
   ambiente: 'development' | 'test' | 'production';
   usuario?: string;
   senha?: string;
+  realm?: string;
 }
 
 function compararSeguro(valorRecebido: string, valorEsperado: string): boolean {
@@ -27,7 +28,7 @@ export function criarProtecaoDocumentacao(configuracao: ConfiguracaoDocumentacao
     const authorization = requisicao.headers.authorization;
 
     if (!authorization?.startsWith('Basic ')) {
-      resposta.setHeader('WWW-Authenticate', 'Basic realm="ZapBot API Docs"');
+      resposta.setHeader('WWW-Authenticate', `Basic realm="${configuracao.realm ?? 'ZapBot API Docs'}"`);
       resposta.status(401).json({
         erro: {
           codigo: 'NAO_AUTENTICADO',
@@ -48,7 +49,7 @@ export function criarProtecaoDocumentacao(configuracao: ConfiguracaoDocumentacao
       !compararSeguro(usuario, configuracao.usuario ?? '') ||
       !compararSeguro(senha, configuracao.senha ?? '')
     ) {
-      resposta.setHeader('WWW-Authenticate', 'Basic realm="ZapBot API Docs"');
+      resposta.setHeader('WWW-Authenticate', `Basic realm="${configuracao.realm ?? 'ZapBot API Docs'}"`);
       resposta.status(401).json({
         erro: {
           codigo: 'NAO_AUTENTICADO',
@@ -66,4 +67,12 @@ export const protegerDocumentacao = criarProtecaoDocumentacao({
   ambiente: ambiente.NODE_ENV,
   ...(ambiente.SWAGGER_USUARIO === undefined ? {} : { usuario: ambiente.SWAGGER_USUARIO }),
   ...(ambiente.SWAGGER_SENHA === undefined ? {} : { senha: ambiente.SWAGGER_SENHA }),
+});
+
+/** Mesmo mecanismo do Swagger (Basic Auth, só exigida em produção), reaproveitado pro Bull Board. */
+export const protegerBullBoard = criarProtecaoDocumentacao({
+  ambiente: ambiente.NODE_ENV,
+  realm: 'ZapBot Filas',
+  ...(ambiente.BULL_BOARD_USUARIO === undefined ? {} : { usuario: ambiente.BULL_BOARD_USUARIO }),
+  ...(ambiente.BULL_BOARD_SENHA === undefined ? {} : { senha: ambiente.BULL_BOARD_SENHA }),
 });
