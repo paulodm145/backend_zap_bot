@@ -22,6 +22,7 @@ import { SetorController } from './controllers/setor.controller.js';
 import { CredencialIntegracaoController } from './controllers/credencial-integracao.controller.js';
 import { PerfilController } from './controllers/perfil.controller.js';
 import { HistoricoController } from './controllers/historico.controller.js';
+import { ContatoController } from './controllers/contato.controller.js';
 import { DirecionamentoAtendimentoController } from './controllers/direcionamento-atendimento.controller.js';
 import { MensagemAtendimentoController } from './controllers/mensagem-atendimento.controller.js';
 import type { EnfileiradorMensagemSaida } from './services/mensagem-atendimento.service.js';
@@ -51,7 +52,8 @@ import { criarRotasUsuariosTenant } from './rotas/usuario-tenant.rotas.js';
 import { criarRotasSetores, criarRotaVinculosSetores } from './rotas/setor.rotas.js';
 import { criarRotasCredenciaisIntegracao } from './rotas/credencial-integracao.rotas.js';
 import { criarRotasPerfil } from './rotas/perfil.rotas.js';
-import { criarRotasContatos, criarRotasConversas } from './rotas/historico.rotas.js';
+import { criarRotasConversas } from './rotas/historico.rotas.js';
+import { criarRotasContatos } from './rotas/contato.rotas.js';
 import { AutenticacaoInternaService } from './services/autenticacao-interna.service.js';
 import { AutenticacaoService } from './services/autenticacao.service.js';
 import { AdministracaoTenantsService } from './services/administracao-tenants.service.js';
@@ -262,7 +264,7 @@ export function criarAplicacao(opcoes: OpcoesAplicacao = {}): Express {
       criptografiaConexaoTenant,
       obterGerenciadorConexoesTenant(),
     ),
-    criarRotasContatos(new HistoricoController()),
+    criarRotasContatos(new ContatoController()),
   );
   aplicacao.use(
     '/api/v1/conversas',

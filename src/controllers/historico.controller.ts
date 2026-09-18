@@ -1,25 +1,11 @@
 import type { Request, Response } from 'express';
-import type {
-  ListarContatosEntrada,
-  ListarConversasEntrada,
-  ListarMensagensEntrada,
-} from '../dtos/historico.dto.js';
+import type { ListarConversasEntrada, ListarMensagensEntrada } from '../dtos/historico.dto.js';
 import { NaoEncontradoError, ValidacaoError } from '../erros/erro-aplicacao.js';
 import type { PrismaClient } from '../generated/prisma-tenant/client.js';
 import { ConsultaHistoricoRepository } from '../repositories/consulta-historico.repository.js';
 import { ConsultaHistoricoService } from '../services/consulta-historico.service.js';
 
 export class HistoricoController {
-  public listarContatos = async (requisicao: Request, resposta: Response): Promise<void> => {
-    resposta
-      .status(200)
-      .json(
-        await this.service(requisicao).listarContatos(
-          requisicao.query as unknown as ListarContatosEntrada,
-          this.contexto(requisicao),
-        ),
-      );
-  };
   public listarConversas = async (requisicao: Request, resposta: Response): Promise<void> => {
     resposta
       .status(200)

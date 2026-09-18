@@ -20,10 +20,16 @@ import {
 } from '../dtos/perfil.dto.js';
 import {
   conversaParametroSchema,
-  listarContatosSchema,
   listarConversasSchema,
   listarMensagensSchema,
 } from '../dtos/historico.dto.js';
+import {
+  atualizarContatoSchema,
+  contatoParametroSchema,
+  criarContatoSchema,
+  iniciarConversaContatoSchema,
+  listarContatosSchema,
+} from '../dtos/contato.dto.js';
 import {
   encerrarConversaSchema,
   reatribuirConversaSchema,
@@ -334,15 +340,31 @@ const perfilRespostaSchema = z.object({
   permissoes: z.array(z.string()),
   setores: z.array(z.object({ public_id: z.uuid(), nome: z.string() })),
 });
-const contatoHistoricoSchema = z.object({
-  public_id: z.uuid(),
-  nome: z.string().nullable(),
-  telefone: z.string(),
-  atributos: z.unknown().nullable(),
-  created_at: z.iso.datetime(),
-  updated_at: z.iso.datetime(),
-  _count: z.object({ conversas: z.number().int() }),
+const contatoSchema = z
+  .object({
+    public_id: z.uuid(),
+    nome: z.string().nullable(),
+    telefone: z.string(),
+    atributos: z.unknown().nullable(),
+    ativo: z.boolean(),
+    created_at: z.iso.datetime(),
+    updated_at: z.iso.datetime(),
+    _count: z.object({ conversas: z.number().int() }),
+  })
+  .openapi('Contato');
+const paginaContatosSchema = z.object({
+  dados: z.array(contatoSchema),
+  total: z.number().int(),
+  skip: z.number().int(),
+  take: z.number().int(),
 });
+const iniciarConversaContatoRespostaSchema = z
+  .object({
+    conversaId: z.uuid(),
+    status: z.literal('COM_ATENDENTE'),
+    janelaAberta: z.boolean(),
+  })
+  .openapi('IniciarConversaContatoResposta');
 const conversaHistoricoSchema = z.object({
   public_id: z.uuid(),
   status: z.enum(['BOT', 'AGUARDANDO_ATENDENTE', 'COM_ATENDENTE', 'ENCERRADA']),
@@ -539,24 +561,85 @@ function criarRegistro(): OpenAPIRegistry {
   registro.registerPath({
     method: 'get',
     path: '/api/v1/contatos',
-    tags: ['Histórico'],
-    summary: 'Lista contatos com paginação server-side',
+    tags: ['Contatos'],
+    summary: 'Lista contatos do tenant com paginação server-side',
     security: [{ bearerAuth: [] }],
     request: { query: listarContatosSchema },
     responses: {
-      200: {
-        description: 'Contatos visíveis.',
-        content: {
-          'application/json': {
-            schema: z.object({
-              dados: z.array(contatoHistoricoSchema),
-              total: z.number().int(),
-              skip: z.number().int(),
-              take: z.number().int(),
-            }),
-          },
-        },
+      200: { description: 'Contatos do tenant.', content: { 'application/json': { schema: paginaContatosSchema } } },
+    },
+  });
+  registro.registerPath({
+    method: 'post',
+    path: '/api/v1/contatos',
+    tags: ['Contatos'],
+    summary: 'Cria contato (ADMIN_TENANT ou GESTOR)',
+    security: [{ bearerAuth: [] }],
+    request: { body: { required: true, content: { 'application/json': { schema: criarContatoSchema } } } },
+    responses: {
+      201: { description: 'Contato criado.', content: { 'application/json': { schema: contatoSchema } } },
+      409: { description: 'Já existe um contato com esse telefone.', content: { 'application/json': { schema: erroSchema } } },
+    },
+  });
+  registro.registerPath({
+    method: 'get',
+    path: '/api/v1/contatos/{contatoId}',
+    tags: ['Contatos'],
+    summary: 'Detalha contato',
+    security: [{ bearerAuth: [] }],
+    request: { params: contatoParametroSchema },
+    responses: {
+      200: { description: 'Contato.', content: { 'application/json': { schema: contatoSchema } } },
+      404: { description: 'Contato não encontrado.', content: { 'application/json': { schema: erroSchema } } },
+    },
+  });
+  registro.registerPath({
+    method: 'put',
+    path: '/api/v1/contatos/{contatoId}',
+    tags: ['Contatos'],
+    summary: 'Atualiza contato (ADMIN_TENANT ou GESTOR)',
+    security: [{ bearerAuth: [] }],
+    request: {
+      params: contatoParametroSchema,
+      body: { required: true, content: { 'application/json': { schema: atualizarContatoSchema } } },
+    },
+    responses: {
+      200: { description: 'Contato atualizado.', content: { 'application/json': { schema: contatoSchema } } },
+      409: { description: 'Já existe um contato com esse telefone.', content: { 'application/json': { schema: erroSchema } } },
+    },
+  });
+  registro.registerPath({
+    method: 'delete',
+    path: '/api/v1/contatos/{contatoId}',
+    tags: ['Contatos'],
+    summary: 'Exclui contato logicamente (ADMIN_TENANT ou GESTOR)',
+    security: [{ bearerAuth: [] }],
+    request: { params: contatoParametroSchema },
+    responses: {
+      204: { description: 'Contato desativado.' },
+      409: { description: 'Contato possui conversas em andamento.', content: { 'application/json': { schema: erroSchema } } },
+    },
+  });
+  registro.registerPath({
+    method: 'post',
+    path: '/api/v1/contatos/{contatoId}/conversas',
+    tags: ['Contatos'],
+    summary: 'Inicia (ou reivindica) uma conversa direta com o contato',
+    description:
+      'Reivindica a conversa em andamento mais recente do contato, se houver e ainda não tiver atendente, ou cria uma nova, sempre com quem chamou como responsável. Não envia mensagem — o envio continua em POST /conversas/{id}/mensagens, com as mesmas regras de janela de atendimento de sempre.',
+    security: [{ bearerAuth: [] }],
+    request: {
+      params: contatoParametroSchema,
+      body: { required: false, content: { 'application/json': { schema: iniciarConversaContatoSchema } } },
+    },
+    responses: {
+      201: {
+        description: 'Conversa pronta para atendimento.',
+        content: { 'application/json': { schema: iniciarConversaContatoRespostaSchema } },
       },
+      403: { description: 'Usuário não possui perfil de atendente ativo.', content: { 'application/json': { schema: erroSchema } } },
+      409: { description: 'Conversa já está sendo atendida por outra pessoa.', content: { 'application/json': { schema: erroSchema } } },
+      422: { description: 'Nenhuma ou mais de uma conta WhatsApp conectada sem desambiguação.', content: { 'application/json': { schema: erroSchema } } },
     },
   });
   registro.registerPath({

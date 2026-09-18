@@ -87,6 +87,84 @@ export class DirecionamentoAtendimentoRepository {
     });
   }
 
+  /**
+   * Direciona uma mensagem direta a um contato: reivindica a conversa aberta mais
+   * recente dele (se houver e ainda não tiver atendente) ou cria uma nova, sempre
+   * com o atendente que iniciou o contato já responsável. Diferente de `assumirAtomico`,
+   * não exige vínculo com setor — é um atalho fora da fila, não uma reivindicação dela.
+   */
+  public async iniciarContatoDireto(
+    contatoId: number,
+    contaWhatsappId: number,
+    atendenteId: number,
+    autorUsuarioPublicId: string,
+  ): Promise<
+    | { public_id: string; status: 'COM_ATENDENTE'; janela_expira_at: Date | null }
+    | 'CONFLITO'
+  > {
+    return this.prisma.$transaction(async (transacao) => {
+      const existente = await transacao.conversa.findFirst({
+        where: { contato_id: contatoId, conta_whatsapp_id: contaWhatsappId, status: { not: 'ENCERRADA' } },
+        orderBy: { id: 'desc' },
+        select: {
+          id: true,
+          public_id: true,
+          atendente_id: true,
+          setor_id: true,
+          janela_expira_at: true,
+        },
+      });
+      if (existente) {
+        if (existente.atendente_id === atendenteId)
+          return {
+            public_id: existente.public_id,
+            status: 'COM_ATENDENTE',
+            janela_expira_at: existente.janela_expira_at,
+          };
+        if (existente.atendente_id !== null) return 'CONFLITO';
+        const atualizado = await transacao.conversa.updateMany({
+          where: { id: existente.id, atendente_id: null },
+          data: { atendente_id: atendenteId, status: 'COM_ATENDENTE' },
+        });
+        if (atualizado.count === 0) return 'CONFLITO';
+        await this.registrarMovimentacao(transacao, {
+          conversaId: existente.id,
+          autorUsuarioPublicId,
+          autorAtendenteId: atendenteId,
+          destinoAtendenteId: atendenteId,
+          ...(existente.setor_id ? { destinoSetorId: existente.setor_id } : {}),
+          acao: 'INICIOU_CONTATO_DIRETO',
+        });
+        return {
+          public_id: existente.public_id,
+          status: 'COM_ATENDENTE',
+          janela_expira_at: existente.janela_expira_at,
+        };
+      }
+      const criada = await transacao.conversa.create({
+        data: {
+          contato_id: contatoId,
+          conta_whatsapp_id: contaWhatsappId,
+          atendente_id: atendenteId,
+          status: 'COM_ATENDENTE',
+        },
+        select: { id: true, public_id: true, janela_expira_at: true },
+      });
+      await this.registrarMovimentacao(transacao, {
+        conversaId: criada.id,
+        autorUsuarioPublicId,
+        autorAtendenteId: atendenteId,
+        destinoAtendenteId: atendenteId,
+        acao: 'INICIOU_CONTATO_DIRETO',
+      });
+      return {
+        public_id: criada.public_id,
+        status: 'COM_ATENDENTE',
+        janela_expira_at: criada.janela_expira_at,
+      };
+    });
+  }
+
   public async reatribuir(dados: {
     conversaId: number;
     autorAtendenteId?: number;

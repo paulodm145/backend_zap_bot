@@ -7,7 +7,7 @@ import { HistoricoController } from '../src/controllers/historico.controller.js'
 import { PrismaClient } from '../src/generated/prisma-tenant/client.js';
 import { HistoricoRepository } from '../src/repositories/historico.repository.js';
 import { tratarErro } from '../src/middlewares/erro.middleware.js';
-import { criarRotasContatos, criarRotasConversas } from '../src/rotas/historico.rotas.js';
+import { criarRotasConversas } from '../src/rotas/historico.rotas.js';
 
 const url = process.env.TEST_TENANT_DATABASE_URL_B;
 const descreverIntegracao = url ? describe : describe.skip;
@@ -120,7 +120,6 @@ descreverIntegracao('histórico de conversas', () => {
       proximo();
     });
     const controller = new HistoricoController();
-    aplicacao.use('/contatos', criarRotasContatos(controller));
     aplicacao.use('/conversas', criarRotasConversas(controller));
     aplicacao.use(tratarErro);
     return aplicacao;
@@ -176,12 +175,6 @@ descreverIntegracao('histórico de conversas', () => {
   });
 
   it('aplica escopo de setores e filtros no histórico', async () => {
-    await request(app('ATENDENTE'))
-      .get('/contatos?skip=0&take=20')
-      .expect(200)
-      .expect((resposta) => {
-        expect((resposta.body as unknown as { total: number }).total).toBe(1);
-      });
     await request(app('ATENDENTE'))
       .get('/conversas?status=AGUARDANDO_ATENDENTE&busca=cliente')
       .expect(200)

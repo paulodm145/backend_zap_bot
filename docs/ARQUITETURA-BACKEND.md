@@ -623,12 +623,20 @@ Convenção geral: prefixo `/api/v1`, autenticação via JWT (header `Authorizat
 
 | Método | Rota | Descrição |
 |---|---|---|
-| GET | `/api/v1/contatos?skip=&take=&busca=` | Lista contatos do tenant |
+| GET | `/api/v1/contatos?skip=&take=&busca=&ativo=` | Lista contatos do tenant |
+| POST | `/api/v1/contatos` | Cria contato (admin/gestor) |
+| GET | `/api/v1/contatos/:id` | Detalha contato |
+| PUT | `/api/v1/contatos/:id` | Atualiza contato (admin/gestor) |
+| DELETE | `/api/v1/contatos/:id` | Soft delete (admin/gestor); recusa com conversa ativa |
+| POST | `/api/v1/contatos/:id/conversas` | Inicia ou reivindica conversa direta com o contato, fora da fila |
 | GET | `/api/v1/conversas?status=&setor_id=&skip=&take=` | Lista conversas (fila do setor, minhas conversas, encerradas) |
 | GET | `/api/v1/conversas/:id/mensagens?skip=&take=` | Histórico de mensagens de uma conversa |
 | POST | `/api/v1/conversas/:id/assumir` | Claim atômico (seção 8) — atendente assume a conversa |
 | POST | `/api/v1/conversas/:id/encerrar` | Encerra atendimento humano, devolve ao bot ou finaliza |
 | POST | `/api/v1/conversas/:id/mensagens` | Atendente envia mensagem manual dentro da conversa |
+
+`Contato` passou a seguir soft delete (`ativo` + `deletado_at`), como as demais
+entidades principais (seção 13.7). Contrato completo em `docs/api/contatos.md`.
 
 ### 14.4 Setores e atendentes
 

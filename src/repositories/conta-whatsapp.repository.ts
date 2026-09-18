@@ -64,6 +64,22 @@ export class ContaWhatsappRepository {
     return this.prisma.contaWhatsapp.count({ where: { ativo: true, deletado_at: null } });
   }
 
+  /** Contas elegíveis para iniciar uma conversa nova (mensagem direta a um contato). */
+  public listarConectadas() {
+    return this.prisma.contaWhatsapp.findMany({
+      where: { ativo: true, deletado_at: null, status: 'CONECTADO' },
+      select: { id: true, public_id: true, nome: true },
+      orderBy: { nome: 'asc' },
+    });
+  }
+
+  public buscarConectada(publicId: string) {
+    return this.prisma.contaWhatsapp.findFirst({
+      where: { public_id: publicId, ativo: true, deletado_at: null, status: 'CONECTADO' },
+      select: { id: true, public_id: true, nome: true },
+    });
+  }
+
   public buscarAtivaDaConversa(conversaPublicId: string) {
     return this.prisma.contaWhatsapp.findFirst({
       where: {

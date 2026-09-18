@@ -209,11 +209,14 @@ model Contato {
   nome_normalizado String? @db.VarChar(150)
   telefone   String   @unique @db.VarChar(20)
   atributos  Json?
+  ativo       Boolean  @default(true)
+  deletado_at DateTime? @db.Timestamptz(3)
   created_at DateTime @default(now()) @db.Timestamptz(3)
   updated_at DateTime @updatedAt @db.Timestamptz(3)
   conversas  Conversa[]
 
   @@index([nome_normalizado])
+  @@index([ativo, deletado_at])
   @@map("contatos")
 }
 

@@ -1,46 +1,11 @@
 import type { Prisma, PrismaClient } from '../generated/prisma-tenant/client.js';
-import type { ListarContatosEntrada, ListarConversasEntrada } from '../dtos/historico.dto.js';
+import type { ListarConversasEntrada } from '../dtos/historico.dto.js';
 import { criarPaginacaoResultado } from '../dtos/paginacao.dto.js';
 import type { CursorTemporal } from '../helpers/cursor-temporal.helper.js';
 import { normalizarTextoBusca } from '../helpers/texto.helper.js';
 
 export class ConsultaHistoricoRepository {
   public constructor(private readonly prisma: PrismaClient) {}
-
-  public async listarContatos(entrada: ListarContatosEntrada, usuarioCentralPublicId?: string) {
-    const where: Prisma.ContatoWhereInput = {
-      ...(entrada.busca
-        ? {
-            OR: [
-              { nome_normalizado: { contains: normalizarTextoBusca(entrada.busca) } },
-              { telefone: { contains: entrada.busca.replace(/\D/g, '') } },
-            ],
-          }
-        : {}),
-      ...(usuarioCentralPublicId
-        ? { conversas: { some: this.escopoConversa(usuarioCentralPublicId) } }
-        : {}),
-    };
-    const [dados, total] = await this.prisma.$transaction([
-      this.prisma.contato.findMany({
-        where,
-        skip: entrada.skip,
-        take: entrada.take,
-        orderBy: [{ nome_normalizado: 'asc' }, { id: 'asc' }],
-        select: {
-          public_id: true,
-          nome: true,
-          telefone: true,
-          atributos: true,
-          created_at: true,
-          updated_at: true,
-          _count: { select: { conversas: true } },
-        },
-      }),
-      this.prisma.contato.count({ where }),
-    ]);
-    return criarPaginacaoResultado(dados, total, entrada);
-  }
 
   public async listarConversas(entrada: ListarConversasEntrada, usuarioCentralPublicId?: string) {
     const where: Prisma.ConversaWhereInput = {
