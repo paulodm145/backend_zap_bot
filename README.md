@@ -18,6 +18,21 @@ O projeto está na fase de construção da estrutura base. Consulte:
 > caminho mais rápido (só exige Docker) e já deixa a API, o Postgres, o Redis
 > e a Evolution API (WhatsApp) no ar.
 
+## Documentação interativa
+
+Com a API no ar (`npm run dev` ou via containers):
+
+- **Swagger** — `http://localhost:3000/api/v1/docs/`: contrato executável de
+  toda a API. Use o botão **Authorize** pra colar um `accessToken` e testar
+  rotas protegidas direto pelo navegador.
+- **Bull Board** — `http://localhost:3000/admin/queues`: painel das filas
+  BullMQ (jobs em espera, ativos, concluídos e falhos), útil pra acompanhar
+  o processamento de mensagens em tempo real.
+
+As duas ficam abertas em desenvolvimento e exigem autenticação HTTP Basic em
+produção (`SWAGGER_USUARIO`/`SWAGGER_SENHA` e
+`BULL_BOARD_USUARIO`/`BULL_BOARD_SENHA` — ver [Configuração](#configuração)).
+
 ## Requisitos
 
 - Node.js `20.19.0` ou superior;
@@ -91,6 +106,8 @@ Variáveis disponíveis no scaffold atual:
 | `HTTP_SHUTDOWN_TIMEOUT_MS`                   | Limite do encerramento gracioso                                       |
 | `SWAGGER_USUARIO`                            | Usuário do Swagger em produção                                        |
 | `SWAGGER_SENHA`                              | Senha do Swagger em produção                                          |
+| `BULL_BOARD_USUARIO`                         | Usuário do Bull Board (`/admin/queues`) em produção                   |
+| `BULL_BOARD_SENHA`                           | Senha do Bull Board em produção                                       |
 | `EMAIL_PROVEDOR`                             | `smtp`, `resend` ou `local` para suprimir                             |
 | `EMAIL_REMETENTE`                            | Remetente dos e-mails transacionais                                   |
 | `SMTP_HOST`                                  | Host SMTP; MailHog local usa `127.0.0.1`                              |
