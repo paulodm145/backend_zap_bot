@@ -258,8 +258,7 @@ tenant_credentials (
   valor_criptografado TEXT,
   criado_em TIMESTAMP
 )
--- Implementado como `credenciais_integracao`, com as diferenças abaixo
--- registradas em docs/TAREFAS-INTEGRACAO-HTTP-FLUXO.md (etapa 1):
+-- Implementado como `credenciais_integracao`, com as diferenças abaixo:
 --   * `id` inteiro + `public_id` UUID, conforme a regra de chaves do AGENTS.md;
 --   * `base_url` NOT NULL: delimita o destino que a credencial autoriza e
 --     funciona como allowlist por tenant para o nó `integracao_http`, que só
